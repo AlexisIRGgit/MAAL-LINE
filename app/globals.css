@@ -1,0 +1,409 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   MAAL LINE - DARK GOTHIC STREETWEAR
+   ============================================ */
+
+/* Gothic Font Import */
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap');
+
+@layer base {
+  :root {
+    /* ============================================
+       DARK GOTHIC PALETTE
+       ============================================ */
+    --background-primary: #0A0A0A;
+    --background-secondary: #111111;
+    --background-tertiary: #1A1A1A;
+
+    --foreground-primary: #E8E4D9;
+    --foreground-secondary: #B8B4A9;
+    --foreground-muted: #6B6860;
+
+    /* Accent - Cream/Off-white */
+    --accent-primary: #E8E4D9;
+    --accent-secondary: #D4D0C5;
+    --accent-gold: #C9A962;
+
+    --border: #2A2A2A;
+    --border-hover: #3A3A3A;
+
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --error: #EF4444;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--background-primary);
+    color: var(--foreground-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100vh;
+    background: var(--background-primary);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--foreground-primary);
+  }
+
+  ::selection {
+    background-color: var(--accent-primary);
+    color: var(--background-primary);
+  }
+}
+
+@layer components {
+  /* ============================================
+     GOTHIC TYPOGRAPHY
+     ============================================ */
+  .font-gothic {
+    font-family: 'UnifrakturMaguntia', 'Times New Roman', serif;
+  }
+
+  .text-cream {
+    color: var(--foreground-primary);
+  }
+
+  .text-outline {
+    -webkit-text-stroke: 1px var(--foreground-primary);
+    color: transparent;
+  }
+
+  /* ============================================
+     TRIBAL/GOTHIC DECORATIVE ELEMENTS
+     ============================================ */
+
+  /* Dragon/Wing pattern as background */
+  .tribal-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5C25 10 20 8 15 12C10 16 12 22 8 28C4 34 10 38 15 42C20 46 18 52 25 55C32 58 35 52 40 48C45 44 52 46 55 40C58 34 52 30 48 25C44 20 46 14 42 10C38 6 35 10 30 5Z' fill='none' stroke='%23E8E4D920' stroke-width='0.5'/%3E%3C/svg%3E");
+  }
+
+  /* Cross with thorns pattern */
+  .thorn-cross {
+    position: relative;
+  }
+
+  .thorn-cross::before {
+    content: '✝';
+    position: absolute;
+    font-size: 1.5em;
+    color: var(--foreground-primary);
+    opacity: 0.1;
+  }
+
+  /* ============================================
+     GOTHIC BORDERS & FRAMES
+     ============================================ */
+  .border-gothic {
+    border: 2px solid var(--foreground-primary);
+    position: relative;
+  }
+
+  .border-gothic::before,
+  .border-gothic::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--foreground-primary);
+  }
+
+  .border-gothic::before {
+    top: -6px;
+    left: -6px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .border-gothic::after {
+    bottom: -6px;
+    right: -6px;
+    border-left: none;
+    border-top: none;
+  }
+
+  /* Ornate corners */
+  .corners-ornate {
+    position: relative;
+  }
+
+  .corners-ornate::before {
+    content: '◆';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--foreground-primary);
+    font-size: 12px;
+  }
+
+  /* ============================================
+     BRUSH STROKE EFFECTS
+     ============================================ */
+  .brush-underline {
+    position: relative;
+    display: inline-block;
+  }
+
+  .brush-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      var(--foreground-primary) 10%,
+      var(--foreground-primary) 30%,
+      transparent 35%,
+      var(--foreground-primary) 40%,
+      var(--foreground-primary) 90%,
+      transparent 100%
+    );
+    opacity: 0.8;
+  }
+
+  /* ============================================
+     GLOW & SHADOW EFFECTS
+     ============================================ */
+  .glow-cream {
+    box-shadow: 0 0 30px rgba(232, 228, 217, 0.2);
+  }
+
+  .text-glow-cream {
+    text-shadow: 0 0 20px rgba(232, 228, 217, 0.3);
+  }
+
+  .shadow-brutal {
+    box-shadow: 4px 4px 0 var(--foreground-primary);
+  }
+
+  .shadow-brutal-sm {
+    box-shadow: 2px 2px 0 var(--foreground-primary);
+  }
+
+  /* ============================================
+     DARK GLASS MORPHISM
+     ============================================ */
+  .glass-dark {
+    background: rgba(10, 10, 10, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(232, 228, 217, 0.1);
+  }
+
+  .glass-cream {
+    background: rgba(232, 228, 217, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(232, 228, 217, 0.1);
+  }
+
+  /* ============================================
+     NOISE TEXTURE
+     ============================================ */
+  .noise-overlay {
+    position: relative;
+  }
+
+  .noise-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ============================================
+     CARD STYLES - DARK
+     ============================================ */
+  .card-dark {
+    background: var(--background-secondary);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+  }
+
+  .card-dark:hover {
+    border-color: var(--foreground-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  /* ============================================
+     BUTTON STYLES - GOTHIC
+     ============================================ */
+  .btn-gothic {
+    background: var(--foreground-primary);
+    color: var(--background-primary);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-gothic:hover {
+    box-shadow: 4px 4px 0 var(--foreground-muted);
+    transform: translate(-2px, -2px);
+  }
+
+  .btn-gothic-outline {
+    background: transparent;
+    color: var(--foreground-primary);
+    border: 2px solid var(--foreground-primary);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gothic-outline:hover {
+    background: var(--foreground-primary);
+    color: var(--background-primary);
+  }
+
+  /* ============================================
+     DIVIDERS - GOTHIC
+     ============================================ */
+  .divider-gothic {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--foreground-muted);
+  }
+
+  .divider-gothic::before,
+  .divider-gothic::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--foreground-muted), transparent);
+  }
+
+  /* ============================================
+     MARQUEE
+     ============================================ */
+  .marquee-container {
+    overflow: hidden;
+  }
+
+  .marquee-content {
+    display: flex;
+    animation: marquee 40s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* ============================================
+     TRIBAL DECORATIONS
+     ============================================ */
+  .tribal-wing-left {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='200' viewBox='0 0 100 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M80 100C60 80 40 60 30 40C20 20 30 10 50 30C70 50 80 70 90 90C100 110 90 130 70 120C50 110 40 130 50 150C60 170 40 180 20 160' fill='none' stroke='%23E8E4D9' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  /* ============================================
+     SCROLLBAR - DARK
+     ============================================ */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--background-secondary);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--foreground-muted);
+    border-radius: 0;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--foreground-primary);
+  }
+
+  /* ============================================
+     PRODUCT CARD - DARK GOTHIC
+     ============================================ */
+  .product-card-gothic {
+    background: var(--background-secondary);
+    border: 1px solid var(--border);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .product-card-gothic:hover {
+    border-color: var(--foreground-primary);
+    box-shadow: 0 0 30px rgba(232, 228, 217, 0.1);
+  }
+
+  /* ============================================
+     ANIMATIONS
+     ============================================ */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(232, 228, 217, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(232, 228, 217, 0.4);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Gradient text */
+  .gradient-text-gold {
+    background: linear-gradient(135deg, #E8E4D9 0%, #C9A962 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
