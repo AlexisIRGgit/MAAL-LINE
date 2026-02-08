@@ -79,7 +79,7 @@ export function transformProductForCard(product: ProductWithRelations): ProductC
   const availableSizes = product.variants
     .filter(v => v.isActive && v.size)
     .map(v => v.size as string)
-  const uniqueSizes = [...new Set(availableSizes)]
+  const uniqueSizes = Array.from(new Set(availableSizes))
 
   // Calculate total stock
   const totalStock = product.variants.reduce((sum, v) => sum + v.stockQuantity, 0)
