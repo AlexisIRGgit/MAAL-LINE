@@ -1,5 +1,4 @@
 import type { Product, ProductImage, ProductVariant, Category } from '@prisma/client'
-import { Decimal } from '@prisma/client/runtime/library'
 
 // Type for Product with relations from Prisma
 export type ProductWithRelations = Product & {
@@ -47,7 +46,7 @@ export interface ProductDetailData extends ProductCardData {
 /**
  * Convert Prisma Decimal to number
  */
-function decimalToNumber(decimal: Decimal | null | undefined): number | undefined {
+function decimalToNumber(decimal: unknown): number | undefined {
   if (decimal === null || decimal === undefined) return undefined
   return Number(decimal)
 }
