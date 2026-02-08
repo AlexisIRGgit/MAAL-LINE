@@ -12,6 +12,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  Percent,
 } from 'lucide-react'
 import {
   AreaChart,
