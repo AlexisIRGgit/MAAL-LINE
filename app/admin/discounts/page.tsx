@@ -55,67 +55,67 @@ export default function DiscountsPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
+      className="space-y-3"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-[#E8E4D9]">Descuentos</h1>
-          <p className="text-[#666] mt-1">Gestiona códigos de descuento y promociones</p>
+          <h1 className="text-xl font-bold text-[#E8E4D9]">Descuentos</h1>
+          <p className="text-[#666] mt-1 text-xs">Gestiona códigos de descuento y promociones</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="inline-flex items-center gap-2 px-5 py-3 bg-[#C9A962] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#d4b76d] transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 bg-[#C9A962] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#d4b76d] transition-colors text-xs"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-3.5 h-3.5" />
           Nuevo Descuento
         </motion.button>
       </motion.div>
 
       {/* Stats */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-[#C9A962]/10">
-              <Tag className="w-6 h-6 text-[#C9A962]" />
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-[#C9A962]/10">
+              <Tag className="w-4 h-4 text-[#C9A962]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#E8E4D9]">{discounts.length}</p>
-              <p className="text-sm text-[#666]">Total Códigos</p>
+              <p className="text-lg font-bold text-[#E8E4D9]">{discounts.length}</p>
+              <p className="text-xs text-[#666]">Total Códigos</p>
             </div>
           </div>
         </div>
-        <div className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-green-500/10">
-              <CheckCircle className="w-6 h-6 text-green-500" />
+        <div className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-green-500/10">
+              <CheckCircle className="w-4 h-4 text-green-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#E8E4D9]">{activeCount}</p>
-              <p className="text-sm text-[#666]">Activos</p>
+              <p className="text-lg font-bold text-[#E8E4D9]">{activeCount}</p>
+              <p className="text-xs text-[#666]">Activos</p>
             </div>
           </div>
         </div>
-        <div className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-blue-500/10">
-              <Users className="w-6 h-6 text-blue-500" />
+        <div className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-blue-500/10">
+              <Users className="w-4 h-4 text-blue-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#E8E4D9]">{totalUsage}</p>
-              <p className="text-sm text-[#666]">Usos Totales</p>
+              <p className="text-lg font-bold text-[#E8E4D9]">{totalUsage}</p>
+              <p className="text-xs text-[#666]">Usos Totales</p>
             </div>
           </div>
         </div>
-        <div className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-purple-500/10">
-              <Percent className="w-6 h-6 text-purple-500" />
+        <div className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-purple-500/10">
+              <Percent className="w-4 h-4 text-purple-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#E8E4D9]">$45.2k</p>
-              <p className="text-sm text-[#666]">Ahorro Clientes</p>
+              <p className="text-lg font-bold text-[#E8E4D9]">$45.2k</p>
+              <p className="text-xs text-[#666]">Ahorro Clientes</p>
             </div>
           </div>
         </div>
@@ -123,68 +123,68 @@ export default function DiscountsPage() {
 
       {/* Search */}
       <motion.div variants={itemVariants} className="relative max-w-md">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#666]" />
         <input
           type="text"
           placeholder="Buscar código..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-[#E8E4D9] placeholder-[#666] focus:outline-none focus:border-[#C9A962] transition-colors"
+          className="w-full pl-9 pr-3 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-[#E8E4D9] placeholder-[#666] focus:outline-none focus:border-[#C9A962] transition-colors text-xs"
         />
       </motion.div>
 
       {/* Discounts Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {filteredDiscounts.map((discount, index) => (
           <motion.div
             key={discount.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl hover:border-[#222] transition-all group"
+            className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl hover:border-[#222] transition-all group"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${discount.status === 'active' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className={`p-1.5 rounded-lg ${discount.status === 'active' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                   {discount.type === 'percentage' ? (
-                    <Percent className={`w-5 h-5 ${discount.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
+                    <Percent className={`w-3.5 h-3.5 ${discount.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
                   ) : discount.type === 'shipping' ? (
-                    <Tag className={`w-5 h-5 ${discount.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
+                    <Tag className={`w-3.5 h-3.5 ${discount.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
                   ) : (
-                    <Tag className={`w-5 h-5 ${discount.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
+                    <Tag className={`w-3.5 h-3.5 ${discount.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
                   )}
                 </div>
-                <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                   discount.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
                 }`}>
                   {discount.status === 'active' ? 'Activo' : 'Expirado'}
                 </span>
               </div>
               <button className="p-1 hover:bg-[#1a1a1a] rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                <MoreVertical className="w-4 h-4 text-[#666]" />
+                <MoreVertical className="w-3.5 h-3.5 text-[#666]" />
               </button>
             </div>
 
-            <div className="flex items-center gap-2 mb-3">
-              <code className="text-lg font-mono font-bold text-[#C9A962]">{discount.code}</code>
+            <div className="flex items-center gap-2 mb-2">
+              <code className="text-sm font-mono font-bold text-[#C9A962]">{discount.code}</code>
               <button
                 onClick={() => copyCode(discount.code)}
                 className="p-1 hover:bg-[#1a1a1a] rounded transition-colors"
               >
-                <Copy className="w-4 h-4 text-[#666]" />
+                <Copy className="w-3.5 h-3.5 text-[#666]" />
               </button>
             </div>
 
-            <p className="text-[#E8E4D9] text-xl font-bold mb-4">
+            <p className="text-[#E8E4D9] text-sm font-bold mb-2">
               {discount.type === 'percentage' ? `${discount.value}% OFF` :
                discount.type === 'shipping' ? 'Envío Gratis' :
                `$${discount.value} OFF`}
             </p>
 
-            <div className="space-y-2 text-sm">
+            <div className="space-y-1 text-xs">
               <div className="flex items-center justify-between text-[#666]">
                 <span className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
+                  <Users className="w-3.5 h-3.5" />
                   Usos
                 </span>
                 <span className="text-[#E8E4D9]">
@@ -193,7 +193,7 @@ export default function DiscountsPage() {
               </div>
               <div className="flex items-center justify-between text-[#666]">
                 <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="w-3.5 h-3.5" />
                   Expira
                 </span>
                 <span className="text-[#E8E4D9]">
@@ -203,8 +203,8 @@ export default function DiscountsPage() {
             </div>
 
             {discount.usageLimit && (
-              <div className="mt-4">
-                <div className="h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+              <div className="mt-2">
+                <div className="h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-[#C9A962] to-[#d4b76d] rounded-full transition-all"
                     style={{ width: `${(discount.usageCount / discount.usageLimit) * 100}%` }}

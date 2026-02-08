@@ -36,8 +36,8 @@ export function AdminSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   const sidebarVariants = {
-    expanded: { width: 280 },
-    collapsed: { width: 80 },
+    expanded: { width: 200 },
+    collapsed: { width: 56 },
   }
 
   const linkVariants = {
@@ -50,9 +50,9 @@ export function AdminSidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#111111] border border-[#222222] rounded-lg text-[#E8E4D9]"
+        className="lg:hidden fixed top-3 left-3 z-50 p-1.5 bg-[#111111] border border-[#222222] rounded-lg text-[#E8E4D9]"
       >
-        <Menu className="w-6 h-6" />
+        <Menu className="w-4 h-4" />
       </button>
 
       {/* Mobile Overlay */}
@@ -73,7 +73,7 @@ export function AdminSidebar() {
         initial={false}
         animate={isCollapsed ? 'collapsed' : 'expanded'}
         variants={sidebarVariants}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        transition={{ duration: 0.2, ease: 'easeInOut' }}
         className={`
           fixed lg:relative inset-y-0 left-0 z-50
           bg-[#0a0a0a] border-r border-[#1a1a1a]
@@ -83,23 +83,23 @@ export function AdminSidebar() {
         `}
       >
         {/* Logo Section */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-[#1a1a1a]">
+        <div className="h-12 flex items-center justify-between px-2 border-b border-[#1a1a1a]">
           <AnimatePresence mode="wait">
             {!isCollapsed && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-2"
               >
                 <Image
                   src="/images/logo-maal-negro.png"
                   alt="MAAL"
-                  width={100}
-                  height={40}
+                  width={70}
+                  height={28}
                   className="invert"
                 />
-                <span className="text-xs text-[#666] font-mono bg-[#1a1a1a] px-2 py-0.5 rounded">
+                <span className="text-[10px] text-[#666] font-mono bg-[#1a1a1a] px-1.5 py-0.5 rounded">
                   ADMIN
                 </span>
               </motion.div>
@@ -109,18 +109,18 @@ export function AdminSidebar() {
           {/* Collapse Button */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex p-2 rounded-lg bg-[#111] border border-[#222] text-[#888] hover:text-[#E8E4D9] hover:border-[#333] transition-all"
+            className="hidden lg:flex p-1.5 rounded-lg bg-[#111] border border-[#222] text-[#888] hover:text-[#E8E4D9] hover:border-[#333] transition-all"
           >
             {isCollapsed ? (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3 h-3" />
             ) : (
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3 h-3" />
             )}
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
           {menuItems.map((item) => {
             const isActive = pathname === item.href ||
               (item.href !== '/admin' && pathname.startsWith(item.href))
@@ -131,7 +131,7 @@ export function AdminSidebar() {
                 href={item.href}
                 onClick={() => setIsMobileOpen(false)}
                 className={`
-                  relative flex items-center gap-3 px-3 py-3 rounded-xl
+                  relative flex items-center gap-2 px-2 py-2 rounded-lg
                   transition-all duration-200 group
                   ${isActive
                     ? 'bg-gradient-to-r from-[#C9A962]/20 to-transparent text-[#C9A962]'
@@ -143,21 +143,18 @@ export function AdminSidebar() {
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#C9A962] rounded-r-full"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#C9A962] rounded-r-full"
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   />
                 )}
 
-                {/* Icon with glow effect */}
+                {/* Icon */}
                 <div className={`
-                  relative p-2 rounded-lg
+                  relative p-1.5 rounded-md
                   ${isActive ? 'bg-[#C9A962]/10' : 'bg-[#111] group-hover:bg-[#1a1a1a]'}
                   transition-all duration-200
                 `}>
-                  <item.icon className={`w-5 h-5 ${isActive ? 'text-[#C9A962]' : ''}`} />
-                  {isActive && (
-                    <div className="absolute inset-0 bg-[#C9A962]/20 blur-xl rounded-lg" />
-                  )}
+                  <item.icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#C9A962]' : ''}`} />
                 </div>
 
                 {/* Label */}
@@ -168,7 +165,7 @@ export function AdminSidebar() {
                       initial="collapsed"
                       animate="expanded"
                       exit="collapsed"
-                      className="font-medium whitespace-nowrap"
+                      className="text-xs font-medium whitespace-nowrap"
                     >
                       {item.name}
                     </motion.span>
@@ -177,8 +174,8 @@ export function AdminSidebar() {
 
                 {/* Tooltip for collapsed state */}
                 {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-3 py-2 bg-[#111] border border-[#222] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                    <span className="text-sm text-[#E8E4D9]">{item.name}</span>
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-[#111] border border-[#222] rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                    <span className="text-xs text-[#E8E4D9]">{item.name}</span>
                   </div>
                 )}
               </Link>
@@ -187,17 +184,17 @@ export function AdminSidebar() {
         </nav>
 
         {/* User Section */}
-        <div className="p-3 border-t border-[#1a1a1a]">
+        <div className="p-2 border-t border-[#1a1a1a]">
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
             className={`
-              w-full flex items-center gap-3 px-3 py-3 rounded-xl
+              w-full flex items-center gap-2 px-2 py-2 rounded-lg
               text-[#888] hover:text-red-400 hover:bg-red-500/10
               transition-all duration-200 group
             `}
           >
-            <div className="p-2 rounded-lg bg-[#111] group-hover:bg-red-500/10 transition-all">
-              <LogOut className="w-5 h-5" />
+            <div className="p-1.5 rounded-md bg-[#111] group-hover:bg-red-500/10 transition-all">
+              <LogOut className="w-3.5 h-3.5" />
             </div>
             <AnimatePresence mode="wait">
               {!isCollapsed && (
@@ -206,7 +203,7 @@ export function AdminSidebar() {
                   initial="collapsed"
                   animate="expanded"
                   exit="collapsed"
-                  className="font-medium"
+                  className="text-xs font-medium"
                 >
                   Cerrar Sesión
                 </motion.span>
@@ -216,7 +213,7 @@ export function AdminSidebar() {
         </div>
 
         {/* Decorative Elements */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#C9A962]/5 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#C9A962]/5 to-transparent pointer-events-none" />
       </motion.aside>
     </>
   )

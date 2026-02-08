@@ -98,12 +98,12 @@ const containerVariants = {
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.5,
+      duration: 0.3,
       ease: 'easeOut' as const,
     },
   },
@@ -115,16 +115,16 @@ export default function AdminDashboard() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-4"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-[#E8E4D9]">Dashboard</h1>
-          <p className="text-[#666] mt-1">Bienvenido al panel de administración</p>
+          <h1 className="text-xl font-bold text-[#E8E4D9]">Dashboard</h1>
+          <p className="text-[#666] text-xs">Bienvenido al panel de administración</p>
         </div>
-        <div className="flex items-center gap-3">
-          <select className="px-4 py-2 bg-[#111] border border-[#222] rounded-xl text-[#E8E4D9] text-sm focus:outline-none focus:border-[#C9A962]">
+        <div className="flex items-center gap-2">
+          <select className="px-3 py-1.5 bg-[#111] border border-[#222] rounded-lg text-[#E8E4D9] text-xs focus:outline-none focus:border-[#C9A962]">
             <option>Últimos 7 días</option>
             <option>Últimos 30 días</option>
             <option>Este mes</option>
@@ -134,32 +134,32 @@ export default function AdminDashboard() {
       </motion.div>
 
       {/* Stats Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((stat, index) => (
           <motion.div
             key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: index * 0.05 }}
             className="relative group"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#C9A962]/10 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative p-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl hover:border-[#222] transition-all">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#C9A962]/10 to-transparent rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl hover:border-[#222] transition-all">
               <div className="flex items-start justify-between">
                 <div
-                  className="p-3 rounded-xl"
+                  className="p-2 rounded-lg"
                   style={{ backgroundColor: `${stat.color}15` }}
                 >
-                  <stat.icon className="w-6 h-6" style={{ color: stat.color }} />
+                  <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
                 </div>
-                <div className={`flex items-center gap-1 text-sm ${stat.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-                  {stat.isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                <div className={`flex items-center gap-0.5 text-xs ${stat.isPositive ? 'text-green-500' : 'text-red-500'}`}>
+                  {stat.isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                   {stat.change}
                 </div>
               </div>
-              <div className="mt-4">
-                <h3 className="text-[#666] text-sm">{stat.title}</h3>
-                <p className="text-2xl font-bold text-[#E8E4D9] mt-1">{stat.value}</p>
+              <div className="mt-2">
+                <h3 className="text-[#666] text-xs">{stat.title}</h3>
+                <p className="text-lg font-bold text-[#E8E4D9]">{stat.value}</p>
               </div>
             </div>
           </motion.div>
@@ -167,22 +167,22 @@ export default function AdminDashboard() {
       </motion.div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Sales Chart */}
         <motion.div
           variants={itemVariants}
-          className="lg:col-span-2 p-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl"
+          className="lg:col-span-2 p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-[#E8E4D9]">Ventas</h2>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#C9A962]" />
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-[#E8E4D9]">Ventas</h2>
+            <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-[#C9A962]" />
                 <span className="text-[#666]">Ventas</span>
               </div>
             </div>
           </div>
-          <div className="h-[300px]">
+          <div className="h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesData}>
                 <defs>
@@ -192,21 +192,22 @@ export default function AdminDashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-                <XAxis dataKey="name" stroke="#666" fontSize={12} />
-                <YAxis stroke="#666" fontSize={12} />
+                <XAxis dataKey="name" stroke="#666" fontSize={10} />
+                <YAxis stroke="#666" fontSize={10} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#111',
                     border: '1px solid #222',
-                    borderRadius: '12px',
+                    borderRadius: '8px',
                     color: '#E8E4D9',
+                    fontSize: '11px',
                   }}
                 />
                 <Area
                   type="monotone"
                   dataKey="ventas"
                   stroke="#C9A962"
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   fillOpacity={1}
                   fill="url(#salesGradient)"
                 />
@@ -218,24 +219,24 @@ export default function AdminDashboard() {
         {/* Top Products */}
         <motion.div
           variants={itemVariants}
-          className="p-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl"
+          className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl"
         >
-          <h2 className="text-lg font-semibold text-[#E8E4D9] mb-6">Top Productos</h2>
-          <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-[#E8E4D9] mb-3">Top Productos</h2>
+          <div className="space-y-2">
             {topProducts.map((product, index) => (
               <div
                 key={product.name}
-                className="flex items-center gap-4 p-3 rounded-xl bg-[#111] hover:bg-[#151515] transition-colors"
+                className="flex items-center gap-2 p-2 rounded-lg bg-[#111] hover:bg-[#151515] transition-colors"
               >
-                <div className="w-8 h-8 rounded-lg bg-[#1a1a1a] flex items-center justify-center text-[#C9A962] font-bold text-sm">
+                <div className="w-5 h-5 rounded bg-[#1a1a1a] flex items-center justify-center text-[#C9A962] font-bold text-xs">
                   {index + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[#E8E4D9] text-sm font-medium truncate">{product.name}</p>
-                  <p className="text-[#666] text-xs">{product.ventas} vendidos</p>
+                  <p className="text-[#E8E4D9] text-xs font-medium truncate">{product.name}</p>
+                  <p className="text-[#666] text-[10px]">{product.ventas} vendidos</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[#C9A962] font-semibold">{product.revenue}</p>
+                  <p className="text-[#C9A962] text-xs font-semibold">{product.revenue}</p>
                 </div>
               </div>
             ))}
@@ -244,28 +245,29 @@ export default function AdminDashboard() {
       </div>
 
       {/* Orders Chart & Recent Orders */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Orders by Day */}
         <motion.div
           variants={itemVariants}
-          className="p-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl"
+          className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl"
         >
-          <h2 className="text-lg font-semibold text-[#E8E4D9] mb-6">Pedidos por Día</h2>
-          <div className="h-[250px]">
+          <h2 className="text-sm font-semibold text-[#E8E4D9] mb-3">Pedidos por Día</h2>
+          <div className="h-[150px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salesData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-                <XAxis dataKey="name" stroke="#666" fontSize={12} />
-                <YAxis stroke="#666" fontSize={12} />
+                <XAxis dataKey="name" stroke="#666" fontSize={10} />
+                <YAxis stroke="#666" fontSize={10} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#111',
                     border: '1px solid #222',
-                    borderRadius: '12px',
+                    borderRadius: '8px',
                     color: '#E8E4D9',
+                    fontSize: '11px',
                   }}
                 />
-                <Bar dataKey="pedidos" fill="#C9A962" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="pedidos" fill="#C9A962" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -274,29 +276,29 @@ export default function AdminDashboard() {
         {/* Recent Orders */}
         <motion.div
           variants={itemVariants}
-          className="p-6 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl"
+          className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-[#E8E4D9]">Pedidos Recientes</h2>
-            <a href="/admin/orders" className="text-[#C9A962] text-sm hover:underline">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-[#E8E4D9]">Pedidos Recientes</h2>
+            <a href="/admin/orders" className="text-[#C9A962] text-xs hover:underline">
               Ver todos
             </a>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {recentOrders.map((order) => (
               <div
                 key={order.id}
-                className="flex items-center gap-4 p-3 rounded-xl bg-[#111] hover:bg-[#151515] transition-colors"
+                className="flex items-center gap-2 p-2 rounded-lg bg-[#111] hover:bg-[#151515] transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[#E8E4D9] font-mono text-sm">{order.id}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[#E8E4D9] font-mono text-xs">{order.id}</p>
                     <StatusBadge status={order.status} />
                   </div>
-                  <p className="text-[#666] text-sm mt-1">{order.customer}</p>
+                  <p className="text-[#666] text-[10px] mt-0.5">{order.customer}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[#E8E4D9] font-semibold">{order.total}</p>
+                  <p className="text-[#E8E4D9] text-xs font-semibold">{order.total}</p>
                 </div>
               </div>
             ))}
@@ -305,7 +307,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {[
           { icon: Package, label: 'Nuevo Producto', href: '/admin/products/new', color: '#C9A962' },
           { icon: ShoppingBag, label: 'Ver Pedidos', href: '/admin/orders', color: '#22C55E' },
@@ -315,15 +317,15 @@ export default function AdminDashboard() {
           <a
             key={action.label}
             href={action.href}
-            className="group p-4 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl hover:border-[#222] transition-all flex items-center gap-4"
+            className="group p-2.5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl hover:border-[#222] transition-all flex items-center gap-2"
           >
             <div
-              className="p-3 rounded-xl transition-all group-hover:scale-110"
+              className="p-1.5 rounded-lg transition-all group-hover:scale-110"
               style={{ backgroundColor: `${action.color}15` }}
             >
-              <action.icon className="w-5 h-5" style={{ color: action.color }} />
+              <action.icon className="w-3.5 h-3.5" style={{ color: action.color }} />
             </div>
-            <span className="text-[#E8E4D9] font-medium">{action.label}</span>
+            <span className="text-[#E8E4D9] text-xs font-medium">{action.label}</span>
           </a>
         ))}
       </motion.div>
@@ -343,8 +345,8 @@ function StatusBadge({ status }: { status: string }) {
   const Icon = style.icon
 
   return (
-    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${style.bg} ${style.text}`}>
-      <Icon className="w-3 h-3" />
+    <div className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] ${style.bg} ${style.text}`}>
+      <Icon className="w-2.5 h-2.5" />
       {status}
     </div>
   )

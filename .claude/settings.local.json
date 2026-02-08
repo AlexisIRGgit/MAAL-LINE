@@ -20,7 +20,14 @@
       "Bash(npx prisma generate)",
       "Bash(npx prisma:*)",
       "Bash(npm run build:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(openssl rand:*)",
+      "Bash(source .env)",
+      "Bash(npx dotenv:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

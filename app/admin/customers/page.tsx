@@ -58,109 +58,109 @@ export default function CustomersPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
+      className="space-y-3"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-[#E8E4D9]">Clientes</h1>
-          <p className="text-[#666] mt-1">Gestiona tu base de clientes</p>
+          <h1 className="text-xl font-bold text-[#E8E4D9]">Clientes</h1>
+          <p className="text-[#666] mt-1 text-xs">Gestiona tu base de clientes</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-5 py-3 bg-[#C9A962] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#d4b76d] transition-colors">
-          <UserPlus className="w-5 h-5" />
+        <button className="inline-flex items-center gap-2 px-3 py-2 bg-[#C9A962] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#d4b76d] transition-colors text-xs">
+          <UserPlus className="w-3.5 h-3.5" />
           Nuevo Cliente
         </button>
       </motion.div>
 
       {/* Stats */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-[#C9A962]/10">
-              <Users className="w-6 h-6 text-[#C9A962]" />
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-[#C9A962]/10">
+              <Users className="w-4 h-4 text-[#C9A962]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#E8E4D9]">{totalCustomers}</p>
-              <p className="text-sm text-[#666]">Total Clientes</p>
+              <p className="text-lg font-bold text-[#E8E4D9]">{totalCustomers}</p>
+              <p className="text-xs text-[#666]">Total Clientes</p>
             </div>
           </div>
         </div>
-        <div className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-purple-500/10">
-              <Crown className="w-6 h-6 text-purple-500" />
+        <div className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-purple-500/10">
+              <Crown className="w-4 h-4 text-purple-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#E8E4D9]">{vipCustomers}</p>
-              <p className="text-sm text-[#666]">Clientes VIP</p>
+              <p className="text-lg font-bold text-[#E8E4D9]">{vipCustomers}</p>
+              <p className="text-xs text-[#666]">Clientes VIP</p>
             </div>
           </div>
         </div>
-        <div className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-green-500/10">
-              <DollarSign className="w-6 h-6 text-green-500" />
+        <div className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-green-500/10">
+              <DollarSign className="w-4 h-4 text-green-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#E8E4D9]">${(totalRevenue / 1000).toFixed(1)}k</p>
-              <p className="text-sm text-[#666]">Ingresos Totales</p>
+              <p className="text-lg font-bold text-[#E8E4D9]">${(totalRevenue / 1000).toFixed(1)}k</p>
+              <p className="text-xs text-[#666]">Ingresos Totales</p>
             </div>
           </div>
         </div>
-        <div className="p-5 bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-blue-500/10">
-              <ShoppingBag className="w-6 h-6 text-blue-500" />
+        <div className="p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-blue-500/10">
+              <ShoppingBag className="w-4 h-4 text-blue-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#E8E4D9]">${avgOrderValue.toFixed(0)}</p>
-              <p className="text-sm text-[#666]">Ticket Promedio</p>
+              <p className="text-lg font-bold text-[#E8E4D9]">${avgOrderValue.toFixed(0)}</p>
+              <p className="text-xs text-[#666]">Ticket Promedio</p>
             </div>
           </div>
         </div>
       </motion.div>
 
       {/* Filters */}
-      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row gap-4">
+      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#666]" />
           <input
             type="text"
             placeholder="Buscar por nombre o email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-[#E8E4D9] placeholder-[#666] focus:outline-none focus:border-[#C9A962] transition-colors"
+            className="w-full pl-9 pr-3 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-[#E8E4D9] placeholder-[#666] focus:outline-none focus:border-[#C9A962] transition-colors text-xs"
           />
         </div>
         <div className="relative">
           <select
             value={filterGroup}
             onChange={(e) => setFilterGroup(e.target.value)}
-            className="appearance-none px-4 py-3 pr-10 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-[#E8E4D9] focus:outline-none focus:border-[#C9A962] transition-colors cursor-pointer"
+            className="appearance-none px-3 py-2 pr-8 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-[#E8E4D9] focus:outline-none focus:border-[#C9A962] transition-colors cursor-pointer text-xs"
           >
             <option value="all">Todos los grupos</option>
             <option value="vip">VIP</option>
             <option value="standard">Standard</option>
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666] pointer-events-none" />
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#666] pointer-events-none" />
         </div>
       </motion.div>
 
       {/* Customers Table */}
       <motion.div
         variants={itemVariants}
-        className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-2xl overflow-hidden"
+        className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl overflow-hidden"
       >
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-[#1a1a1a]">
-                <th className="p-4 text-left text-sm font-medium text-[#666]">Cliente</th>
-                <th className="p-4 text-left text-sm font-medium text-[#666]">Grupo</th>
-                <th className="p-4 text-left text-sm font-medium text-[#666]">Pedidos</th>
-                <th className="p-4 text-left text-sm font-medium text-[#666]">Total Gastado</th>
-                <th className="p-4 text-left text-sm font-medium text-[#666]">Registrado</th>
-                <th className="p-4 text-left text-sm font-medium text-[#666]"></th>
+                <th className="p-2 text-left text-xs font-medium text-[#666]">Cliente</th>
+                <th className="p-2 text-left text-xs font-medium text-[#666]">Grupo</th>
+                <th className="p-2 text-left text-xs font-medium text-[#666]">Pedidos</th>
+                <th className="p-2 text-left text-xs font-medium text-[#666]">Total Gastado</th>
+                <th className="p-2 text-left text-xs font-medium text-[#666]">Registrado</th>
+                <th className="p-2 text-left text-xs font-medium text-[#666]"></th>
               </tr>
             </thead>
             <tbody>
@@ -172,48 +172,48 @@ export default function CustomersPage() {
                   transition={{ delay: index * 0.05 }}
                   className="border-b border-[#1a1a1a] hover:bg-[#111] transition-colors"
                 >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C9A962] to-[#8B7355] flex items-center justify-center text-[#0a0a0a] font-bold">
+                  <td className="p-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#C9A962] to-[#8B7355] flex items-center justify-center text-[#0a0a0a] font-bold text-xs">
                         {customer.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="text-[#E8E4D9] font-medium">{customer.name}</p>
-                        <p className="text-[#666] text-sm flex items-center gap-1">
-                          <Mail className="w-3 h-3" />
+                        <p className="text-[#E8E4D9] font-medium text-xs">{customer.name}</p>
+                        <p className="text-[#666] text-xs flex items-center gap-1">
+                          <Mail className="w-2.5 h-2.5" />
                           {customer.email}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-2">
                     {customer.group === 'vip' ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium">
-                        <Crown className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium">
+                        <Crown className="w-2.5 h-2.5" />
                         VIP
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-3 py-1 bg-[#1a1a1a] text-[#888] rounded-full text-xs font-medium">
+                      <span className="inline-flex items-center px-2 py-0.5 bg-[#1a1a1a] text-[#888] rounded-full text-xs font-medium">
                         Standard
                       </span>
                     )}
                   </td>
-                  <td className="p-4">
-                    <span className="text-[#E8E4D9]">{customer.orders}</span>
+                  <td className="p-2">
+                    <span className="text-[#E8E4D9] text-xs">{customer.orders}</span>
                   </td>
-                  <td className="p-4">
-                    <span className="text-[#C9A962] font-semibold">${customer.spent.toLocaleString()}</span>
+                  <td className="p-2">
+                    <span className="text-[#C9A962] font-semibold text-xs">${customer.spent.toLocaleString()}</span>
                   </td>
-                  <td className="p-4">
-                    <span className="text-[#666] text-sm">{customer.createdAt}</span>
+                  <td className="p-2">
+                    <span className="text-[#666] text-xs">{customer.createdAt}</span>
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                        <Eye className="w-4 h-4 text-[#666]" />
+                  <td className="p-2">
+                    <div className="flex items-center gap-1">
+                      <button className="p-1 hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                        <Eye className="w-3.5 h-3.5 text-[#666]" />
                       </button>
-                      <button className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors">
-                        <MoreVertical className="w-4 h-4 text-[#666]" />
+                      <button className="p-1 hover:bg-[#1a1a1a] rounded-lg transition-colors">
+                        <MoreVertical className="w-3.5 h-3.5 text-[#666]" />
                       </button>
                     </div>
                   </td>
