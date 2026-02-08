@@ -6,109 +6,12 @@ import { Footer } from '@/components/navigation/footer'
 import { ProductCard } from '@/components/product/product-card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Logo } from '@/components/common/logo'
+import { getNewArrivals, getBestSellers } from '@/lib/queries/products'
+import { getActiveCategories } from '@/lib/queries/categories'
+import { transformProductsForCards } from '@/lib/transformers/product'
 
-// Mock Products Data
-const PRODUCTS = [
-  {
-    id: '1',
-    slug: 'tee-maal-tribal-wings',
-    name: 'Tee MAAL Tribal Wings',
-    price: 699,
-    compareAtPrice: 899,
-    images: [
-      '/images/IMG_3008.PNG',
-      '/images/IMG_3009.PNG',
-    ],
-    isNew: true,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-  },
-  {
-    id: '2',
-    slug: 'longsleeve-maal-dragon-wings',
-    name: 'Longsleeve MAAL Dragon Wings',
-    price: 899,
-    images: [
-      '/images/IMG_3009.PNG',
-      '/images/IMG_3008.PNG',
-    ],
-    isBestSeller: true,
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-  },
-  {
-    id: '3',
-    slug: 'longsleeve-maal-gothic-cross',
-    name: 'Longsleeve MAAL Gothic Cross',
-    price: 899,
-    images: [
-      '/images/IMG_3010.PNG',
-      '/images/IMG_3009.PNG',
-    ],
-    isRestock: true,
-    sizes: ['M', 'L', 'XL'],
-  },
-  {
-    id: '4',
-    slug: 'tee-maal-oversized-black',
-    name: 'Tee MAAL Oversized Black',
-    price: 699,
-    images: [
-      '/images/IMG_3008.PNG',
-      '/images/IMG_3010.PNG',
-    ],
-    isNew: true,
-    sizes: ['S', 'M', 'L', 'XL'],
-  },
-  {
-    id: '5',
-    slug: 'longsleeve-maal-tribal-black',
-    name: 'Longsleeve MAAL Tribal Black',
-    price: 899,
-    compareAtPrice: 1099,
-    images: [
-      '/images/IMG_3009.PNG',
-      '/images/IMG_3010.PNG',
-    ],
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-  },
-  {
-    id: '6',
-    slug: 'longsleeve-maal-cross-edition',
-    name: 'Longsleeve MAAL Cross Edition',
-    price: 949,
-    images: [
-      '/images/IMG_3010.PNG',
-      '/images/IMG_3008.PNG',
-    ],
-    isBestSeller: true,
-    sizes: ['M', 'L', 'XL', 'XXL'],
-  },
-  {
-    id: '7',
-    slug: 'tee-maal-wings-limited',
-    name: 'Tee MAAL Wings Limited',
-    price: 749,
-    images: [
-      '/images/IMG_3008.PNG',
-      '/images/IMG_3009.PNG',
-    ],
-    isNew: true,
-    sizes: ['S', 'M', 'L', 'XL'],
-  },
-  {
-    id: '8',
-    slug: 'longsleeve-maal-dragon-edition',
-    name: 'Longsleeve MAAL Dragon Edition',
-    price: 899,
-    images: [
-      '/images/IMG_3009.PNG',
-      '/images/IMG_3008.PNG',
-    ],
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-  },
-]
-
-const CATEGORIES = [
+// Fallback categories when database is empty
+const FALLBACK_CATEGORIES = [
   {
     slug: 'longsleeves',
     name: 'LONGSLEEVES',
@@ -133,7 +36,74 @@ const CATEGORIES = [
   },
 ]
 
-export default function HomePage() {
+// Fallback products when database is empty
+const FALLBACK_PRODUCTS = [
+  {
+    id: '1',
+    slug: 'tee-maal-tribal-wings',
+    name: 'Tee MAAL Tribal Wings',
+    price: 699,
+    compareAtPrice: 899,
+    images: ['/images/IMG_3008.PNG', '/images/IMG_3009.PNG'],
+    isNew: true,
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+  },
+  {
+    id: '2',
+    slug: 'longsleeve-maal-dragon-wings',
+    name: 'Longsleeve MAAL Dragon Wings',
+    price: 899,
+    images: ['/images/IMG_3009.PNG', '/images/IMG_3008.PNG'],
+    isBestSeller: true,
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+  },
+  {
+    id: '3',
+    slug: 'longsleeve-maal-gothic-cross',
+    name: 'Longsleeve MAAL Gothic Cross',
+    price: 899,
+    images: ['/images/IMG_3010.PNG', '/images/IMG_3009.PNG'],
+    isRestock: true,
+    sizes: ['M', 'L', 'XL'],
+  },
+  {
+    id: '4',
+    slug: 'tee-maal-oversized-black',
+    name: 'Tee MAAL Oversized Black',
+    price: 699,
+    images: ['/images/IMG_3008.PNG', '/images/IMG_3010.PNG'],
+    isNew: true,
+    sizes: ['S', 'M', 'L', 'XL'],
+  },
+]
+
+export default async function HomePage() {
+  // Fetch data from database
+  const [newArrivalsRaw, bestSellersRaw, dbCategories] = await Promise.all([
+    getNewArrivals(4),
+    getBestSellers(4),
+    getActiveCategories(),
+  ])
+
+  // Transform products for ProductCard component
+  const newArrivals = newArrivalsRaw.length > 0
+    ? transformProductsForCards(newArrivalsRaw)
+    : FALLBACK_PRODUCTS
+
+  const bestSellers = bestSellersRaw.length > 0
+    ? transformProductsForCards(bestSellersRaw)
+    : FALLBACK_PRODUCTS
+
+  // Use database categories or fallback
+  const categories = dbCategories.length > 0
+    ? dbCategories.map((cat, index) => ({
+        slug: cat.slug,
+        name: cat.name.toUpperCase(),
+        image: cat.imageUrl || '/images/IMG_3008.PNG',
+        large: index === 0,
+        wide: index === 3,
+      }))
+    : FALLBACK_CATEGORIES
   return (
     <>
       <PromoBar />
@@ -286,7 +256,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-              {PRODUCTS.slice(0, 4).map((product, index) => (
+              {newArrivals.map((product, index) => (
                 <ProductCard
                   key={product.id}
                   product={product}
@@ -316,7 +286,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {CATEGORIES.map(({ slug, name, image, large, wide }) => (
+              {categories.map(({ slug, name, image, large, wide }) => (
                 <Link
                   key={slug}
                   href={`/coleccion/${slug}`}
@@ -375,7 +345,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-              {PRODUCTS.slice(4, 8).map((product) => (
+              {bestSellers.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Plus,
   Search,
@@ -13,56 +15,31 @@ import {
   Package,
   ChevronDown,
   Image as ImageIcon,
+  Loader2,
 } from 'lucide-react'
 import Image from 'next/image'
 
-// Mock data - will be replaced with real data from API
-const mockProducts = [
-  {
-    id: '1',
-    name: 'Hoodie Oversize Black',
-    slug: 'hoodie-oversize-black',
-    price: 1299,
-    compareAtPrice: 1599,
-    status: 'active',
-    inventory: 45,
-    category: 'Hoodies',
-    image: '/images/IMG_3008.PNG',
-  },
-  {
-    id: '2',
-    name: 'Tee Gothic Print',
-    slug: 'tee-gothic-print',
-    price: 599,
-    compareAtPrice: null,
-    status: 'active',
-    inventory: 120,
-    category: 'Tees',
-    image: '/images/IMG_3009.PNG',
-  },
-  {
-    id: '3',
-    name: 'Cargo Pants Dark',
-    slug: 'cargo-pants-dark',
-    price: 1499,
-    compareAtPrice: 1899,
-    status: 'draft',
-    inventory: 28,
-    category: 'Bottoms',
-    image: '/images/IMG_3010.PNG',
-  },
-  {
-    id: '4',
-    name: 'Jacket Bomber MAAL',
-    slug: 'jacket-bomber-maal',
-    price: 2499,
-    compareAtPrice: null,
-    status: 'active',
-    inventory: 15,
-    category: 'Jackets',
-    image: null,
-  },
-]
+interface Product {
+  id: string
+  name: string
+  slug: string
+  price: number
+  compareAtPrice: number | null
+  status: 'active' | 'draft' | 'archived'
+  inventory: number
+  category: string | null
+  image: string | null
+}
+
+interface ProductsResponse {
+  products: Product[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -78,17 +55,66 @@ const itemVariants = {
 }
 
 export default function ProductsPage() {
-  const [products] = useState(mockProducts)
+  const router = useRouter()
+  const [products, setProducts] = useState<Product[]>([])
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 })
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = filterStatus === 'all' || product.status === filterStatus
-    return matchesSearch && matchesStatus
-  })
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: '20',
+        ...(filterStatus !== 'all' && { status: filterStatus }),
+        ...(searchQuery && { search: searchQuery }),
+      })
+
+      const response = await fetch(`/api/products?${params}`)
+      if (!response.ok) throw new Error('Error fetching products')
+
+      const data: ProductsResponse = await response.json()
+      setProducts(data.products)
+      setPagination({
+        page: data.pagination.page,
+        totalPages: data.pagination.totalPages,
+        total: data.pagination.total,
+      })
+    } catch (error) {
+      console.error('Error fetching products:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [pagination.page, filterStatus, searchQuery])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPagination((prev) => ({ ...prev, page: 1 }))
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery, filterStatus])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Estás seguro de eliminar este producto?')) return
+
+    try {
+      const response = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Error deleting product')
+      fetchProducts()
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('Error al eliminar el producto')
+    }
+  }
 
   const toggleProductSelection = (id: string) => {
     setSelectedProducts((prev) =>
@@ -97,10 +123,10 @@ export default function ProductsPage() {
   }
 
   const toggleAllProducts = () => {
-    if (selectedProducts.length === filteredProducts.length) {
+    if (selectedProducts.length === products.length) {
       setSelectedProducts([])
     } else {
-      setSelectedProducts(filteredProducts.map((p) => p.id))
+      setSelectedProducts(products.map((p) => p.id))
     }
   }
 
@@ -115,16 +141,18 @@ export default function ProductsPage() {
       <motion.div variants={itemVariants} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
         <div>
           <h1 className="text-xl font-bold text-[#E8E4D9]">Productos</h1>
-          <p className="text-[#666] text-xs mt-1">{products.length} productos en total</p>
+          <p className="text-[#666] text-xs mt-1">{pagination.total} productos en total</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="inline-flex items-center gap-2 px-3 py-2 bg-[#C9A962] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#d4b76d] transition-colors text-xs"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Nuevo Producto
-        </motion.button>
+        <Link href="/admin/products/new">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center gap-2 px-3 py-2 bg-[#C9A962] text-[#0a0a0a] font-semibold rounded-xl hover:bg-[#d4b76d] transition-colors text-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Nuevo Producto
+          </motion.button>
+        </Link>
       </motion.div>
 
       {/* Filters */}
@@ -191,147 +219,197 @@ export default function ProductsPage() {
         variants={itemVariants}
         className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl overflow-hidden"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#1a1a1a]">
-                <th className="p-2 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
-                    onChange={toggleAllProducts}
-                    className="w-3.5 h-3.5 rounded border-[#333] bg-[#111] accent-[#C9A962]"
-                  />
-                </th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Producto</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Estado</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Inventario</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Categoría</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Precio</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.map((product, index) => (
-                <motion.tr
-                  key={product.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="border-b border-[#1a1a1a] hover:bg-[#111] transition-colors group"
-                >
-                  <td className="p-2">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-6 h-6 text-[#C9A962] animate-spin" />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-20">
+            <Package className="w-10 h-10 text-[#444] mx-auto mb-3" />
+            <p className="text-[#E8E4D9] font-medium">No hay productos</p>
+            <p className="text-[#666] text-xs mt-1">Crea tu primer producto para empezar</p>
+            <Link href="/admin/products/new">
+              <button className="mt-4 px-4 py-2 bg-[#C9A962] text-[#0a0a0a] font-semibold rounded-xl text-xs">
+                Crear producto
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#1a1a1a]">
+                  <th className="p-2 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedProducts.includes(product.id)}
-                      onChange={() => toggleProductSelection(product.id)}
+                      checked={selectedProducts.length === products.length && products.length > 0}
+                      onChange={toggleAllProducts}
                       className="w-3.5 h-3.5 rounded border-[#333] bg-[#111] accent-[#C9A962]"
                     />
-                  </td>
-                  <td className="p-2">
-                    <div className="flex items-center gap-2">
-                      <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-[#111] border border-[#222]">
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ImageIcon className="w-3.5 h-3.5 text-[#444]" />
-                          </div>
-                        )}
+                  </th>
+                  <th className="p-2 text-left text-xs font-medium text-[#666]">Producto</th>
+                  <th className="p-2 text-left text-xs font-medium text-[#666]">Estado</th>
+                  <th className="p-2 text-left text-xs font-medium text-[#666]">Inventario</th>
+                  <th className="p-2 text-left text-xs font-medium text-[#666]">Categoría</th>
+                  <th className="p-2 text-left text-xs font-medium text-[#666]">Precio</th>
+                  <th className="p-2 text-left text-xs font-medium text-[#666]"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((product, index) => (
+                  <motion.tr
+                    key={product.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b border-[#1a1a1a] hover:bg-[#111] transition-colors group"
+                  >
+                    <td className="p-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedProducts.includes(product.id)}
+                        onChange={() => toggleProductSelection(product.id)}
+                        className="w-3.5 h-3.5 rounded border-[#333] bg-[#111] accent-[#C9A962]"
+                      />
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <div className="relative w-8 h-8 rounded-lg overflow-hidden bg-[#111] border border-[#222]">
+                          {product.image ? (
+                            <Image
+                              src={product.image}
+                              alt={product.name}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="w-3.5 h-3.5 text-[#444]" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[#E8E4D9] font-medium text-xs">{product.name}</p>
+                          <p className="text-[#666] text-xs">{product.slug}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[#E8E4D9] font-medium text-xs">{product.name}</p>
-                        <p className="text-[#666] text-xs">{product.slug}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-2">
-                    <StatusBadge status={product.status} />
-                  </td>
-                  <td className="p-2">
-                    <div className="flex items-center gap-1.5">
-                      <Package className="w-3 h-3 text-[#666]" />
-                      <span className={`text-xs ${product.inventory < 20 ? 'text-yellow-500' : 'text-[#E8E4D9]'}`}>
-                        {product.inventory} en stock
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-2">
-                    <span className="text-[#888] text-xs">{product.category}</span>
-                  </td>
-                  <td className="p-2">
-                    <div>
-                      <span className="text-[#E8E4D9] font-semibold text-xs">
-                        ${product.price.toLocaleString()}
-                      </span>
-                      {product.compareAtPrice && (
-                        <span className="ml-1.5 text-[#666] line-through text-xs">
-                          ${product.compareAtPrice.toLocaleString()}
+                    </td>
+                    <td className="p-2">
+                      <StatusBadge status={product.status} />
+                    </td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-1.5">
+                        <Package className="w-3 h-3 text-[#666]" />
+                        <span className={`text-xs ${product.inventory < 20 ? 'text-yellow-500' : 'text-[#E8E4D9]'}`}>
+                          {product.inventory} en stock
                         </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-2">
-                    <div className="relative">
-                      <button
-                        onClick={() => setActiveDropdown(activeDropdown === product.id ? null : product.id)}
-                        className="p-1.5 hover:bg-[#1a1a1a] rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      >
-                        <MoreVertical className="w-3.5 h-3.5 text-[#666]" />
-                      </button>
-                      <AnimatePresence>
-                        {activeDropdown === product.id && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="absolute right-0 top-full mt-1 w-36 bg-[#111] border border-[#222] rounded-xl shadow-xl z-50 overflow-hidden"
-                          >
-                            <button className="w-full flex items-center gap-2 px-3 py-2 text-left text-[#E8E4D9] hover:bg-[#1a1a1a] transition-colors text-xs">
-                              <Eye className="w-3 h-3" />
-                              Ver producto
-                            </button>
-                            <button className="w-full flex items-center gap-2 px-3 py-2 text-left text-[#E8E4D9] hover:bg-[#1a1a1a] transition-colors text-xs">
-                              <Edit className="w-3 h-3" />
-                              Editar
-                            </button>
-                            <button className="w-full flex items-center gap-2 px-3 py-2 text-left text-red-400 hover:bg-red-500/10 transition-colors text-xs">
-                              <Trash2 className="w-3 h-3" />
-                              Eliminar
-                            </button>
-                          </motion.div>
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <span className="text-[#888] text-xs">{product.category || '-'}</span>
+                    </td>
+                    <td className="p-2">
+                      <div>
+                        <span className="text-[#E8E4D9] font-semibold text-xs">
+                          ${product.price.toLocaleString()}
+                        </span>
+                        {product.compareAtPrice && (
+                          <span className="ml-1.5 text-[#666] line-through text-xs">
+                            ${product.compareAtPrice.toLocaleString()}
+                          </span>
                         )}
-                      </AnimatePresence>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                      </div>
+                    </td>
+                    <td className="p-2">
+                      <div className="relative">
+                        <button
+                          onClick={() => setActiveDropdown(activeDropdown === product.id ? null : product.id)}
+                          className="p-1.5 hover:bg-[#1a1a1a] rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <MoreVertical className="w-3.5 h-3.5 text-[#666]" />
+                        </button>
+                        <AnimatePresence>
+                          {activeDropdown === product.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              className="absolute right-0 top-full mt-1 w-36 bg-[#111] border border-[#222] rounded-xl shadow-xl z-50 overflow-hidden"
+                            >
+                              <Link
+                                href={`/producto/${product.slug}`}
+                                target="_blank"
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-[#E8E4D9] hover:bg-[#1a1a1a] transition-colors text-xs"
+                              >
+                                <Eye className="w-3 h-3" />
+                                Ver producto
+                              </Link>
+                              <Link
+                                href={`/admin/products/${product.id}/edit`}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-[#E8E4D9] hover:bg-[#1a1a1a] transition-colors text-xs"
+                              >
+                                <Edit className="w-3 h-3" />
+                                Editar
+                              </Link>
+                              <button
+                                onClick={() => {
+                                  setActiveDropdown(null)
+                                  handleDelete(product.id)
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-red-400 hover:bg-red-500/10 transition-colors text-xs"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Eliminar
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-2 border-t border-[#1a1a1a]">
-          <p className="text-xs text-[#666]">
-            Mostrando {filteredProducts.length} de {products.length} productos
-          </p>
-          <div className="flex items-center gap-1.5">
-            <button className="px-3 py-1.5 text-xs text-[#666] hover:text-[#E8E4D9] hover:bg-[#111] rounded-lg transition-colors disabled:opacity-50" disabled>
-              Anterior
-            </button>
-            <button className="px-3 py-1.5 text-xs bg-[#C9A962] text-[#0a0a0a] rounded-lg font-medium">
-              1
-            </button>
-            <button className="px-3 py-1.5 text-xs text-[#666] hover:text-[#E8E4D9] hover:bg-[#111] rounded-lg transition-colors">
-              Siguiente
-            </button>
+        {products.length > 0 && (
+          <div className="flex items-center justify-between p-2 border-t border-[#1a1a1a]">
+            <p className="text-xs text-[#666]">
+              Mostrando {products.length} de {pagination.total} productos
+            </p>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
+                disabled={pagination.page <= 1}
+                className="px-3 py-1.5 text-xs text-[#666] hover:text-[#E8E4D9] hover:bg-[#111] rounded-lg transition-colors disabled:opacity-50"
+              >
+                Anterior
+              </button>
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setPagination((prev) => ({ ...prev, page }))}
+                  className={`px-3 py-1.5 text-xs rounded-lg font-medium ${
+                    page === pagination.page
+                      ? 'bg-[#C9A962] text-[#0a0a0a]'
+                      : 'text-[#666] hover:text-[#E8E4D9] hover:bg-[#111]'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
+                disabled={pagination.page >= pagination.totalPages}
+                className="px-3 py-1.5 text-xs text-[#666] hover:text-[#E8E4D9] hover:bg-[#111] rounded-lg transition-colors disabled:opacity-50"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </motion.div>
     </motion.div>
   )
