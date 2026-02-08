@@ -95,16 +95,16 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-3 py-6">
+      <div className="w-full max-w-xs">
         {/* Logo */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-4">
           <Link href="/">
             <Image
               src="/images/logo-maal-negro.png"
               alt="MAAL Line"
-              width={120}
-              height={48}
+              width={80}
+              height={32}
               className="mx-auto invert"
               priority
             />
@@ -112,23 +112,23 @@ export default function RegisterPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-[#111111] border border-[#222222] rounded-lg p-8">
-          <h1 className="text-2xl font-bold text-[#E8E4D9] text-center mb-6">
+        <div className="bg-[#111111] border border-[#222222] rounded-lg p-5">
+          <h1 className="text-lg font-bold text-[#E8E4D9] text-center mb-4">
             Crear Cuenta
           </h1>
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
+            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-3 py-2 rounded-lg mb-3 text-xs">
               {errorMessage}
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-[#E8E4D9] mb-2">
+                <label htmlFor="firstName" className="block text-xs font-medium text-[#E8E4D9] mb-1">
                   Nombre
                 </label>
                 <input
@@ -137,12 +137,12 @@ export default function RegisterPage() {
                   type="text"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#333333] rounded-lg text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
+                  className="w-full px-3 py-2 bg-[#0A0A0A] border border-[#333333] rounded-lg text-sm text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
                   placeholder="Juan"
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-[#E8E4D9] mb-2">
+                <label htmlFor="lastName" className="block text-xs font-medium text-[#E8E4D9] mb-1">
                   Apellido
                 </label>
                 <input
@@ -151,14 +151,14 @@ export default function RegisterPage() {
                   type="text"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#333333] rounded-lg text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
+                  className="w-full px-3 py-2 bg-[#0A0A0A] border border-[#333333] rounded-lg text-sm text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
                   placeholder="Pérez"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#E8E4D9] mb-2">
+              <label htmlFor="email" className="block text-xs font-medium text-[#E8E4D9] mb-1">
                 Email
               </label>
               <input
@@ -168,13 +168,13 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#333333] rounded-lg text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
+                className="w-full px-3 py-2 bg-[#0A0A0A] border border-[#333333] rounded-lg text-sm text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
                 placeholder="tu@email.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#E8E4D9] mb-2">
+              <label htmlFor="password" className="block text-xs font-medium text-[#E8E4D9] mb-1">
                 Contraseña
               </label>
               <input
@@ -184,14 +184,14 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#333333] rounded-lg text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
+                className="w-full px-3 py-2 bg-[#0A0A0A] border border-[#333333] rounded-lg text-sm text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
                 placeholder="••••••••"
               />
-              <p className="mt-1 text-xs text-[#666666]">Mínimo 8 caracteres</p>
+              <p className="mt-0.5 text-[10px] text-[#666666]">Mínimo 8 caracteres</p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#E8E4D9] mb-2">
+              <label htmlFor="confirmPassword" className="block text-xs font-medium text-[#E8E4D9] mb-1">
                 Confirmar Contraseña
               </label>
               <input
@@ -201,7 +201,7 @@ export default function RegisterPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#333333] rounded-lg text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
+                className="w-full px-3 py-2 bg-[#0A0A0A] border border-[#333333] rounded-lg text-sm text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
                 placeholder="••••••••"
               />
             </div>
@@ -212,16 +212,16 @@ export default function RegisterPage() {
                 id="terms"
                 checked={acceptTerms}
                 onChange={(e) => setAcceptTerms(e.target.checked)}
-                className="mt-1 mr-2 accent-[#C9A962]"
+                className="mt-0.5 mr-1.5 accent-[#C9A962] w-3 h-3"
               />
-              <label htmlFor="terms" className="text-sm text-[#888888]">
+              <label htmlFor="terms" className="text-[10px] text-[#888888] leading-tight">
                 Acepto los{' '}
                 <Link href="/terms" className="text-[#C9A962] hover:underline">
-                  términos y condiciones
+                  términos
                 </Link>{' '}
                 y la{' '}
                 <Link href="/privacy" className="text-[#C9A962] hover:underline">
-                  política de privacidad
+                  privacidad
                 </Link>
               </label>
             </div>
@@ -229,25 +229,25 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-[#E8E4D9] text-[#0A0A0A] font-semibold rounded-lg hover:bg-[#C9A962] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2 bg-[#E8E4D9] text-[#0A0A0A] text-sm font-semibold rounded-lg hover:bg-[#C9A962] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </button>
           </form>
 
           {/* Divider */}
-          <div className="flex items-center my-6">
+          <div className="flex items-center my-4">
             <div className="flex-1 border-t border-[#333333]"></div>
-            <span className="px-4 text-sm text-[#666666]">o continúa con</span>
+            <span className="px-3 text-xs text-[#666666]">o continúa con</span>
             <div className="flex-1 border-t border-[#333333]"></div>
           </div>
 
           {/* Google Sign In */}
           <button
             onClick={handleGoogleSignIn}
-            className="w-full py-3 bg-[#0A0A0A] border border-[#333333] text-[#E8E4D9] font-medium rounded-lg hover:border-[#C9A962] transition-colors flex items-center justify-center gap-3"
+            className="w-full py-2 bg-[#0A0A0A] border border-[#333333] text-[#E8E4D9] text-sm font-medium rounded-lg hover:border-[#C9A962] transition-colors flex items-center justify-center gap-2"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -269,7 +269,7 @@ export default function RegisterPage() {
           </button>
 
           {/* Login Link */}
-          <p className="mt-6 text-center text-sm text-[#888888]">
+          <p className="mt-4 text-center text-xs text-[#888888]">
             ¿Ya tienes cuenta?{' '}
             <Link href="/login" className="text-[#C9A962] hover:underline font-medium">
               Inicia sesión
