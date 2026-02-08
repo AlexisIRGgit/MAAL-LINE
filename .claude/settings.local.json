@@ -13,7 +13,12 @@
       "Bash(git remote:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd complete database architecture documentation \\(42 tables\\)\n\n- Core: users, roles, authentication, addresses\n- Products: products, variants, categories, images\n- Inventory: reservations \\(anti-overselling\\), movements\n- Orders: orders, items, payments, refunds\n- Shipments: shipments, items, tracking\n- Returns/RMA: returns, items, conditions\n- Collections/Drops: collections, products \\(streetwear core\\)\n- Webhooks: events, idempotency keys\n- Analytics: events, conversion funnel\n- Customer: profiles, wish lists\n- Discounts: discounts, usage tracking\n- Email: templates, logs\n- Advanced: background_jobs, feature_flags, store_credits, security_events\n- CHECK constraints for all status fields\n- Soft deletes for audit trails\n- GIN indexes for array columns \\(tags, groups\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma init:*)",
+      "Bash(npx prisma validate:*)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma:*)"
     ]
   }
 }
