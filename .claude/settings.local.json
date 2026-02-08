@@ -18,7 +18,9 @@
       "Bash(npx prisma init:*)",
       "Bash(npx prisma validate:*)",
       "Bash(npx prisma generate)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }

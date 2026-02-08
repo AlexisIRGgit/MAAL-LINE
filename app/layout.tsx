@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Space_Grotesk, Inter } from 'next/font/google'
+import { SessionProvider } from '@/components/providers/session-provider'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -28,7 +29,9 @@ export default function RootLayout({
   return (
     <html lang="es-MX" className={`${spaceGrotesk.variable} ${inter.variable}`}>
       <body className="bg-[#0A0A0A] text-[#E8E4D9] antialiased">
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   )
