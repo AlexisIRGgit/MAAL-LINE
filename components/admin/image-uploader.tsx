@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
-import { Upload, X, GripVertical, Loader2 } from 'lucide-react'
+import { Plus, X, GripVertical, Link as LinkIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 interface ProductImage {
@@ -16,49 +16,31 @@ interface ImageUploaderProps {
 }
 
 export function ImageUploader({ images, onChange }: ImageUploaderProps) {
-  const [isUploading, setIsUploading] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+  const handleAddUrl = () => {
+    if (!urlInput.trim()) return
 
-    setIsUploading(true)
-
+    // Basic URL validation
     try {
-      const newImages: ProductImage[] = []
-
-      for (const file of Array.from(files)) {
-        const formData = new FormData()
-        formData.append('file', file)
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!response.ok) {
-          const data = await response.json()
-          throw new Error(data.error || 'Error al subir imagen')
-        }
-
-        const data = await response.json()
-        newImages.push({
-          url: data.url,
-          altText: file.name.split('.')[0],
-        })
+      new URL(urlInput)
+    } catch {
+      // If not a valid URL, check if it's a relative path
+      if (!urlInput.startsWith('/')) {
+        alert('Por favor ingresa una URL válida o una ruta relativa (ej: /images/producto.png)')
+        return
       }
+    }
 
-      onChange([...images, ...newImages])
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      alert(error instanceof Error ? error.message : 'Error al subir imagen')
-    } finally {
-      setIsUploading(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
+    onChange([...images, { url: urlInput.trim(), altText: '' }])
+    setUrlInput('')
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleAddUrl()
     }
   }
 
@@ -90,48 +72,39 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
 
   return (
     <div className="space-y-4">
-      {/* Upload Area */}
-      <div
-        onClick={() => fileInputRef.current?.click()}
-        className={cn(
-          'border-2 border-dashed border-[#333333] rounded-lg p-6 text-center cursor-pointer',
-          'hover:border-[#C9A962] transition-colors',
-          isUploading && 'pointer-events-none opacity-50'
-        )}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-        />
-
-        {isUploading ? (
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="w-8 h-8 text-[#C9A962] animate-spin" />
-            <p className="text-sm text-[#E8E4D9]/60">Subiendo imágenes...</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <Upload className="w-8 h-8 text-[#E8E4D9]/40" />
-            <p className="text-sm text-[#E8E4D9]/60">
-              Arrastra imágenes aquí o haz clic para seleccionar
-            </p>
-            <p className="text-xs text-[#E8E4D9]/40">
-              JPEG, PNG, WebP o GIF. Máximo 5MB.
-            </p>
-          </div>
-        )}
+      {/* URL Input */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666]" />
+          <input
+            type="text"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="URL de imagen o ruta: /images/producto.png"
+            className="w-full pl-10 pr-3 py-2 bg-[#0A0A0A] border border-[#333333] rounded-lg text-sm text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleAddUrl}
+          className="px-4 py-2 bg-[#C9A962] text-[#0A0A0A] text-sm font-semibold rounded-lg hover:bg-[#E8E4D9] transition-colors flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Agregar
+        </button>
       </div>
+
+      <p className="text-xs text-[#666]">
+        Usa imágenes de /images/ o URLs externas (Imgur, Cloudinary, etc.)
+      </p>
 
       {/* Image Grid */}
       {images.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {images.map((image, index) => (
             <div
-              key={image.url}
+              key={`${image.url}-${index}`}
               draggable
               onDragStart={() => handleDragStart(index)}
               onDragOver={(e) => handleDragOver(e, index)}
@@ -147,6 +120,10 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
                 alt={image.altText || `Imagen ${index + 1}`}
                 fill
                 className="object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = '/images/placeholder.png'
+                }}
               />
 
               {/* Overlay */}

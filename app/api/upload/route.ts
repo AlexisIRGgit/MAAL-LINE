@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
 import { requireAdmin, handleAuthError } from '@/lib/auth-utils'
 
 // POST /api/upload - Upload image file
+// NOTE: This endpoint requires cloud storage configuration for production
+// Options: Vercel Blob, Cloudinary, AWS S3, Uploadthing
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin()
@@ -37,44 +36,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'products')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
+    // For now, return an error indicating cloud storage needs to be configured
+    // In production, you would upload to Vercel Blob, Cloudinary, S3, etc.
+    return NextResponse.json(
+      {
+        error: 'Image upload requires cloud storage configuration. For now, use external image URLs.',
+        suggestion: 'You can use images from /images/ folder or external URLs like Imgur, Cloudinary, etc.'
+      },
+      { status: 501 }
+    )
 
-    // Generate unique filename
-    const timestamp = Date.now()
-    const randomStr = Math.random().toString(36).substring(2, 8)
-    const extension = file.name.split('.').pop()
-    const filename = `${timestamp}-${randomStr}.${extension}`
-
-    // Save file
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const filepath = path.join(uploadsDir, filename)
-
-    await writeFile(filepath, buffer)
-
-    // Return the public URL
-    const url = `/uploads/products/${filename}`
-
-    return NextResponse.json({
-      url,
-      filename,
-      size: file.size,
-      type: file.type,
-    })
   } catch (error) {
     return handleAuthError(error)
   }
 }
-
-// Note: For production, consider using cloud storage like:
-// - Cloudinary
-// - AWS S3
-// - Vercel Blob
-// - Uploadthing
-//
-// Local file storage won't work on serverless deployments like Vercel
-// because the filesystem is ephemeral.
