@@ -4,10 +4,4 @@ import { defineConfig } from 'prisma/config'
 export default defineConfig({
   earlyAccess: true,
   schema: path.join(__dirname, 'schema.prisma'),
-
-  datasource: {
-    async url() {
-      return process.env.DIRECT_URL || process.env.DATABASE_URL || ''
-    },
-  },
 })
