@@ -87,19 +87,3 @@ export function handleAuthError(error: unknown): NextResponse {
     { status: 500 }
   )
 }
-
-/**
- * Wrapper for API route handlers that require admin access
- */
-export function withAdmin<T extends unknown[]>(
-  handler: (session: Awaited<ReturnType<typeof auth>>, ...args: T) => Promise<NextResponse>
-) {
-  return async (...args: T): Promise<NextResponse> => {
-    try {
-      const session = await requireAdmin()
-      return await handler(session, ...args)
-    } catch (error) {
-      return handleAuthError(error)
-    }
-  }
-}
