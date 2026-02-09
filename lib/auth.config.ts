@@ -6,6 +6,7 @@ import Credentials from 'next-auth/providers/credentials'
 // It doesn't include database operations
 
 export const authConfig: NextAuthConfig = {
+  trustHost: true, // Required for Vercel deployment
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
