@@ -1,3 +1,6 @@
+// Force dynamic rendering - database queries require runtime connection
+export const dynamic = 'force-dynamic'
+
 import Image from 'next/image'
 import Link from 'next/link'
 import { Navbar } from '@/components/navigation/navbar'

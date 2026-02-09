@@ -1,3 +1,6 @@
+// Force dynamic rendering - database queries require runtime connection
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { ProductForm } from '@/components/admin/product-form'

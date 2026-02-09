@@ -1,3 +1,6 @@
+// Force dynamic rendering - database queries require runtime connection
+export const dynamic = 'force-dynamic'
+
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
