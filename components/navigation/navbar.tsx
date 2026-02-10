@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { Logo } from '@/components/common/logo'
 import { cn } from '@/lib/utils/cn'
 
@@ -14,6 +15,7 @@ const NAV_LINKS = [
 ]
 
 export function Navbar() {
+  const { data: session } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   return (
@@ -71,9 +73,9 @@ export function Navbar() {
 
             {/* Account */}
             <Link
-              href="/cuenta"
+              href={session ? '/cuenta' : '/login'}
               className="hidden md:block p-2 text-[#E8E4D9]/70 hover:text-[#E8E4D9] transition-colors"
-              aria-label="Mi cuenta"
+              aria-label={session ? 'Mi cuenta' : 'Iniciar sesión'}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -112,6 +114,17 @@ export function Navbar() {
                   {label}
                 </Link>
               ))}
+
+              {/* Account link in mobile */}
+              <div className="pt-4 border-t border-[#E8E4D9]/10">
+                <Link
+                  href={session ? '/cuenta' : '/login'}
+                  className="block text-sm font-bold tracking-[0.15em] uppercase text-[#E8E4D9]/70"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {session ? 'MI CUENTA' : 'INICIAR SESIÓN'}
+                </Link>
+              </div>
             </div>
           </div>
         )}
