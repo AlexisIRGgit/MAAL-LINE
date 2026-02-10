@@ -28,7 +28,7 @@ export async function GET() {
         city: addr.city,
         state: addr.state,
         zipCode: addr.postalCode,
-        country: addr.country,
+        country: addr.country === 'MX' ? 'México' : addr.country,
         isDefault: addr.isDefault,
       })),
     })
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         city,
         state,
         postalCode: zipCode,
-        country: country || 'México',
+        country: 'MX',
         isDefault: shouldBeDefault,
       },
     })
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         city: newAddress.city,
         state: newAddress.state,
         zipCode: newAddress.postalCode,
-        country: newAddress.country,
+        country: newAddress.country === 'MX' ? 'México' : newAddress.country,
         isDefault: newAddress.isDefault,
       },
     })

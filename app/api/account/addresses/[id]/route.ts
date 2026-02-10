@@ -60,7 +60,7 @@ export async function PUT(
         city,
         state,
         postalCode: zipCode,
-        country: country || 'México',
+        country: 'MX',
         isDefault,
       },
     })
@@ -80,7 +80,7 @@ export async function PUT(
         city: updatedAddress.city,
         state: updatedAddress.state,
         zipCode: updatedAddress.postalCode,
-        country: updatedAddress.country,
+        country: updatedAddress.country === 'MX' ? 'México' : updatedAddress.country,
         isDefault: updatedAddress.isDefault,
       },
     })
