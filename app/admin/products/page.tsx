@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -64,7 +64,33 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (activeDropdown && !(e.target as Element).closest('.dropdown-trigger')) {
+        setActiveDropdown(null)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [activeDropdown])
+
+  const handleDropdownToggle = (productId: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (activeDropdown === productId) {
+      setActiveDropdown(null)
+      setDropdownPosition(null)
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect()
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.right - 160, // 160px is dropdown width
+      })
+      setActiveDropdown(productId)
+    }
+  }
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true)
@@ -221,7 +247,7 @@ export default function ProductsPage() {
       {/* Products Table */}
       <motion.div
         variants={itemVariants}
-        className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden shadow-sm"
+        className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm"
       >
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -332,54 +358,12 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className="p-3">
-                      <div className="relative">
-                        <button
-                          onClick={() => setActiveDropdown(activeDropdown === product.id ? null : product.id)}
-                          className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors sm:opacity-0 sm:group-hover:opacity-100"
-                        >
-                          <MoreVertical className="w-4 h-4 text-[#6B7280]" />
-                        </button>
-                        <AnimatePresence>
-                          {activeDropdown === product.id && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              className="absolute right-0 top-full mt-1 w-40 bg-white border border-[#E5E7EB] rounded-xl shadow-lg z-50 overflow-hidden"
-                            >
-                              <Link
-                                href={`/producto/${product.slug}`}
-                                target="_blank"
-                                className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-[#374151] hover:bg-[#F9FAFB] transition-colors text-sm"
-                              >
-                                <Eye className="w-4 h-4" />
-                                Ver producto
-                              </Link>
-                              {canEditProducts && (
-                                <Link
-                                  href={`/admin/products/${product.id}/edit`}
-                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-[#374151] hover:bg-[#F9FAFB] transition-colors text-sm"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                  Editar
-                                </Link>
-                              )}
-                              {canDeleteProducts && (
-                                <button
-                                  onClick={() => {
-                                    setActiveDropdown(null)
-                                    handleDelete(product.id)
-                                  }}
-                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-red-600 hover:bg-red-50 transition-colors text-sm"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Eliminar
-                                </button>
-                              )}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
+                      <button
+                        onClick={(e) => handleDropdownToggle(product.id, e)}
+                        className="dropdown-trigger p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+                      >
+                        <MoreVertical className="w-4 h-4 text-[#6B7280]" />
+                      </button>
                     </td>
                   </motion.tr>
                 ))}
@@ -388,9 +372,63 @@ export default function ProductsPage() {
           </div>
         )}
 
+        {/* Fixed Dropdown Menu */}
+        <AnimatePresence>
+          {activeDropdown && dropdownPosition && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              style={{
+                position: 'fixed',
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+              }}
+              className="w-40 bg-white border border-[#E5E7EB] rounded-xl shadow-lg z-[100] overflow-hidden"
+            >
+              {products.find(p => p.id === activeDropdown) && (
+                <>
+                  <Link
+                    href={`/producto/${products.find(p => p.id === activeDropdown)?.slug}`}
+                    target="_blank"
+                    onClick={() => setActiveDropdown(null)}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-[#374151] hover:bg-[#F9FAFB] transition-colors text-sm"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Ver producto
+                  </Link>
+                  {canEditProducts && (
+                    <Link
+                      href={`/admin/products/${activeDropdown}/edit`}
+                      onClick={() => setActiveDropdown(null)}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-[#374151] hover:bg-[#F9FAFB] transition-colors text-sm"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Editar
+                    </Link>
+                  )}
+                  {canDeleteProducts && (
+                    <button
+                      onClick={() => {
+                        const id = activeDropdown
+                        setActiveDropdown(null)
+                        handleDelete(id)
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-red-600 hover:bg-red-50 transition-colors text-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Eliminar
+                    </button>
+                  )}
+                </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Pagination */}
         {products.length > 0 && (
-          <div className="flex items-center justify-between p-4 border-t border-[#E5E7EB] bg-[#F9FAFB]">
+          <div className="flex items-center justify-between p-4 border-t border-[#E5E7EB] bg-[#F9FAFB] rounded-b-xl">
             <p className="text-sm text-[#6B7280]">
               Mostrando {products.length} de {pagination.total} productos
             </p>
