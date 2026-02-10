@@ -103,6 +103,7 @@ MAAL-LINE/
 │   │   ├── auth/[...nextauth]/route.ts  # NextAuth API
 │   │   ├── products/route.ts         # CRUD productos (GET, POST)
 │   │   ├── products/[id]/route.ts    # Producto individual (GET, PUT, DELETE)
+│   │   ├── inventory/route.ts        # Inventario (GET variantes con stock)
 │   │   ├── users/route.ts            # Listar y crear usuarios (GET, POST)
 │   │   ├── users/[id]/route.ts       # Usuario individual (GET, PUT, DELETE)
 │   │   └── upload/route.ts           # Upload de imágenes (placeholder)
@@ -770,18 +771,68 @@ openssl rand -base64 32
   - Badges con solo dot de color en pantallas pequeñas
   - Textos truncados con `truncate` y `line-clamp`
 
+### Fase 12: Fixes y Mejoras de UX
+- [x] **Dropdown de acciones en tabla de productos:**
+  - Menú de 3 puntos ahora usa posición fija
+  - No se oculta detrás del contenedor de la tabla
+  - Se cierra automáticamente al hacer clic afuera
+  - z-index alto (100) para estar siempre visible
+
+- [x] **Autenticación del panel de usuario:**
+  - Ruta `/cuenta` ahora está protegida en middleware
+  - Usuarios sin sesión son redirigidos a `/login`
+  - Navbar verifica sesión antes de mostrar link a cuenta
+
+- [x] **Menú de usuario en navbar (tienda):**
+  - Icono de usuario ahora verifica sesión
+  - Con sesión → va a `/cuenta`
+  - Sin sesión → va a `/login`
+  - Link agregado también en menú móvil
+
+- [x] **Dropdown de avatar en panel de usuario:**
+  - Avatar en header móvil ahora abre menú desplegable
+  - Opciones: Mi Perfil, Cerrar sesión
+  - Se cierra al hacer clic afuera
+
+### Fase 13: Inventario Conectado a Base de Datos
+- [x] **Query de inventario** (`lib/queries/products.ts`):
+  - Nueva función `getInventory()` para obtener variantes con stock
+  - Filtros por estado de stock (todos, OK, bajo, sin stock)
+  - Búsqueda por nombre de producto o SKU
+  - Estadísticas: total stock, stock bajo, sin stock
+
+- [x] **API de inventario** (`app/api/inventory/route.ts`):
+  - Endpoint GET con verificación de permisos
+  - Parámetros: page, limit, stock, search
+  - Retorna variantes con info del producto
+
+- [x] **Página de inventario actualizada** (`app/admin/inventory/page.tsx`):
+  - Ahora muestra datos reales de la base de datos
+  - Estadísticas en tiempo real
+  - Filtros y búsqueda funcionales
+  - Link para editar producto desde cada variante
+  - Mensaje de ayuda explicando cómo agregar stock
+
+- [x] **Flujo para agregar stock:**
+  1. Ir a Productos → Editar producto
+  2. En sección "Variantes / Tallas" agregar tallas
+  3. Poner cantidad de stock en cada variante
+  4. Guardar producto
+
 ---
 
 ## Commits Recientes
 
 ```
+6126fa1 feat: Connect inventory page to real database
+bbc41eb fix: Dropdown menu now escapes table container
+950b294 fix: Protect /cuenta routes - require authentication
+d5821c3 fix: Check auth status before navigating to account
+20b990a fix: Add dropdown menu to avatar for logout option
+ce0a63a refactor: Remove payment methods section from customer panel
+55cf437 feat: Add customer account panel (/cuenta)
 d18c01e fix: Allow users to edit their own profile
 e2eb54d feat: Add user management system with role-based permissions
-30d0d6c docs: Update PROJECT_CONTEXT.md with complete implementation details
-4406cc7 feat: Update admin panel to light theme
-520cd13 fix: Separate admin login from admin layout
-8414894 feat: Separate logins and redesign admin panel
-63d25be Add trustHost for Vercel NextAuth deployment
 ```
 
 ---
@@ -792,7 +843,8 @@ e2eb54d feat: Add user management system with role-based permissions
 - [ ] Integrar Cloudinary/Vercel Blob para imágenes reales
 - [ ] Implementar checkout con Stripe
 - [ ] Dashboard con métricas reales de la DB
-- [ ] Funcionalidad real en páginas de órdenes, clientes, inventario
+- [ ] Funcionalidad real en páginas de órdenes y clientes
+- [x] ~~Inventario conectado a base de datos~~
 
 ### Mediano Plazo
 - [ ] Sistema de notificaciones real (push/email)
