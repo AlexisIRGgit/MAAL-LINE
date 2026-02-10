@@ -88,7 +88,8 @@ MAAL-LINE/
 │   │   ├── customers/page.tsx        # Gestión de clientes (tema claro)
 │   │   ├── inventory/page.tsx        # Control de inventario (tema claro)
 │   │   ├── discounts/page.tsx        # Descuentos y cupones (tema claro)
-│   │   └── settings/page.tsx         # Configuración (tema claro)
+│   │   ├── users/page.tsx            # Gestión de usuarios del equipo
+│   │   └── settings/page.tsx         # Configuración con pestaña Equipo
 │   ├── producto/[slug]/page.tsx      # Detalle de producto
 │   ├── categoria/[slug]/page.tsx     # Productos por categoría
 │   ├── coleccion/[slug]/page.tsx     # Productos por colección
@@ -96,15 +97,19 @@ MAAL-LINE/
 │   │   ├── auth/[...nextauth]/route.ts  # NextAuth API
 │   │   ├── products/route.ts         # CRUD productos (GET, POST)
 │   │   ├── products/[id]/route.ts    # Producto individual (GET, PUT, DELETE)
+│   │   ├── users/route.ts            # Listar y crear usuarios (GET, POST)
+│   │   ├── users/[id]/route.ts       # Usuario individual (GET, PUT, DELETE)
 │   │   └── upload/route.ts           # Upload de imágenes (placeholder)
 │   └── page.tsx                      # Landing page (tema oscuro)
 ├── components/
 │   ├── admin/
-│   │   ├── sidebar.tsx               # Sidebar moderno (tema claro, colapsable)
+│   │   ├── sidebar.tsx               # Sidebar con filtrado por permisos
 │   │   ├── header.tsx                # Header con search, notificaciones, user menu
 │   │   ├── product-form.tsx          # Formulario de producto (tema claro)
 │   │   ├── variant-manager.tsx       # Gestor de variantes/tallas (tema claro)
-│   │   └── image-uploader.tsx        # Uploader de imágenes (tema claro)
+│   │   ├── image-uploader.tsx        # Uploader de imágenes (tema claro)
+│   │   ├── user-form.tsx             # Formulario crear/editar usuario
+│   │   └── permission-gate.tsx       # Componente para condicionar UI por permisos
 │   ├── navigation/
 │   │   ├── navbar.tsx                # Navbar público
 │   │   ├── promo-bar.tsx             # Barra de promociones
@@ -112,15 +117,19 @@ MAAL-LINE/
 │   ├── product/
 │   │   └── product-card.tsx          # Card de producto
 │   └── ui/                           # Componentes UI reutilizables
+├── hooks/
+│   └── use-permissions.ts            # Hook para verificar permisos en cliente
 ├── lib/
 │   ├── auth.ts                       # Configuración NextAuth completa
 │   ├── auth.config.ts                # Config NextAuth para Edge (middleware) con trustHost
-│   ├── auth-utils.ts                 # Utilidades de autenticación
+│   ├── auth-utils.ts                 # Utilidades de autenticación + getCurrentUserId
 │   ├── db.ts                         # Cliente Prisma
+│   ├── permissions.ts                # Sistema de permisos por rol
 │   ├── queries/
 │   │   ├── products.ts               # Queries de productos
 │   │   ├── categories.ts             # Queries de categorías
-│   │   └── collections.ts            # Queries de colecciones
+│   │   ├── collections.ts            # Queries de colecciones
+│   │   └── users.ts                  # Queries de usuarios del equipo
 │   ├── transformers/
 │   │   └── product.ts                # Transformadores Prisma → Frontend
 │   ├── store/
@@ -129,6 +138,8 @@ MAAL-LINE/
 │   └── utils/
 │       ├── cn.ts                     # Utility para clases CSS (clsx + twMerge)
 │       └── formatters.ts             # Formateadores (precios, fechas)
+├── scripts/
+│   └── set-owner.ts                  # Script para asignar rol owner
 ├── prisma/
 │   ├── schema.prisma                 # Schema con 42 tablas
 │   └── prisma.config.ts              # Configuración Prisma
@@ -176,13 +187,39 @@ Email: admin@maalline.com
 Password: Admin123!
 ```
 
-### Roles con Acceso Admin
+### Roles y Sistema de Permisos
 
-Los siguientes roles pueden acceder a `/admin/*`:
-- `employee`
-- `manager`
-- `admin`
-- `owner`
+#### Jerarquía de Roles (Mayor a Menor)
+
+| Rol | Nivel | Descripción |
+|-----|-------|-------------|
+| `owner` | 5 | Dueño - Acceso total sin restricciones |
+| `admin` | 4 | Administrador - Gestión completa excepto config crítica |
+| `manager` | 3 | Gerente - Operaciones diarias de la tienda |
+| `employee` | 2 | Empleado - Tareas operativas básicas |
+| `viewer` | 1 | Visor - Solo lectura (ideal para contadores) |
+| `customer` | 0 | Cliente - Solo tienda pública |
+
+#### Permisos por Módulo
+
+| Módulo | Owner | Admin | Manager | Employee | Viewer |
+|--------|:-----:|:-----:|:-------:|:--------:|:------:|
+| Dashboard | ✅ Todo | ✅ Todo | ✅ Todo | ⚡ Limitado | 👁️ Ver |
+| Productos | ✅ CRUD | ✅ CRUD | ✅ CRUD | ⚡ Ver/Editar | 👁️ Ver |
+| Pedidos | ✅ Todo | ✅ Todo | ✅ Todo | ⚡ Procesar | 👁️ Ver |
+| Clientes | ✅ Todo | ✅ Todo | ✅ Ver/Editar | ⚡ Ver | 👁️ Ver |
+| Inventario | ✅ Todo | ✅ Todo | ✅ Ajustar | ⚡ Actualizar | ❌ No |
+| Descuentos | ✅ CRUD | ✅ CRUD | ⚡ Ver/Usar | ❌ No | 👁️ Ver |
+| **Usuarios** | ✅ CRUD | ✅ Crear ≤admin | ❌ No | ❌ No | ❌ No |
+| **Configuración** | ✅ Todo | ⚡ Parcial | ❌ No | ❌ No | ❌ No |
+
+#### Reglas de Gestión de Usuarios
+
+- Solo puedes crear usuarios con rol **menor** al tuyo
+- `owner` puede crear: admin, manager, employee, viewer
+- `admin` puede crear: manager, employee, viewer
+- Puedes editar tu propio perfil (pero no tu rol)
+- No puedes eliminarte a ti mismo
 
 ### Configuración NextAuth para Vercel
 
@@ -396,12 +433,88 @@ export default {
 
 ```typescript
 enum UserRole {
-  customer   // Cliente regular
+  customer   // Cliente regular (sin acceso admin)
+  viewer     // Visor (solo lectura)
   employee   // Empleado (acceso admin limitado)
   manager    // Gerente (más permisos)
   admin      // Administrador
   owner      // Dueño (todos los permisos)
 }
+```
+
+---
+
+## Sistema de Gestión de Usuarios
+
+### Acceso
+
+| Ruta | Descripción |
+|------|-------------|
+| `/admin/users` | Página completa de gestión de usuarios |
+| `/admin/settings` → Equipo | Acceso rápido + info de roles |
+
+### Funcionalidades
+
+```
+✓ Ver lista de usuarios del equipo (no clientes)
+✓ Crear nuevos usuarios con rol ≤ tu rol
+✓ Editar información, rol y estado de usuarios
+✓ Cambiar contraseñas
+✓ Desactivar/eliminar usuarios (soft delete)
+✓ Filtrar por rol y buscar por nombre/email
+✓ Editar tu propio perfil (sin cambiar rol)
+```
+
+### Hook usePermissions
+
+```tsx
+import { usePermissions } from '@/hooks/use-permissions'
+
+function MyComponent() {
+  const {
+    can,              // (permission) => boolean
+    canCreateProducts,
+    canEditProducts,
+    canDeleteProducts,
+    canViewUsers,
+    canCreateUsers,
+    userRole,
+    isLoading
+  } = usePermissions()
+
+  if (can('products:create')) {
+    // mostrar botón crear
+  }
+}
+```
+
+### PermissionGate Component
+
+```tsx
+import { PermissionGate } from '@/components/admin/permission-gate'
+
+<PermissionGate permission="products:delete">
+  <button>Eliminar</button>
+</PermissionGate>
+
+// Con múltiples permisos
+<PermissionGate permission={['products:edit', 'products:create']} requireAll={false}>
+  <button>Editar o Crear</button>
+</PermissionGate>
+```
+
+### Cambiar Usuario a Owner
+
+Si necesitas cambiar tu cuenta a owner, ejecuta en la consola SQL de Neon:
+
+```sql
+UPDATE users SET role = 'owner' WHERE email = 'tu@email.com';
+```
+
+O usa el script:
+
+```bash
+npx tsx scripts/set-owner.ts
 ```
 
 ---
@@ -513,17 +626,44 @@ openssl rand -base64 32
 - [x] `components/admin/image-uploader.tsx` - Uploader con drag & drop
 - [x] `components/admin/variant-manager.tsx` - Gestor de tallas con quick-add
 
+### Fase 8: Sistema de Gestión de Usuarios y Permisos
+- [x] `lib/permissions.ts` - Sistema completo de permisos por rol
+- [x] `lib/queries/users.ts` - CRUD de usuarios del equipo
+- [x] `lib/auth-utils.ts` - Funciones `getCurrentUserId`, `requirePermission`
+- [x] `hooks/use-permissions.ts` - Hook para verificar permisos en cliente
+- [x] `app/api/users/route.ts` - API GET (listar) y POST (crear) usuarios
+- [x] `app/api/users/[id]/route.ts` - API GET, PUT, DELETE usuario individual
+- [x] `app/admin/users/page.tsx` - Página de gestión de usuarios con:
+  - Lista de usuarios con avatar, rol, estado
+  - Filtros por rol y búsqueda
+  - Modal para crear/editar usuarios
+  - Confirmación para eliminar
+- [x] `components/admin/user-form.tsx` - Formulario de usuario con:
+  - Campos: nombre, email, teléfono, contraseña
+  - Selector de rol con descripción de permisos
+  - Campos opcionales: departamento, puesto
+- [x] `components/admin/permission-gate.tsx` - Componente para condicionar UI
+- [x] `components/admin/sidebar.tsx` - Filtrado de menú por permisos del rol
+- [x] `app/admin/products/page.tsx` - Botones condicionales (crear/editar/eliminar)
+- [x] `app/admin/settings/page.tsx` - Nueva pestaña "Equipo" con:
+  - Acceso directo a gestión de usuarios
+  - Explicación de roles y permisos
+- [x] Rol `viewer` agregado al schema Prisma
+- [x] Usuarios pueden editar su propio perfil
+- [x] Protección: no puedes cambiar tu propio rol ni eliminarte
+
 ---
 
 ## Commits Recientes
 
 ```
+d18c01e fix: Allow users to edit their own profile
+e2eb54d feat: Add user management system with role-based permissions
+30d0d6c docs: Update PROJECT_CONTEXT.md with complete implementation details
 4406cc7 feat: Update admin panel to light theme
 520cd13 fix: Separate admin login from admin layout
 8414894 feat: Separate logins and redesign admin panel
 63d25be Add trustHost for Vercel NextAuth deployment
-7b1da26 Make database pages dynamic for Vercel deployment
-6b25cdd Fix Vercel deployment issues
 ```
 
 ---
@@ -534,18 +674,21 @@ openssl rand -base64 32
 - [ ] Integrar Cloudinary/Vercel Blob para imágenes reales
 - [ ] Implementar checkout con Stripe
 - [ ] Dashboard con métricas reales de la DB
+- [ ] Funcionalidad real en páginas de órdenes, clientes, inventario
 
 ### Mediano Plazo
 - [ ] Sistema de notificaciones real (push/email)
 - [ ] Sistema de envíos (integración con carriers)
 - [ ] Emails transaccionales (confirmación, envío, etc.)
 - [ ] Panel de analytics
+- [ ] Invitación de usuarios por email con link temporal
 
 ### Largo Plazo
 - [ ] App móvil (React Native)
 - [ ] Sistema de puntos/rewards
 - [ ] Integración con marketplaces (MercadoLibre, Amazon)
 - [ ] Multi-idioma (i18n)
+- [ ] Auditoría de acciones (activity log por usuario)
 
 ---
 
