@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
   Users,
@@ -13,6 +13,11 @@ import {
   Eye,
   UserPlus,
   Loader2,
+  X,
+  Mail,
+  Calendar,
+  TrendingUp,
+  ExternalLink,
 } from 'lucide-react'
 
 interface Customer {
@@ -60,6 +65,7 @@ export default function CustomersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState('all')
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true)
@@ -237,7 +243,8 @@ export default function CustomersPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="hover:bg-[#F9FAFB] transition-colors"
+                    className="hover:bg-[#F9FAFB] transition-colors cursor-pointer"
+                    onClick={() => setSelectedCustomer(customer)}
                   >
                     <td className="p-3">
                       <div className="flex items-center gap-3">
@@ -288,10 +295,24 @@ export default function CustomersPage() {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
-                        <button className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedCustomer(customer)
+                          }}
+                          className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                          title="Ver detalles"
+                        >
                           <Eye className="w-4 h-4 text-[#6B7280]" />
                         </button>
-                        <button className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedCustomer(customer)
+                          }}
+                          className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                          title="Más opciones"
+                        >
                           <MoreVertical className="w-4 h-4 text-[#6B7280]" />
                         </button>
                       </div>
@@ -341,6 +362,128 @@ export default function CustomersPage() {
           </div>
         )}
       </motion.div>
+
+      {/* Customer Detail Modal */}
+      <AnimatePresence>
+        {selectedCustomer && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedCustomer(null)}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-auto sm:w-full sm:max-w-lg bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6 z-50 shadow-xl overflow-y-auto max-h-[90vh]"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-[#111827]">Detalles del Cliente</h2>
+                <button
+                  onClick={() => setSelectedCustomer(null)}
+                  className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-[#6B7280]" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Customer Header */}
+                <div className="flex items-center gap-4 p-4 bg-[#F9FAFB] rounded-xl">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+                    {selectedCustomer.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[#111827] font-semibold text-lg truncate">{selectedCustomer.name}</h3>
+                      {selectedCustomer.group === 'vip' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                          <Crown className="w-3 h-3" />
+                          VIP
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[#6B7280] mt-1">
+                      <Mail className="w-4 h-4" />
+                      <span className="text-sm truncate">{selectedCustomer.email}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-[#F9FAFB] rounded-xl text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-[#6B7280] mb-1">
+                      <ShoppingBag className="w-4 h-4" />
+                    </div>
+                    <p className="text-xl font-bold text-[#111827]">{selectedCustomer.orders}</p>
+                    <p className="text-xs text-[#6B7280]">Pedidos</p>
+                  </div>
+                  <div className="p-3 bg-[#F9FAFB] rounded-xl text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-[#6B7280] mb-1">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                    <p className="text-xl font-bold text-[#111827]">${selectedCustomer.spent.toLocaleString()}</p>
+                    <p className="text-xs text-[#6B7280]">Total Gastado</p>
+                  </div>
+                  <div className="p-3 bg-[#F9FAFB] rounded-xl text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-[#6B7280] mb-1">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                    <p className="text-xl font-bold text-[#111827]">
+                      ${selectedCustomer.orders > 0 ? Math.round(selectedCustomer.spent / selectedCustomer.orders).toLocaleString() : 0}
+                    </p>
+                    <p className="text-xs text-[#6B7280]">Ticket Prom.</p>
+                  </div>
+                </div>
+
+                {/* Info Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-[#F9FAFB] rounded-xl">
+                    <p className="text-[#6B7280] text-xs uppercase tracking-wider mb-1">Grupo</p>
+                    <p className="text-[#111827] font-medium capitalize">
+                      {selectedCustomer.group === 'vip' ? 'VIP' :
+                       selectedCustomer.group === 'wholesale' ? 'Mayorista' :
+                       selectedCustomer.group === 'influencer' ? 'Influencer' : 'Standard'}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-[#F9FAFB] rounded-xl">
+                    <div className="flex items-center gap-1.5 text-[#6B7280] mb-1">
+                      <Calendar className="w-3 h-3" />
+                      <p className="text-xs uppercase tracking-wider">Registrado</p>
+                    </div>
+                    <p className="text-[#111827] font-medium">{selectedCustomer.createdAt}</p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-2 space-y-2">
+                  <div className="flex gap-3">
+                    <button className="flex-1 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] font-medium text-sm rounded-xl hover:bg-[#F9FAFB] transition-colors inline-flex items-center justify-center gap-2">
+                      <ExternalLink className="w-4 h-4" />
+                      Ver Pedidos
+                    </button>
+                    <button className="flex-1 py-2.5 bg-[#111827] text-white font-semibold text-sm rounded-xl hover:bg-[#1F2937] transition-colors inline-flex items-center justify-center gap-2">
+                      <Crown className="w-4 h-4" />
+                      Cambiar Grupo
+                    </button>
+                  </div>
+                  <a
+                    href={`mailto:${selectedCustomer.email}`}
+                    className="w-full py-2.5 bg-white border border-[#E5E7EB] text-[#374151] font-medium text-sm rounded-xl hover:bg-[#F9FAFB] transition-colors inline-flex items-center justify-center gap-2"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Enviar Email
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
