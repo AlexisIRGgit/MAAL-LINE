@@ -75,27 +75,27 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
       {/* URL Input */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666]" />
+          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
           <input
             type="text"
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="URL de imagen o ruta: /images/producto.png"
-            className="w-full pl-10 pr-3 py-2 bg-[#0A0A0A] border border-[#333333] rounded-lg text-sm text-[#E8E4D9] placeholder-[#666666] focus:outline-none focus:border-[#C9A962] transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
           />
         </div>
         <button
           type="button"
           onClick={handleAddUrl}
-          className="px-4 py-2 bg-[#C9A962] text-[#0A0A0A] text-sm font-semibold rounded-lg hover:bg-[#E8E4D9] transition-colors flex items-center gap-2"
+          className="px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Agregar
         </button>
       </div>
 
-      <p className="text-xs text-[#666]">
+      <p className="text-xs text-[#6B7280]">
         Usa imágenes de /images/ o URLs externas (Imgur, Cloudinary, etc.)
       </p>
 
@@ -110,8 +110,8 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
               onDragOver={(e) => handleDragOver(e, index)}
               onDragEnd={handleDragEnd}
               className={cn(
-                'relative aspect-square bg-[#0A0A0A] rounded-lg overflow-hidden group',
-                'border border-[#333333]',
+                'relative aspect-square bg-[#F3F4F6] rounded-xl overflow-hidden group',
+                'border border-[#E5E7EB]',
                 draggedIndex === index && 'opacity-50'
               )}
             >
@@ -130,14 +130,14 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button
                   type="button"
-                  className="p-1.5 bg-[#111111] rounded text-[#E8E4D9]/60 hover:text-[#E8E4D9] cursor-grab"
+                  className="p-1.5 bg-white rounded text-[#6B7280] hover:text-[#111827] cursor-grab"
                 >
                   <GripVertical className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() => handleRemove(index)}
-                  className="p-1.5 bg-red-500/20 rounded text-red-400 hover:bg-red-500/30"
+                  className="p-1.5 bg-red-50 rounded text-red-600 hover:bg-red-100"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -145,7 +145,7 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
 
               {/* Primary Badge */}
               {index === 0 && (
-                <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#C9A962] text-[#0A0A0A] text-[10px] font-bold rounded">
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-[#111827] text-white text-[10px] font-bold rounded">
                   PRINCIPAL
                 </div>
               )}
@@ -155,7 +155,7 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
       )}
 
       {images.length > 0 && (
-        <p className="text-xs text-[#E8E4D9]/40">
+        <p className="text-xs text-[#9CA3AF]">
           Arrastra para reordenar. La primera imagen será la principal.
         </p>
       )}

@@ -92,7 +92,7 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
     <div className="space-y-4">
       {/* Quick Add Sizes */}
       <div className="space-y-2">
-        <p className="text-xs text-[#E8E4D9]/60">Agregar tallas rápidamente:</p>
+        <p className="text-sm text-[#6B7280]">Agregar tallas rápidamente:</p>
         <div className="flex flex-wrap gap-2">
           {COMMON_SIZES.map((size) => {
             const exists = variants.some((v) => v.size === size)
@@ -105,12 +105,12 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
                 disabled={exists}
                 onClick={() => handleQuickAddToggle(size)}
                 className={cn(
-                  'px-3 py-1 text-xs font-bold border rounded transition-colors',
+                  'px-3 py-1.5 text-xs font-semibold border rounded-lg transition-colors',
                   exists
-                    ? 'border-[#222222] text-[#666666] cursor-not-allowed'
+                    ? 'border-[#E5E7EB] text-[#D1D5DB] cursor-not-allowed bg-[#F9FAFB]'
                     : selected
-                      ? 'border-[#C9A962] bg-[#C9A962] text-[#0A0A0A]'
-                      : 'border-[#333333] text-[#E8E4D9] hover:border-[#C9A962]'
+                      ? 'border-[#111827] bg-[#111827] text-white'
+                      : 'border-[#E5E7EB] text-[#374151] hover:border-[#111827]'
                 )}
               >
                 {size}
@@ -121,7 +121,7 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
             <button
               type="button"
               onClick={handleQuickAdd}
-              className="px-3 py-1 text-xs font-bold bg-[#C9A962] text-[#0A0A0A] rounded hover:bg-[#E8E4D9] transition-colors"
+              className="px-3 py-1.5 text-xs font-semibold bg-[#111827] text-white rounded-lg hover:bg-[#1F2937] transition-colors"
             >
               Agregar ({quickAddSizes.length})
             </button>
@@ -133,7 +133,7 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
       {variants.length > 0 ? (
         <div className="space-y-3">
           {/* Header */}
-          <div className="grid grid-cols-12 gap-2 text-xs text-[#E8E4D9]/60 px-1">
+          <div className="grid grid-cols-12 gap-2 text-xs font-medium text-[#6B7280] px-1">
             <div className="col-span-3">SKU</div>
             <div className="col-span-2">Talla</div>
             <div className="col-span-2">Color</div>
@@ -150,7 +150,7 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
                   type="text"
                   value={variant.sku}
                   onChange={(e) => handleVariantChange(index, 'sku', e.target.value)}
-                  className="w-full px-2 py-1.5 bg-[#0A0A0A] border border-[#333333] rounded text-xs text-[#E8E4D9] focus:outline-none focus:border-[#C9A962]"
+                  className="w-full px-2.5 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
                   placeholder="SKU"
                 />
               </div>
@@ -158,7 +158,7 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
                 <select
                   value={variant.size || ''}
                   onChange={(e) => handleVariantChange(index, 'size', e.target.value)}
-                  className="w-full px-2 py-1.5 bg-[#0A0A0A] border border-[#333333] rounded text-xs text-[#E8E4D9] focus:outline-none focus:border-[#C9A962]"
+                  className="w-full px-2.5 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
                 >
                   <option value="">-</option>
                   {COMMON_SIZES.map((size) => (
@@ -171,7 +171,7 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
                   type="text"
                   value={variant.color || ''}
                   onChange={(e) => handleVariantChange(index, 'color', e.target.value)}
-                  className="w-full px-2 py-1.5 bg-[#0A0A0A] border border-[#333333] rounded text-xs text-[#E8E4D9] focus:outline-none focus:border-[#C9A962]"
+                  className="w-full px-2.5 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
                   placeholder="Negro"
                 />
               </div>
@@ -181,7 +181,7 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
                   value={variant.stockQuantity}
                   onChange={(e) => handleVariantChange(index, 'stockQuantity', parseInt(e.target.value) || 0)}
                   min={0}
-                  className="w-full px-2 py-1.5 bg-[#0A0A0A] border border-[#333333] rounded text-xs text-[#E8E4D9] focus:outline-none focus:border-[#C9A962]"
+                  className="w-full px-2.5 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
                 />
               </div>
               <div className="col-span-2">
@@ -190,25 +190,25 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
                   value={variant.priceAdjustment}
                   onChange={(e) => handleVariantChange(index, 'priceAdjustment', parseFloat(e.target.value) || 0)}
                   step={0.01}
-                  className="w-full px-2 py-1.5 bg-[#0A0A0A] border border-[#333333] rounded text-xs text-[#E8E4D9] focus:outline-none focus:border-[#C9A962]"
+                  className="w-full px-2.5 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
                 />
               </div>
               <div className="col-span-1 flex justify-center">
                 <button
                   type="button"
                   onClick={() => handleRemoveVariant(index)}
-                  className="p-1.5 text-red-400 hover:bg-red-500/20 rounded transition-colors"
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-8 text-[#E8E4D9]/40">
-          <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No hay variantes</p>
+        <div className="text-center py-8 text-[#9CA3AF]">
+          <Package className="w-8 h-8 mx-auto mb-2" />
+          <p className="text-sm font-medium text-[#6B7280]">No hay variantes</p>
           <p className="text-xs">Agrega tallas para gestionar el inventario</p>
         </div>
       )}
@@ -217,7 +217,7 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
       <button
         type="button"
         onClick={handleAddVariant}
-        className="w-full py-2 border border-dashed border-[#333333] rounded-lg text-xs text-[#E8E4D9]/60 hover:border-[#C9A962] hover:text-[#C9A962] transition-colors flex items-center justify-center gap-2"
+        className="w-full py-2.5 border border-dashed border-[#E5E7EB] rounded-xl text-sm text-[#6B7280] hover:border-[#111827] hover:text-[#111827] transition-colors flex items-center justify-center gap-2"
       >
         <Plus className="w-4 h-4" />
         Agregar variante manualmente
@@ -225,11 +225,11 @@ export function VariantManager({ variants, onChange, productSlug }: VariantManag
 
       {/* Total Stock */}
       {variants.length > 0 && (
-        <div className="flex justify-between items-center pt-3 border-t border-[#222222]">
-          <span className="text-xs text-[#E8E4D9]/60">Stock total:</span>
+        <div className="flex justify-between items-center pt-4 border-t border-[#E5E7EB]">
+          <span className="text-sm text-[#6B7280]">Stock total:</span>
           <span className={cn(
-            'text-sm font-bold',
-            totalStock === 0 ? 'text-red-400' : totalStock <= 10 ? 'text-yellow-400' : 'text-green-400'
+            'text-base font-bold',
+            totalStock === 0 ? 'text-red-600' : totalStock <= 10 ? 'text-amber-600' : 'text-green-600'
           )}>
             {totalStock} unidades
           </span>

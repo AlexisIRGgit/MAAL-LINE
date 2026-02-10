@@ -14,6 +14,7 @@ import {
   Package,
   Calendar,
   DollarSign,
+  X,
 } from 'lucide-react'
 
 // Mock data
@@ -71,11 +72,11 @@ const mockOrders = [
 ]
 
 const statusConfig = {
-  pending: { label: 'Pendiente', icon: Clock, color: 'yellow' },
-  processing: { label: 'Procesando', icon: Package, color: 'blue' },
-  shipped: { label: 'Enviado', icon: Truck, color: 'purple' },
-  delivered: { label: 'Entregado', icon: CheckCircle, color: 'green' },
-  cancelled: { label: 'Cancelado', icon: XCircle, color: 'red' },
+  pending: { label: 'Pendiente', icon: Clock, bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
+  processing: { label: 'Procesando', icon: Package, bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
+  shipped: { label: 'Enviado', icon: Truck, bg: 'bg-purple-50', text: 'text-purple-700', dot: 'bg-purple-500' },
+  delivered: { label: 'Entregado', icon: CheckCircle, bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500' },
+  cancelled: { label: 'Cancelado', icon: XCircle, bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
 }
 
 const containerVariants = {
@@ -107,10 +108,10 @@ export default function OrdersPage() {
   })
 
   const stats = [
-    { label: 'Total Pedidos', value: orders.length, icon: Package, color: '#C9A962' },
-    { label: 'Pendientes', value: orders.filter((o) => o.status === 'pending').length, icon: Clock, color: '#EAB308' },
-    { label: 'En Proceso', value: orders.filter((o) => o.status === 'processing').length, icon: Truck, color: '#3B82F6' },
-    { label: 'Entregados', value: orders.filter((o) => o.status === 'delivered').length, icon: CheckCircle, color: '#22C55E' },
+    { label: 'Total Pedidos', value: orders.length, icon: Package, color: '#111827' },
+    { label: 'Pendientes', value: orders.filter((o) => o.status === 'pending').length, icon: Clock, color: '#D97706' },
+    { label: 'En Proceso', value: orders.filter((o) => o.status === 'processing').length, icon: Truck, color: '#2563EB' },
+    { label: 'Entregados', value: orders.filter((o) => o.status === 'delivered').length, icon: CheckCircle, color: '#16A34A' },
   ]
 
   return (
@@ -118,31 +119,31 @@ export default function OrdersPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-3"
+      className="space-y-4"
     >
       {/* Header */}
       <motion.div variants={itemVariants}>
-        <h1 className="text-xl font-bold text-[#E8E4D9]">Pedidos</h1>
-        <p className="text-[#666] mt-1 text-xs">Gestiona todos los pedidos de la tienda</p>
+        <h1 className="text-2xl font-bold text-[#111827]">Pedidos</h1>
+        <p className="text-[#6B7280] mt-1 text-sm">Gestiona todos los pedidos de la tienda</p>
       </motion.div>
 
       {/* Stats */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="p-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl"
+            className="p-4 bg-white border border-[#E5E7EB] rounded-xl shadow-sm"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <div
-                className="p-2 rounded-lg"
-                style={{ backgroundColor: `${stat.color}15` }}
+                className="p-2.5 rounded-xl"
+                style={{ backgroundColor: `${stat.color}10` }}
               >
-                <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
+                <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
               </div>
               <div>
-                <p className="text-lg font-bold text-[#E8E4D9]">{stat.value}</p>
-                <p className="text-xs text-[#666]">{stat.label}</p>
+                <p className="text-2xl font-bold text-[#111827]">{stat.value}</p>
+                <p className="text-sm text-[#6B7280]">{stat.label}</p>
               </div>
             </div>
           </div>
@@ -150,15 +151,15 @@ export default function OrdersPage() {
       </motion.div>
 
       {/* Filters */}
-      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row gap-2">
+      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#666]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
           <input
             type="text"
             placeholder="Buscar por orden, cliente o email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-xs text-[#E8E4D9] placeholder-[#666] focus:outline-none focus:border-[#C9A962] transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
           />
         </div>
 
@@ -166,7 +167,7 @@ export default function OrdersPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="appearance-none px-3 py-2 pr-8 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-xs text-[#E8E4D9] focus:outline-none focus:border-[#C9A962] transition-colors cursor-pointer"
+            className="appearance-none px-4 py-2.5 pr-10 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all cursor-pointer"
           >
             <option value="all">Todos los estados</option>
             <option value="pending">Pendiente</option>
@@ -175,11 +176,11 @@ export default function OrdersPage() {
             <option value="delivered">Entregado</option>
             <option value="cancelled">Cancelado</option>
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#666] pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" />
         </div>
 
-        <button className="inline-flex items-center gap-2 px-3 py-2 bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl text-xs text-[#E8E4D9] hover:border-[#222] transition-colors">
-          <Filter className="w-3.5 h-3.5" />
+        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors">
+          <Filter className="w-4 h-4" />
           Más filtros
         </button>
       </motion.div>
@@ -187,22 +188,22 @@ export default function OrdersPage() {
       {/* Orders Table */}
       <motion.div
         variants={itemVariants}
-        className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl overflow-hidden"
+        className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden shadow-sm"
       >
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#1a1a1a]">
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Pedido</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Cliente</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Fecha</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Estado</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Pago</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]">Total</th>
-                <th className="p-2 text-left text-xs font-medium text-[#666]"></th>
+              <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Pedido</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Cliente</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Fecha</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Estado</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Pago</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Total</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#E5E7EB]">
               {filteredOrders.map((order, index) => {
                 const status = statusConfig[order.status as keyof typeof statusConfig]
                 const StatusIcon = status.icon
@@ -213,67 +214,61 @@ export default function OrdersPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="border-b border-[#1a1a1a] hover:bg-[#111] transition-colors cursor-pointer"
+                    className="hover:bg-[#F9FAFB] transition-colors cursor-pointer"
                     onClick={() => setSelectedOrder(order)}
                   >
-                    <td className="p-2">
-                      <span className="text-[#E8E4D9] font-mono font-medium text-xs">{order.id}</span>
+                    <td className="p-3">
+                      <span className="text-[#111827] font-mono font-medium text-sm">{order.id}</span>
                     </td>
-                    <td className="p-2">
+                    <td className="p-3">
                       <div>
-                        <p className="text-[#E8E4D9] font-medium text-xs">{order.customer.name}</p>
-                        <p className="text-[#666] text-xs">{order.customer.email}</p>
+                        <p className="text-[#111827] font-medium text-sm">{order.customer.name}</p>
+                        <p className="text-[#9CA3AF] text-xs">{order.customer.email}</p>
                       </div>
                     </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-1 text-[#888]">
-                        <Calendar className="w-3 h-3" />
-                        <span className="text-xs">{order.date}</span>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1.5 text-[#6B7280]">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-sm">{order.date}</span>
                       </div>
                     </td>
-                    <td className="p-2">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-${status.color}-500/10 text-${status.color}-500`}
-                        style={{
-                          backgroundColor: `var(--${status.color}-bg, rgba(${status.color === 'yellow' ? '234,179,8' : status.color === 'blue' ? '59,130,246' : status.color === 'green' ? '34,197,94' : status.color === 'red' ? '239,68,68' : '168,85,247'}, 0.1))`,
-                          color: `var(--${status.color}-text, ${status.color === 'yellow' ? '#EAB308' : status.color === 'blue' ? '#3B82F6' : status.color === 'green' ? '#22C55E' : status.color === 'red' ? '#EF4444' : '#A855F7'})`,
-                        }}
-                      >
-                        <StatusIcon className="w-2.5 h-2.5" />
+                    <td className="p-3">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                         {status.label}
                       </span>
                     </td>
-                    <td className="p-2">
+                    <td className="p-3">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                           order.paymentStatus === 'paid'
-                            ? 'bg-green-500/10 text-green-500'
+                            ? 'bg-green-50 text-green-700'
                             : order.paymentStatus === 'refunded'
-                            ? 'bg-red-500/10 text-red-500'
-                            : 'bg-yellow-500/10 text-yellow-500'
+                            ? 'bg-red-50 text-red-700'
+                            : 'bg-amber-50 text-amber-700'
                         }`}
                       >
-                        <DollarSign className="w-2.5 h-2.5" />
+                        <DollarSign className="w-3 h-3" />
                         {order.paymentStatus === 'paid' ? 'Pagado' : order.paymentStatus === 'refunded' ? 'Reembolsado' : 'Pendiente'}
                       </span>
                     </td>
-                    <td className="p-2">
-                      <span className="text-[#E8E4D9] font-semibold text-xs">
+                    <td className="p-3">
+                      <span className="text-[#111827] font-semibold text-sm">
                         ${order.total.toLocaleString()}
                       </span>
-                      <span className="text-[#666] text-xs ml-1">
+                      <span className="text-[#9CA3AF] text-xs ml-1.5">
                         ({order.items} items)
                       </span>
                     </td>
-                    <td className="p-2">
+                    <td className="p-3">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           setSelectedOrder(order)
                         }}
-                        className="p-1 hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                        className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
                       >
-                        <Eye className="w-3.5 h-3.5 text-[#666]" />
+                        <Eye className="w-4 h-4 text-[#6B7280]" />
                       </button>
                     </td>
                   </motion.tr>
@@ -284,18 +279,18 @@ export default function OrdersPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-2 border-t border-[#1a1a1a]">
-          <p className="text-xs text-[#666]">
+        <div className="flex items-center justify-between p-4 border-t border-[#E5E7EB] bg-[#F9FAFB]">
+          <p className="text-sm text-[#6B7280]">
             Mostrando {filteredOrders.length} de {orders.length} pedidos
           </p>
-          <div className="flex items-center gap-1">
-            <button className="px-3 py-1 text-xs text-[#666] hover:text-[#E8E4D9] hover:bg-[#111] rounded-lg transition-colors disabled:opacity-50" disabled>
+          <div className="flex items-center gap-2">
+            <button className="px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
               Anterior
             </button>
-            <button className="px-3 py-1 text-xs bg-[#C9A962] text-[#0a0a0a] rounded-lg font-medium">
+            <button className="px-3 py-1.5 text-sm bg-[#111827] text-white rounded-lg font-medium">
               1
             </button>
-            <button className="px-3 py-1 text-xs text-[#666] hover:text-[#E8E4D9] hover:bg-[#111] rounded-lg transition-colors">
+            <button className="px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-white rounded-lg transition-colors">
               Siguiente
             </button>
           </div>
@@ -311,52 +306,52 @@ export default function OrdersPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedOrder(null)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-3 z-50"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white border border-[#E5E7EB] rounded-2xl p-6 z-50 shadow-xl"
             >
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold text-[#E8E4D9]">Pedido {selectedOrder.id}</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-[#111827]">Pedido {selectedOrder.id}</h2>
                 <button
                   onClick={() => setSelectedOrder(null)}
-                  className="p-1 hover:bg-[#111] rounded-lg transition-colors"
+                  className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
                 >
-                  <XCircle className="w-3.5 h-3.5 text-[#666]" />
+                  <X className="w-5 h-5 text-[#6B7280]" />
                 </button>
               </div>
 
-              <div className="space-y-2">
-                <div className="p-2 bg-[#111] rounded-xl">
-                  <p className="text-[#666] text-xs">Cliente</p>
-                  <p className="text-[#E8E4D9] font-medium text-xs">{selectedOrder.customer.name}</p>
-                  <p className="text-[#888] text-xs">{selectedOrder.customer.email}</p>
+              <div className="space-y-4">
+                <div className="p-4 bg-[#F9FAFB] rounded-xl">
+                  <p className="text-[#6B7280] text-xs uppercase tracking-wider mb-1">Cliente</p>
+                  <p className="text-[#111827] font-medium">{selectedOrder.customer.name}</p>
+                  <p className="text-[#6B7280] text-sm">{selectedOrder.customer.email}</p>
                 </div>
 
-                <div className="p-2 bg-[#111] rounded-xl">
-                  <p className="text-[#666] text-xs">Dirección de envío</p>
-                  <p className="text-[#E8E4D9] text-xs">{selectedOrder.shippingAddress}</p>
+                <div className="p-4 bg-[#F9FAFB] rounded-xl">
+                  <p className="text-[#6B7280] text-xs uppercase tracking-wider mb-1">Dirección de envío</p>
+                  <p className="text-[#111827]">{selectedOrder.shippingAddress}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2 bg-[#111] rounded-xl">
-                    <p className="text-[#666] text-xs">Total</p>
-                    <p className="text-[#C9A962] text-lg font-bold">${selectedOrder.total.toLocaleString()}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-[#F9FAFB] rounded-xl">
+                    <p className="text-[#6B7280] text-xs uppercase tracking-wider mb-1">Total</p>
+                    <p className="text-[#111827] text-2xl font-bold">${selectedOrder.total.toLocaleString()}</p>
                   </div>
-                  <div className="p-2 bg-[#111] rounded-xl">
-                    <p className="text-[#666] text-xs">Items</p>
-                    <p className="text-[#E8E4D9] text-lg font-bold">{selectedOrder.items}</p>
+                  <div className="p-4 bg-[#F9FAFB] rounded-xl">
+                    <p className="text-[#6B7280] text-xs uppercase tracking-wider mb-1">Items</p>
+                    <p className="text-[#111827] text-2xl font-bold">{selectedOrder.items}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2">
-                  <button className="flex-1 py-2 bg-[#111] border border-[#222] text-[#E8E4D9] font-medium text-xs rounded-xl hover:bg-[#1a1a1a] transition-colors">
+                <div className="flex gap-3 pt-2">
+                  <button className="flex-1 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] font-medium text-sm rounded-xl hover:bg-[#F9FAFB] transition-colors">
                     Ver detalles
                   </button>
-                  <button className="flex-1 py-2 bg-[#C9A962] text-[#0a0a0a] font-semibold text-xs rounded-xl hover:bg-[#d4b76d] transition-colors">
+                  <button className="flex-1 py-2.5 bg-[#111827] text-white font-semibold text-sm rounded-xl hover:bg-[#1F2937] transition-colors">
                     Actualizar estado
                   </button>
                 </div>
