@@ -91,6 +91,8 @@ export default function CustomersPage() {
   const [isResettingPassword, setIsResettingPassword] = useState(false)
   const [tempPassword, setTempPassword] = useState<string | null>(null)
   const [copiedPassword, setCopiedPassword] = useState(false)
+  const [showGroupSelector, setShowGroupSelector] = useState(false)
+  const [isChangingGroup, setIsChangingGroup] = useState(false)
 
   const handleResetPassword = async (customerId: string) => {
     if (!confirm('¿Estás seguro de generar una nueva contraseña temporal para este cliente?')) return
@@ -121,10 +123,41 @@ export default function CustomersPage() {
     setTimeout(() => setCopiedPassword(false), 2000)
   }
 
+  const handleChangeGroup = async (customerId: string, newGroup: string) => {
+    setIsChangingGroup(true)
+    try {
+      const response = await fetch(`/api/customers/${customerId}/group`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group: newGroup }),
+      })
+
+      if (!response.ok) throw new Error('Error al cambiar grupo')
+
+      // Update local state
+      setCustomers(customers.map(c =>
+        c.id === customerId ? { ...c, group: newGroup } : c
+      ))
+      if (selectedCustomer?.id === customerId) {
+        setSelectedCustomer({ ...selectedCustomer, group: newGroup })
+      }
+      setShowGroupSelector(false)
+
+      // Update stats if needed
+      fetchCustomers()
+    } catch (error) {
+      console.error('Error changing group:', error)
+      alert('Error al cambiar el grupo del cliente')
+    } finally {
+      setIsChangingGroup(false)
+    }
+  }
+
   const closeModal = () => {
     setSelectedCustomer(null)
     setTempPassword(null)
     setCopiedPassword(false)
+    setShowGroupSelector(false)
   }
 
   const fetchCustomers = useCallback(async () => {
@@ -611,6 +644,50 @@ export default function CustomersPage() {
                   )}
                 </div>
 
+                {/* Group Selector */}
+                {showGroupSelector && (
+                  <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Crown className="w-4 h-4 text-purple-600" />
+                      <p className="text-purple-800 text-xs uppercase tracking-wider font-semibold">Cambiar Grupo</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: 'standard', label: 'Standard', color: 'bg-gray-100 text-gray-700 hover:bg-gray-200' },
+                        { value: 'vip', label: 'VIP', color: 'bg-purple-100 text-purple-700 hover:bg-purple-200' },
+                        { value: 'wholesale', label: 'Mayorista', color: 'bg-blue-100 text-blue-700 hover:bg-blue-200' },
+                        { value: 'influencer', label: 'Influencer', color: 'bg-pink-100 text-pink-700 hover:bg-pink-200' },
+                      ].map((group) => (
+                        <button
+                          key={group.value}
+                          onClick={() => handleChangeGroup(selectedCustomer.id, group.value)}
+                          disabled={isChangingGroup || selectedCustomer.group === group.value}
+                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            selectedCustomer.group === group.value
+                              ? 'ring-2 ring-purple-500 ' + group.color
+                              : group.color
+                          }`}
+                        >
+                          {isChangingGroup ? (
+                            <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                          ) : (
+                            <>
+                              {group.label}
+                              {selectedCustomer.group === group.value && ' ✓'}
+                            </>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setShowGroupSelector(false)}
+                      className="w-full mt-3 py-1.5 text-sm text-purple-600 hover:text-purple-800 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="pt-2 space-y-2">
                   <div className="flex gap-3">
@@ -618,7 +695,14 @@ export default function CustomersPage() {
                       <ExternalLink className="w-4 h-4" />
                       Ver Pedidos
                     </button>
-                    <button className="flex-1 py-2.5 bg-[#111827] text-white font-semibold text-sm rounded-xl hover:bg-[#1F2937] transition-colors inline-flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setShowGroupSelector(!showGroupSelector)}
+                      className={`flex-1 py-2.5 font-semibold text-sm rounded-xl transition-colors inline-flex items-center justify-center gap-2 ${
+                        showGroupSelector
+                          ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                          : 'bg-[#111827] text-white hover:bg-[#1F2937]'
+                      }`}
+                    >
                       <Crown className="w-4 h-4" />
                       Cambiar Grupo
                     </button>
