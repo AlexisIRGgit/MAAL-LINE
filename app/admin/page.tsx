@@ -86,13 +86,13 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#111827]">Welcome back, {userName}</h1>
-          <p className="text-[#6B7280]">Here&apos;s today&apos;s data from your online store!</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#111827]">Welcome back, {userName}</h1>
+          <p className="text-[#6B7280] text-sm">Here&apos;s today&apos;s data from your online store!</p>
         </div>
-        <div className="flex items-center gap-3">
-          <select className="px-4 py-2 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#374151] focus:outline-none focus:ring-2 focus:ring-[#111827]">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <select className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#374151] focus:outline-none focus:ring-2 focus:ring-[#111827]">
             <option>Last 7 days</option>
             <option>Last 30 days</option>
             <option>This month</option>
@@ -100,10 +100,11 @@ export default function AdminDashboard() {
           </select>
           <Link
             href="/admin/products/new"
-            className="px-4 py-2 bg-[#111827] text-white text-sm font-medium rounded-xl hover:bg-[#1F2937] transition-colors flex items-center gap-2"
+            className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-[#111827] text-white text-sm font-medium rounded-xl hover:bg-[#1F2937] transition-colors flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Product
+            <span className="hidden sm:inline">Add Product</span>
+            <span className="sm:hidden">Nuevo</span>
           </Link>
         </div>
       </div>
@@ -138,18 +139,18 @@ export default function AdminDashboard() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Sales Performance */}
-        <div className="lg:col-span-2 bg-white p-5 rounded-2xl border border-[#E5E7EB]">
-          <div className="flex items-center justify-between mb-4">
+        <div className="lg:col-span-2 bg-white p-4 sm:p-5 rounded-2xl border border-[#E5E7EB]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-[#111827]">Sales Performance</h2>
-              <p className="text-sm text-[#6B7280]">Export data</p>
+              <h2 className="text-base sm:text-lg font-semibold text-[#111827]">Sales Performance</h2>
+              <p className="text-xs sm:text-sm text-[#6B7280]">Export data</p>
             </div>
-            <select className="px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg text-[#6B7280]">
+            <select className="px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg text-[#6B7280] w-full sm:w-auto">
               <option>Last 14 Days</option>
               <option>Last 30 Days</option>
             </select>
           </div>
-          <div className="h-[280px]">
+          <div className="h-[200px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesData}>
                 <defs>
@@ -183,14 +184,14 @@ export default function AdminDashboard() {
         </div>
 
         {/* Top Categories */}
-        <div className="bg-white p-5 rounded-2xl border border-[#E5E7EB]">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-[#111827]">Top Categories</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-[#111827]">Top Categories</h2>
             <button className="p-1 hover:bg-[#F3F4F6] rounded-lg">
               <MoreHorizontal className="w-5 h-5 text-[#6B7280]" />
             </button>
           </div>
-          <div className="h-[180px]">
+          <div className="h-[150px] sm:h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -231,8 +232,8 @@ export default function AdminDashboard() {
 
       {/* Recent Orders */}
       <div className="bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden">
-        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[#111827]">Recent Orders</h2>
+        <div className="p-4 sm:p-5 border-b border-[#E5E7EB] flex items-center justify-between">
+          <h2 className="text-base sm:text-lg font-semibold text-[#111827]">Recent Orders</h2>
           <Link href="/admin/orders" className="text-sm text-[#6B7280] hover:text-[#111827] transition-colors">
             View all →
           </Link>
@@ -241,21 +242,24 @@ export default function AdminDashboard() {
           <table className="w-full">
             <thead className="bg-[#F9FAFB]">
               <tr>
-                <th className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">Order</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">Customer</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">Product</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">Total</th>
-                <th className="px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">Status</th>
-                <th className="px-5 py-3 text-right text-xs font-medium text-[#6B7280] uppercase tracking-wider">Actions</th>
+                <th className="px-3 sm:px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">Order</th>
+                <th className="px-3 sm:px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Customer</th>
+                <th className="px-3 sm:px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider hidden md:table-cell">Product</th>
+                <th className="px-3 sm:px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">Total</th>
+                <th className="px-3 sm:px-5 py-3 text-left text-xs font-medium text-[#6B7280] uppercase tracking-wider">Status</th>
+                <th className="px-3 sm:px-5 py-3 text-right text-xs font-medium text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E5E7EB]">
               {recentOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-[#F9FAFB] transition-colors">
-                  <td className="px-5 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-[#111827]">{order.id}</span>
+                  <td className="px-3 sm:px-5 py-3 sm:py-4 whitespace-nowrap">
+                    <div>
+                      <span className="text-sm font-medium text-[#111827]">{order.id}</span>
+                      <p className="text-xs text-[#9CA3AF] sm:hidden">{order.customer}</p>
+                    </div>
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-5 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-[#F3F4F6] rounded-full flex items-center justify-center">
                         <span className="text-xs font-medium text-[#6B7280]">{order.avatar}</span>
@@ -263,16 +267,16 @@ export default function AdminDashboard() {
                       <span className="text-sm text-[#374151]">{order.customer}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-5 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
                     <span className="text-sm text-[#6B7280]">{order.product}</span>
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-5 py-3 sm:py-4 whitespace-nowrap">
                     <span className="text-sm font-medium text-[#111827]">{order.total}</span>
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-5 py-3 sm:py-4 whitespace-nowrap">
                     <StatusBadge status={order.status} />
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap text-right">
+                  <td className="px-3 sm:px-5 py-3 sm:py-4 whitespace-nowrap text-right hidden sm:table-cell">
                     <button className="p-1 hover:bg-[#F3F4F6] rounded-lg">
                       <MoreHorizontal className="w-5 h-5 text-[#6B7280]" />
                     </button>
