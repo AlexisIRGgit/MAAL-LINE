@@ -43,7 +43,7 @@ export default function AdminLoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen bg-[#F8F9FA] flex">
       {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
@@ -125,7 +125,7 @@ export default function AdminLoginForm() {
               </div>
             </div>
 
-            {/* Remember & Forgot */}
+            {/* Remember */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
