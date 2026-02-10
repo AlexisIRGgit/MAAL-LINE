@@ -31,7 +31,7 @@ export const authConfig: NextAuthConfig = {
       const isAdminUser = userRole && adminRoles.includes(userRole)
 
       // Routes that require authentication
-      const protectedRoutes = ['/account', '/checkout', '/orders']
+      const protectedRoutes = ['/cuenta', '/checkout', '/orders']
       // Admin login page (special handling)
       const isAdminLoginPage = nextUrl.pathname === '/admin/login'
       // Admin routes (except login)
