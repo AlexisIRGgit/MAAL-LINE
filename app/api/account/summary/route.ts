@@ -63,8 +63,9 @@ export async function GET(request: NextRequest) {
         where: { userId, isDefault: true },
         select: {
           id: true,
-          label: true,
-          street: true,
+          fullName: true,
+          streetLine1: true,
+          streetLine2: true,
           city: true,
           state: true,
           postalCode: true,
@@ -94,8 +95,8 @@ export async function GET(request: NextRequest) {
     const formattedDefaultAddress = defaultAddress
       ? {
           id: defaultAddress.id,
-          label: defaultAddress.label || 'Principal',
-          street: defaultAddress.street,
+          label: defaultAddress.fullName || 'Principal',
+          street: [defaultAddress.streetLine1, defaultAddress.streetLine2].filter(Boolean).join(', '),
           city: defaultAddress.city,
           state: defaultAddress.state,
           postalCode: defaultAddress.postalCode,

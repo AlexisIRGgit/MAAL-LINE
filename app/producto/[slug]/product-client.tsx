@@ -9,8 +9,9 @@ import { Footer } from '@/components/navigation/footer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ProductCard } from '@/components/product/product-card'
+import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
-import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw, Shield } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw, Shield, Check } from 'lucide-react'
 import type { ProductDetailData, ProductCardData } from '@/lib/transformers/product'
 
 interface ProductPageClientProps {
@@ -22,6 +23,9 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [isAdding, setIsAdding] = useState(false)
+  const [justAdded, setJustAdded] = useState(false)
+  const { addItem } = useCartStore()
 
   const {
     name,
@@ -76,6 +80,20 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
   const prevImage = () => {
     setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)
+  }
+
+  const handleAddToCart = () => {
+    if (!canAddToCart || !selectedSize) return
+
+    setIsAdding(true)
+    addItem(product, selectedSize, quantity)
+
+    // Show confirmation
+    setJustAdded(true)
+    setTimeout(() => {
+      setJustAdded(false)
+      setIsAdding(false)
+    }, 2000)
   }
 
   return (
@@ -268,14 +286,25 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                   variant="primary"
                   size="xl"
                   fullWidth
-                  disabled={!canAddToCart}
-                  className="flex-1"
+                  disabled={!canAddToCart || isAdding}
+                  onClick={handleAddToCart}
+                  className={cn(
+                    "flex-1 transition-all",
+                    justAdded && "bg-green-600 hover:bg-green-600"
+                  )}
                 >
-                  {isSoldOut
-                    ? 'AGOTADO'
-                    : sizesWithStock.length > 0 && !selectedSize
-                      ? 'SELECCIONA UNA TALLA'
-                      : 'AÑADIR AL CARRITO'}
+                  {justAdded ? (
+                    <span className="flex items-center gap-2">
+                      <Check className="w-5 h-5" />
+                      AGREGADO
+                    </span>
+                  ) : isSoldOut ? (
+                    'AGOTADO'
+                  ) : sizesWithStock.length > 0 && !selectedSize ? (
+                    'SELECCIONA UNA TALLA'
+                  ) : (
+                    'AÑADIR AL CARRITO'
+                  )}
                 </Button>
                 <button className="w-12 h-12 border border-[#E8E4D9]/30 flex items-center justify-center text-[#E8E4D9] hover:bg-[#E8E4D9]/10 transition-colors">
                   <Heart className="w-5 h-5" />

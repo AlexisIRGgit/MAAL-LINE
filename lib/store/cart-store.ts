@@ -1,6 +1,22 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { CartItem, Product, SizeValue } from '@/types'
+import type { ProductCardData, ProductDetailData } from '@/lib/transformers/product'
+
+// Cart item stored in state
+export interface CartItem {
+  productId: string
+  product: {
+    id: string
+    slug: string
+    name: string
+    price: number
+    compareAtPrice?: number
+    image: string
+  }
+  size: string
+  quantity: number
+  addedAt: string // ISO string for serialization
+}
 
 interface CartState {
   items: CartItem[]
@@ -8,18 +24,19 @@ interface CartState {
 }
 
 interface CartActions {
-  addItem: (product: Product, size: SizeValue, quantity?: number) => void
-  removeItem: (productId: string, size: SizeValue) => void
-  updateQuantity: (productId: string, size: SizeValue, quantity: number) => void
+  addItem: (product: ProductCardData | ProductDetailData, size: string, quantity?: number) => void
+  removeItem: (productId: string, size: string) => void
+  updateQuantity: (productId: string, size: string, quantity: number) => void
   clearCart: () => void
   openCart: () => void
   closeCart: () => void
+  toggleCart: () => void
 }
 
 interface CartComputed {
   itemCount: number
   subtotal: number
-  getItem: (productId: string, size: SizeValue) => CartItem | undefined
+  getItem: (productId: string, size: string) => CartItem | undefined
 }
 
 type CartStore = CartState & CartActions & CartComputed
@@ -47,7 +64,7 @@ export const useCartStore = create<CartStore>()(
         )
       },
 
-      getItem: (productId: string, size: SizeValue) => {
+      getItem: (productId: string, size: string) => {
         return get().items.find(
           (item) => item.productId === productId && item.size === size
         )
@@ -56,7 +73,7 @@ export const useCartStore = create<CartStore>()(
       // ============================================
       // ACTIONS
       // ============================================
-      addItem: (product: Product, size: SizeValue, quantity = 1) => {
+      addItem: (product: ProductCardData | ProductDetailData, size: string, quantity = 1) => {
         set((state) => {
           const existingIndex = state.items.findIndex(
             (item) => item.productId === product.id && item.size === size
@@ -75,17 +92,24 @@ export const useCartStore = create<CartStore>()(
           // Add new item
           const newItem: CartItem = {
             productId: product.id,
-            product,
+            product: {
+              id: product.id,
+              slug: product.slug,
+              name: product.name,
+              price: product.price,
+              compareAtPrice: product.compareAtPrice,
+              image: product.images[0] || '/images/placeholder.png',
+            },
             size,
             quantity,
-            addedAt: new Date(),
+            addedAt: new Date().toISOString(),
           }
 
           return { items: [...state.items, newItem], isOpen: true }
         })
       },
 
-      removeItem: (productId: string, size: SizeValue) => {
+      removeItem: (productId: string, size: string) => {
         set((state) => ({
           items: state.items.filter(
             (item) => !(item.productId === productId && item.size === size)
@@ -93,7 +117,7 @@ export const useCartStore = create<CartStore>()(
         }))
       },
 
-      updateQuantity: (productId: string, size: SizeValue, quantity: number) => {
+      updateQuantity: (productId: string, size: string, quantity: number) => {
         if (quantity <= 0) {
           get().removeItem(productId, size)
           return
@@ -118,6 +142,10 @@ export const useCartStore = create<CartStore>()(
 
       closeCart: () => {
         set({ isOpen: false })
+      },
+
+      toggleCart: () => {
+        set((state) => ({ isOpen: !state.isOpen }))
       },
     }),
     {

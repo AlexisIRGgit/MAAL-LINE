@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
             productName: true,
             variantName: true,
             quantity: true,
-            price: true,
+            unitPrice: true,
             total: true,
             product: {
               select: {
@@ -54,6 +54,14 @@ export async function GET(request: NextRequest) {
               },
             },
           },
+        },
+        shipments: {
+          select: {
+            trackingNumber: true,
+            carrier: true,
+          },
+          take: 1,
+          orderBy: { createdAt: 'desc' },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -76,6 +84,7 @@ export async function GET(request: NextRequest) {
     const formattedOrders = orders.map((order) => {
       const shippingAddress = order.shippingAddress as {
         street?: string
+        streetLine1?: string
         city?: string
         state?: string
         postalCode?: string
@@ -83,11 +92,13 @@ export async function GET(request: NextRequest) {
       } | null
 
       const addressParts = [
-        shippingAddress?.street,
+        shippingAddress?.street || shippingAddress?.streetLine1,
         shippingAddress?.city,
         shippingAddress?.state,
         shippingAddress?.postalCode,
       ].filter(Boolean)
+
+      const latestShipment = order.shipments[0]
 
       return {
         id: order.orderNumber,
@@ -98,11 +109,11 @@ export async function GET(request: NextRequest) {
           name: item.productName,
           size: item.variantName || 'Única',
           quantity: item.quantity,
-          price: parseFloat(item.price.toString()),
+          price: parseFloat(item.unitPrice.toString()),
           image: item.product?.images[0]?.url || null,
         })),
         shippingAddress: addressParts.join(', ') || 'Sin dirección',
-        trackingNumber: order.trackingNumber,
+        trackingNumber: latestShipment?.trackingNumber || null,
       }
     })
 

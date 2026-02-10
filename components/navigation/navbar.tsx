@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Logo } from '@/components/common/logo'
+import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
 
 const NAV_LINKS = [
@@ -17,6 +18,13 @@ const NAV_LINKS = [
 export function Navbar() {
   const { data: session } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const { openCart, itemCount } = useCartStore()
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <>
@@ -84,15 +92,18 @@ export function Navbar() {
 
             {/* Cart */}
             <button
+              onClick={openCart}
               className="relative p-2 text-[#E8E4D9]/70 hover:text-[#E8E4D9] transition-colors"
               aria-label="Carrito"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#E8E4D9] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center">
-                0
-              </span>
+              {mounted && itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#E8E4D9] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
             </button>
           </div>
         </nav>
