@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requirePermission, handleAuthError, getUserRole } from '@/lib/auth-utils'
+import { requirePermission, handleAuthError, getUserRole, getCurrentUserId } from '@/lib/auth-utils'
 import { getUserById, updateTeamMember, deleteTeamMember, emailExists } from '@/lib/queries/users'
 import { getAssignableRoles, canManageRole, ROLE_HIERARCHY } from '@/lib/permissions'
 import { UserRole, UserStatus } from '@prisma/client'
@@ -49,15 +49,18 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const currentRole = await getUserRole()
-    if (!currentRole) {
+    const currentUserId = await getCurrentUserId()
+
+    if (!currentRole || !currentUserId) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       )
     }
 
-    // Check if user can manage target user's role
-    if (!canManageRole(currentRole, existingUser.role)) {
+    // Allow users to edit their own profile, or check role hierarchy
+    const isEditingSelf = currentUserId === id
+    if (!isEditingSelf && !canManageRole(currentRole, existingUser.role)) {
       return NextResponse.json(
         { error: 'No tienes permiso para editar este usuario' },
         { status: 403 }
@@ -66,6 +69,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // If changing role, validate the new role
     if (data.role && data.role !== existingUser.role) {
+      // Users cannot change their own role
+      if (isEditingSelf) {
+        return NextResponse.json(
+          { error: 'No puedes cambiar tu propio rol' },
+          { status: 403 }
+        )
+      }
+
       const assignableRoles = getAssignableRoles(currentRole)
       if (!assignableRoles.includes(data.role as UserRole)) {
         return NextResponse.json(
@@ -138,10 +149,20 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     const currentRole = await getUserRole()
-    if (!currentRole) {
+    const currentUserId = await getCurrentUserId()
+
+    if (!currentRole || !currentUserId) {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
+      )
+    }
+
+    // Prevent deleting self
+    if (currentUserId === id) {
+      return NextResponse.json(
+        { error: 'No puedes eliminarte a ti mismo' },
+        { status: 403 }
       )
     }
 
@@ -153,9 +174,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    // Prevent deleting self
-    // Note: We'd need to get current user ID to do this check properly
-    // For now, just prevent deleting owner
+    // Prevent deleting owner
     if (existingUser.role === 'owner') {
       return NextResponse.json(
         { error: 'No se puede eliminar al dueño' },

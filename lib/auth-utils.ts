@@ -138,3 +138,11 @@ export async function getUserRole(): Promise<UserRole | null> {
   const session = await auth()
   return (session?.user?.role as UserRole) ?? null
 }
+
+/**
+ * Get current user ID from session
+ */
+export async function getCurrentUserId(): Promise<string | null> {
+  const session = await auth()
+  return session?.user?.id ?? null
+}
