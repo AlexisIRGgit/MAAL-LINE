@@ -83,16 +83,20 @@ export function AdminSidebar() {
       >
         {/* Logo Section */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-[#E5E7EB]">
-          {!isCollapsed && (
-            <Link href="/admin" className="flex items-center gap-2">
+          <Link href="/admin" className="flex items-center gap-2">
+            {isCollapsed ? (
+              <div className="w-8 h-8 bg-[#111827] rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">M</span>
+              </div>
+            ) : (
               <Image
                 src="/images/logo-maal-negro.png"
                 alt="MAAL"
                 width={80}
                 height={32}
               />
-            </Link>
-          )}
+            )}
+          </Link>
 
           {/* Close Mobile / Collapse Desktop */}
           <button

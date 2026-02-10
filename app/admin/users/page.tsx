@@ -306,26 +306,26 @@ export default function UsersPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-[#111827]">
+                      <h3 className="font-semibold text-[#111827] text-sm sm:text-base">
                         {user.firstName} {user.lastName}
                       </h3>
                       {getRoleBadge(user.role)}
-                      {getStatusBadge(user.status)}
+                      <span className="hidden sm:inline">{getStatusBadge(user.status)}</span>
                     </div>
                     <div className="flex items-center gap-4 mt-1 text-sm text-[#6B7280]">
-                      <span className="flex items-center gap-1">
-                        <Mail className="w-3.5 h-3.5" />
-                        {user.email}
+                      <span className="flex items-center gap-1 truncate">
+                        <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">{user.email}</span>
                       </span>
                       {user.phone && (
-                        <span className="flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5" />
+                        <span className="items-center gap-1 hidden md:flex">
+                          <Phone className="w-3.5 h-3.5 flex-shrink-0" />
                           {user.phone}
                         </span>
                       )}
                     </div>
                     {user.employeeDetails?.position && (
-                      <p className="text-xs text-[#9CA3AF] mt-1">
+                      <p className="text-xs text-[#9CA3AF] mt-1 hidden sm:block">
                         {user.employeeDetails.position}
                         {user.employeeDetails.department && ` • ${user.employeeDetails.department}`}
                       </p>
@@ -398,14 +398,14 @@ export default function UsersPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center sm:p-4">
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowModal(false)} />
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto"
+            className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg bg-white sm:rounded-2xl shadow-xl overflow-y-auto"
           >
-            <div className="sticky top-0 bg-white border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-[#E5E7EB] px-4 sm:px-6 py-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[#111827]">
                 {selectedUser ? 'Editar usuario' : 'Nuevo usuario'}
               </h2>
@@ -416,7 +416,7 @@ export default function UsersPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <UserForm
                 user={selectedUser}
                 onSuccess={handleFormSuccess}

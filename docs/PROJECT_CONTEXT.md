@@ -652,6 +652,27 @@ openssl rand -base64 32
 - [x] Usuarios pueden editar su propio perfil
 - [x] Protección: no puedes cambiar tu propio rol ni eliminarte
 
+### Fase 9: Mejoras al Image Uploader
+- [x] `components/admin/image-uploader.tsx` - Reescrito completamente con:
+  - Zona de arrastrar y soltar (drag & drop) para archivos
+  - Click para abrir selector de archivos
+  - Conversión de imágenes a Base64 (funciona sin servidor de archivos)
+  - Validación de tipo (JPG, PNG, WebP, GIF) y tamaño (máx 5MB)
+  - Indicador visual de carga con spinner
+  - Badge "LOCAL" para imágenes en Base64
+  - Mantiene funcionalidad de agregar por URL
+  - Reordenamiento de imágenes con drag & drop
+  - Badge "PRINCIPAL" en la primera imagen
+
+### Fase 10: Diseño Responsivo del Panel Admin
+- [x] Sidebar con menú hamburguesa en móvil
+- [x] Header adaptado para móvil
+- [x] Dashboard con grids responsivos
+- [x] Tablas con scroll horizontal en móvil
+- [x] Formularios adaptados a pantallas pequeñas
+- [x] Modales full-screen en móvil
+- [x] Todas las páginas del admin optimizadas para móvil
+
 ---
 
 ## Commits Recientes

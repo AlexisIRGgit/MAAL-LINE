@@ -247,7 +247,7 @@ export default function ProductsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
-                  <th className="p-3 text-left">
+                  <th className="p-3 text-left hidden sm:table-cell">
                     <input
                       type="checkbox"
                       checked={selectedProducts.length === products.length && products.length > 0}
@@ -256,9 +256,9 @@ export default function ProductsPage() {
                     />
                   </th>
                   <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Producto</th>
-                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Estado</th>
-                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Inventario</th>
-                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Categoría</th>
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Estado</th>
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell">Inventario</th>
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">Categoría</th>
                   <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Precio</th>
                   <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider"></th>
                 </tr>
@@ -272,7 +272,7 @@ export default function ProductsPage() {
                     transition={{ delay: index * 0.05 }}
                     className="hover:bg-[#F9FAFB] transition-colors group"
                   >
-                    <td className="p-3">
+                    <td className="p-3 hidden sm:table-cell">
                       <input
                         type="checkbox"
                         checked={selectedProducts.includes(product.id)}
@@ -282,7 +282,7 @@ export default function ProductsPage() {
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#F3F4F6] border border-[#E5E7EB]">
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#F3F4F6] border border-[#E5E7EB] flex-shrink-0">
                           {product.image ? (
                             <Image
                               src={product.image}
@@ -296,16 +296,19 @@ export default function ProductsPage() {
                             </div>
                           )}
                         </div>
-                        <div>
-                          <p className="text-[#111827] font-medium text-sm">{product.name}</p>
-                          <p className="text-[#9CA3AF] text-xs">{product.slug}</p>
+                        <div className="min-w-0">
+                          <p className="text-[#111827] font-medium text-sm truncate">{product.name}</p>
+                          <p className="text-[#9CA3AF] text-xs truncate sm:hidden">
+                            ${product.price.toLocaleString()}
+                          </p>
+                          <p className="text-[#9CA3AF] text-xs truncate hidden sm:block">{product.slug}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden sm:table-cell">
                       <StatusBadge status={product.status} />
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden md:table-cell">
                       <div className="flex items-center gap-2">
                         <Package className="w-4 h-4 text-[#9CA3AF]" />
                         <span className={`text-sm ${product.inventory < 20 ? 'text-amber-600 font-medium' : 'text-[#374151]'}`}>
@@ -313,10 +316,10 @@ export default function ProductsPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden lg:table-cell">
                       <span className="text-[#6B7280] text-sm">{product.category || '-'}</span>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden sm:table-cell">
                       <div>
                         <span className="text-[#111827] font-semibold text-sm">
                           ${product.price.toLocaleString()}
@@ -332,7 +335,7 @@ export default function ProductsPage() {
                       <div className="relative">
                         <button
                           onClick={() => setActiveDropdown(activeDropdown === product.id ? null : product.id)}
-                          className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors sm:opacity-0 sm:group-hover:opacity-100"
                         >
                           <MoreVertical className="w-4 h-4 text-[#6B7280]" />
                         </button>

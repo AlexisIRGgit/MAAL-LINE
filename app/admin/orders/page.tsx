@@ -195,10 +195,10 @@ export default function OrdersPage() {
             <thead>
               <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
                 <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Pedido</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Cliente</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Fecha</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Cliente</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell">Fecha</th>
                 <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Estado</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Pago</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">Pago</th>
                 <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Total</th>
                 <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider"></th>
               </tr>
@@ -218,15 +218,18 @@ export default function OrdersPage() {
                     onClick={() => setSelectedOrder(order)}
                   >
                     <td className="p-3">
-                      <span className="text-[#111827] font-mono font-medium text-sm">{order.id}</span>
+                      <div>
+                        <span className="text-[#111827] font-mono font-medium text-sm">{order.id}</span>
+                        <p className="text-[#9CA3AF] text-xs sm:hidden">{order.customer.name}</p>
+                      </div>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden sm:table-cell">
                       <div>
                         <p className="text-[#111827] font-medium text-sm">{order.customer.name}</p>
                         <p className="text-[#9CA3AF] text-xs">{order.customer.email}</p>
                       </div>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden md:table-cell">
                       <div className="flex items-center gap-1.5 text-[#6B7280]">
                         <Calendar className="w-4 h-4" />
                         <span className="text-sm">{order.date}</span>
@@ -235,10 +238,10 @@ export default function OrdersPage() {
                     <td className="p-3">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                        {status.label}
+                        <span className="hidden sm:inline">{status.label}</span>
                       </span>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden lg:table-cell">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                           order.paymentStatus === 'paid'
@@ -256,7 +259,7 @@ export default function OrdersPage() {
                       <span className="text-[#111827] font-semibold text-sm">
                         ${order.total.toLocaleString()}
                       </span>
-                      <span className="text-[#9CA3AF] text-xs ml-1.5">
+                      <span className="text-[#9CA3AF] text-xs ml-1.5 hidden sm:inline">
                         ({order.items} items)
                       </span>
                     </td>
@@ -312,7 +315,7 @@ export default function OrdersPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white border border-[#E5E7EB] rounded-2xl p-6 z-50 shadow-xl"
+              className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-auto sm:w-full sm:max-w-lg bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6 z-50 shadow-xl overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-[#111827]">Pedido {selectedOrder.id}</h2>

@@ -163,13 +163,13 @@ export default function InventoryPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">SKU</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell">SKU</th>
                 <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Producto</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Variante</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">En Stock</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Reservado</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Disponible</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">En Camino</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Variante</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Stock</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">Reservado</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">Disponible</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden xl:table-cell">En Camino</th>
                 <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Estado</th>
               </tr>
             </thead>
@@ -187,13 +187,16 @@ export default function InventoryPage() {
                     transition={{ delay: index * 0.05 }}
                     className="hover:bg-[#F9FAFB] transition-colors"
                   >
-                    <td className="p-3">
+                    <td className="p-3 hidden md:table-cell">
                       <span className="text-[#111827] font-mono text-sm font-medium">{item.sku}</span>
                     </td>
                     <td className="p-3">
-                      <span className="text-[#111827] text-sm">{item.name}</span>
+                      <div className="min-w-0">
+                        <span className="text-[#111827] text-sm block truncate">{item.name}</span>
+                        <span className="text-[#9CA3AF] text-xs sm:hidden">{item.variant}</span>
+                      </div>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden sm:table-cell">
                       <span className="px-2.5 py-1 bg-[#F3F4F6] rounded-lg text-[#6B7280] text-sm font-medium">{item.variant}</span>
                     </td>
                     <td className="p-3">
@@ -201,13 +204,13 @@ export default function InventoryPage() {
                         {item.stock}
                       </span>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden lg:table-cell">
                       <span className="text-blue-600 text-sm font-medium">{item.reserved}</span>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden lg:table-cell">
                       <span className="text-[#111827] font-medium text-sm">{available}</span>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 hidden xl:table-cell">
                       {item.incoming > 0 ? (
                         <span className="text-green-600 text-sm font-medium">+{item.incoming}</span>
                       ) : (
@@ -216,19 +219,19 @@ export default function InventoryPage() {
                     </td>
                     <td className="p-3">
                       {isOut ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium">
+                        <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium">
                           <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                          Sin stock
+                          <span className="hidden sm:inline">Sin stock</span>
                         </span>
                       ) : isLow ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
+                        <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          Stock bajo
+                          <span className="hidden sm:inline">Stock bajo</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">
+                        <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          OK
+                          <span className="hidden sm:inline">OK</span>
                         </span>
                       )}
                     </td>

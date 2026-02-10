@@ -156,10 +156,10 @@ export default function CustomersPage() {
             <thead>
               <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
                 <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Cliente</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Grupo</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Pedidos</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Total Gastado</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Registrado</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Grupo</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell">Pedidos</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Total</th>
+                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">Registrado</th>
                 <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider"></th>
               </tr>
             </thead>
@@ -174,19 +174,23 @@ export default function CustomersPage() {
                 >
                   <td className="p-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white font-bold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                         {customer.name.charAt(0)}
                       </div>
-                      <div>
-                        <p className="text-[#111827] font-medium text-sm">{customer.name}</p>
-                        <p className="text-[#9CA3AF] text-xs flex items-center gap-1">
-                          <Mail className="w-3 h-3" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-[#111827] font-medium text-sm truncate">{customer.name}</p>
+                          {customer.group === 'vip' && (
+                            <Crown className="w-3 h-3 text-purple-600 sm:hidden flex-shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-[#9CA3AF] text-xs truncate">
                           {customer.email}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 hidden sm:table-cell">
                     {customer.group === 'vip' ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
                         <Crown className="w-3 h-3" />
@@ -198,13 +202,13 @@ export default function CustomersPage() {
                       </span>
                     )}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 hidden md:table-cell">
                     <span className="text-[#111827] text-sm font-medium">{customer.orders}</span>
                   </td>
                   <td className="p-3">
                     <span className="text-[#111827] font-semibold text-sm">${customer.spent.toLocaleString()}</span>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 hidden lg:table-cell">
                     <span className="text-[#6B7280] text-sm">{customer.createdAt}</span>
                   </td>
                   <td className="p-3">

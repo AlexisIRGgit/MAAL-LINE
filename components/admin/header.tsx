@@ -14,9 +14,9 @@ export function AdminHeader() {
   const userName = session?.user?.firstName || session?.user?.email?.split('@')[0] || 'Admin'
 
   return (
-    <header className="h-16 bg-white border-b border-[#E5E7EB] px-4 lg:px-6 flex items-center justify-between sticky top-0 z-30">
-      {/* Search */}
-      <div className="flex-1 max-w-md">
+    <header className="h-16 bg-white border-b border-[#E5E7EB] pl-14 pr-4 lg:pl-6 lg:pr-6 flex items-center justify-between sticky top-0 z-30">
+      {/* Search - Hidden on mobile, shown on larger screens */}
+      <div className="hidden sm:block flex-1 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
           <input
@@ -26,6 +26,9 @@ export function AdminHeader() {
           />
         </div>
       </div>
+
+      {/* Mobile spacer */}
+      <div className="sm:hidden flex-1" />
 
       {/* Right Side */}
       <div className="flex items-center gap-3">
