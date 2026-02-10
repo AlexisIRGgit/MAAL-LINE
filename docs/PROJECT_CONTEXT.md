@@ -77,6 +77,13 @@ MAAL-LINE/
 │   │       └── login/
 │   │           ├── page.tsx          # Login admin (aislado del layout admin)
 │   │           └── admin-login-form.tsx  # Formulario admin
+│   ├── cuenta/                        # Panel del usuario (cliente)
+│   │   ├── layout.tsx                # Layout con sidebar + header (tema claro)
+│   │   ├── page.tsx                  # Dashboard con resumen
+│   │   ├── pedidos/page.tsx          # Lista de pedidos del usuario
+│   │   ├── perfil/page.tsx           # Información personal y seguridad
+│   │   ├── direcciones/page.tsx      # Gestión de direcciones de envío
+│   │   └── pagos/page.tsx            # Métodos de pago
 │   ├── admin/
 │   │   ├── layout.tsx                # Layout con sidebar + header (tema claro)
 │   │   ├── page.tsx                  # Dashboard principal
@@ -664,38 +671,111 @@ openssl rand -base64 32
   - Reordenamiento de imágenes con drag & drop
   - Badge "PRINCIPAL" en la primera imagen
 
-### Fase 10: Diseño Responsivo del Panel Admin
-- [x] **Layout General:**
+### Fase 10: Panel del Usuario (Cliente)
+- [x] **Layout General** (`/cuenta/layout.tsx`):
+  - Sidebar en desktop con navegación
+  - Drawer con overlay en móvil
+  - Avatar del usuario con inicial
+  - Menú: Resumen, Pedidos, Perfil, Direcciones, Pagos
+  - Botón "Volver a la tienda"
+  - Botón de cerrar sesión
+
+- [x] **Dashboard** (`/cuenta/page.tsx`):
+  - Saludo personalizado con nombre del usuario
+  - Grid de acciones rápidas (Pedidos, Direcciones, Pagos, Wishlist)
+  - Lista de pedidos recientes con estado
+  - Cards de dirección y método de pago principales
+  - Banner de ayuda con contacto y FAQ
+
+- [x] **Pedidos** (`/cuenta/pedidos/page.tsx`):
+  - Cards de estadísticas (total, en proceso, en camino, entregados)
+  - Búsqueda por número de pedido o producto
+  - Filtro por estado (todos, en proceso, enviado, entregado, cancelado)
+  - Cards de pedidos expandibles con:
+    - Lista de productos con imagen, talla, cantidad, precio
+    - Dirección de envío
+    - Número de rastreo
+    - Botones de acción (Ver detalles, Reordenar, Rastrear)
+
+- [x] **Perfil** (`/cuenta/perfil/page.tsx`):
+  - Sección de foto de perfil con botón de cámara
+  - Formulario de información personal:
+    - Nombre y apellido
+    - Email y teléfono
+    - Fecha de nacimiento
+  - Sección de seguridad:
+    - Cambio de contraseña (actual, nueva, confirmar)
+    - Toggle de visibilidad de contraseña
+  - Preferencias de notificaciones:
+    - Email, SMS, actualizaciones de pedidos, promociones
+  - Zona de peligro (eliminar cuenta)
+
+- [x] **Direcciones** (`/cuenta/direcciones/page.tsx`):
+  - Grid de cards de direcciones
+  - Tipos: casa, trabajo, otro (con iconos)
+  - Badge "Principal" para dirección por defecto
+  - Modal para agregar/editar dirección:
+    - Campos: etiqueta, nombre, teléfono
+    - Calle, número, interior
+    - Colonia, ciudad, estado, CP, país
+    - Checkbox "Usar como principal"
+  - Full-screen modal en móvil
+  - Confirmación inline para eliminar
+
+- [x] **Métodos de Pago** (`/cuenta/pagos/page.tsx`):
+  - Cards de tarjetas con diseño de tarjeta de crédito real
+  - Gradientes por tipo (Visa azul, Mastercard naranja, Amex cyan)
+  - Badge "Principal" para tarjeta por defecto
+  - Detección automática de tipo de tarjeta
+  - Modal para agregar tarjeta:
+    - Número de tarjeta con formato automático
+    - Fecha de expiración (mes/año)
+    - CVV
+    - Nombre del titular
+  - Aviso de seguridad (encriptación bancaria)
+  - Acciones: hacer principal, eliminar
+
+### Fase 11: Diseño Responsivo (Admin + Usuario)
+- [x] **Layout Admin General:**
   - Header con padding izquierdo para botón menú hamburguesa
   - Búsqueda oculta en móvil
   - Sidebar con logo "M" cuando está colapsado
 
-- [x] **Dashboard (Overview):**
+- [x] **Dashboard Admin (Overview):**
   - Header con botones que se ajustan al ancho en móvil
   - Botón "Add Product" → "Nuevo" en móvil
   - Tabla Recent Orders: columnas Customer, Product, Actions ocultas en móvil
   - Gráficos con altura reducida (200px vs 280px)
   - Quick actions grid 2x2
 
-- [x] **Tablas responsivas** (columnas ocultas según breakpoint):
+- [x] **Tablas Admin responsivas** (columnas ocultas según breakpoint):
   - Productos: checkbox (sm), estado (sm), inventario (md), categoría (lg)
   - Órdenes: cliente (sm), fecha (md), pago (lg)
   - Clientes: grupo (sm), pedidos (md), fecha registro (lg)
   - Inventario: SKU (md), variante (sm), reservado/disponible (lg), en camino (xl)
   - Usuarios: estado (sm), teléfono (md), puesto (sm)
 
-- [x] **Modales:**
+- [x] **Modales (Admin + Usuario):**
   - Modal de órdenes: full-screen en móvil (inset-4)
   - Modal de usuarios: full-screen en móvil (h-full)
+  - Modal de direcciones: full-screen en móvil
+  - Modal de tarjetas: full-screen en móvil
   - Padding reducido en headers y contenido
 
-- [x] **Settings (Configuración):**
+- [x] **Settings Admin (Configuración):**
   - Tabs con solo iconos en móvil (texto oculto)
   - Scroll horizontal en tabs (-mx-4 px-4)
   - Cards de roles más compactas (p-3 vs p-4)
   - Toggle switches más pequeños (w-10 h-5)
   - Botones "Guardar" full-width en móvil
-  - Todas las secciones optimizadas (General, Equipo, Pagos, Envíos, Notificaciones, Seguridad)
+
+- [x] **Panel de Usuario (Cliente):**
+  - Layout con drawer lateral en móvil
+  - Header fijo con menú hamburguesa
+  - Todas las páginas mobile-first
+  - Cards expandibles en pedidos
+  - Grids responsivos (1, 2, 4 columnas según pantalla)
+  - Formularios con campos apilados en móvil
 
 - [x] **Otras mejoras:**
   - Botones de acción siempre visibles en móvil (no solo hover)
