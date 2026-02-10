@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import {
   Search,
   Package,
@@ -11,18 +12,33 @@ import {
   Filter,
   Download,
   ChevronDown,
+  Loader2,
+  Edit,
 } from 'lucide-react'
 
-// Mock data
-const mockInventory = [
-  { id: '1', sku: 'HOD-BLK-M', name: 'Hoodie Oversize Black', variant: 'M', stock: 45, reserved: 3, incoming: 50, lowStock: 10 },
-  { id: '2', sku: 'HOD-BLK-L', name: 'Hoodie Oversize Black', variant: 'L', stock: 32, reserved: 5, incoming: 50, lowStock: 10 },
-  { id: '3', sku: 'HOD-BLK-XL', name: 'Hoodie Oversize Black', variant: 'XL', stock: 8, reserved: 2, incoming: 30, lowStock: 10 },
-  { id: '4', sku: 'TEE-GTH-S', name: 'Tee Gothic Print', variant: 'S', stock: 120, reserved: 0, incoming: 0, lowStock: 20 },
-  { id: '5', sku: 'TEE-GTH-M', name: 'Tee Gothic Print', variant: 'M', stock: 89, reserved: 4, incoming: 0, lowStock: 20 },
-  { id: '6', sku: 'CRG-DRK-M', name: 'Cargo Pants Dark', variant: 'M', stock: 5, reserved: 1, incoming: 25, lowStock: 10 },
-  { id: '7', sku: 'CRG-DRK-L', name: 'Cargo Pants Dark', variant: 'L', stock: 0, reserved: 0, incoming: 25, lowStock: 10 },
-]
+interface InventoryItem {
+  id: string
+  sku: string
+  productId: string
+  productName: string
+  productSlug: string
+  size: string | null
+  color: string | null
+  stockQuantity: number
+  lowStockThreshold: number
+}
+
+interface InventoryResponse {
+  variants: InventoryItem[]
+  total: number
+  page: number
+  totalPages: number
+  stats: {
+    totalStock: number
+    lowStockCount: number
+    outOfStockCount: number
+  }
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -35,26 +51,52 @@ const itemVariants = {
 }
 
 export default function InventoryPage() {
-  const [inventory] = useState(mockInventory)
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [stats, setStats] = useState({ totalStock: 0, lowStockCount: 0, outOfStockCount: 0 })
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 })
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStock, setFilterStock] = useState('all')
 
-  const filteredInventory = inventory.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStock =
-      filterStock === 'all' ||
-      (filterStock === 'low' && item.stock <= item.lowStock) ||
-      (filterStock === 'out' && item.stock === 0) ||
-      (filterStock === 'ok' && item.stock > item.lowStock)
-    return matchesSearch && matchesStock
-  })
+  const fetchInventory = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: '50',
+        ...(filterStock !== 'all' && { stock: filterStock }),
+        ...(searchQuery && { search: searchQuery }),
+      })
 
-  const totalStock = inventory.reduce((acc, item) => acc + item.stock, 0)
-  const lowStockCount = inventory.filter((item) => item.stock <= item.lowStock && item.stock > 0).length
-  const outOfStockCount = inventory.filter((item) => item.stock === 0).length
-  const totalReserved = inventory.reduce((acc, item) => acc + item.reserved, 0)
+      const response = await fetch(`/api/inventory?${params}`)
+      if (!response.ok) throw new Error('Error fetching inventory')
+
+      const data: InventoryResponse = await response.json()
+      setInventory(data.variants)
+      setStats(data.stats)
+      setPagination({
+        page: data.page,
+        totalPages: data.totalPages,
+        total: data.total,
+      })
+    } catch (error) {
+      console.error('Error fetching inventory:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [pagination.page, filterStock, searchQuery])
+
+  useEffect(() => {
+    fetchInventory()
+  }, [fetchInventory])
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPagination((prev) => ({ ...prev, page: 1 }))
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery, filterStock])
 
   return (
     <motion.div
@@ -83,7 +125,7 @@ export default function InventoryPage() {
               <Package className="w-5 h-5 text-[#111827]" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#111827]">{totalStock}</p>
+              <p className="text-2xl font-bold text-[#111827]">{stats.totalStock}</p>
               <p className="text-sm text-[#6B7280]">Total en Stock</p>
             </div>
           </div>
@@ -94,7 +136,7 @@ export default function InventoryPage() {
               <TrendingDown className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#111827]">{lowStockCount}</p>
+              <p className="text-2xl font-bold text-[#111827]">{stats.lowStockCount}</p>
               <p className="text-sm text-[#6B7280]">Stock Bajo</p>
             </div>
           </div>
@@ -105,7 +147,7 @@ export default function InventoryPage() {
               <AlertTriangle className="w-5 h-5 text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#111827]">{outOfStockCount}</p>
+              <p className="text-2xl font-bold text-[#111827]">{stats.outOfStockCount}</p>
               <p className="text-sm text-[#6B7280]">Sin Stock</p>
             </div>
           </div>
@@ -116,8 +158,8 @@ export default function InventoryPage() {
               <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-[#111827]">{totalReserved}</p>
-              <p className="text-sm text-[#6B7280]">Reservados</p>
+              <p className="text-2xl font-bold text-[#111827]">{pagination.total}</p>
+              <p className="text-sm text-[#6B7280]">Total Variantes</p>
             </div>
           </div>
         </div>
@@ -148,117 +190,156 @@ export default function InventoryPage() {
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" />
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors">
-          <Filter className="w-4 h-4" />
-          Filtros
-        </button>
       </motion.div>
 
       {/* Inventory Table */}
       <motion.div
         variants={itemVariants}
-        className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden shadow-sm"
+        className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell">SKU</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Producto</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Variante</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Stock</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">Reservado</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden lg:table-cell">Disponible</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden xl:table-cell">En Camino</th>
-                <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5E7EB]">
-              {filteredInventory.map((item, index) => {
-                const available = item.stock - item.reserved
-                const isLow = item.stock <= item.lowStock && item.stock > 0
-                const isOut = item.stock === 0
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-6 h-6 text-[#111827] animate-spin" />
+          </div>
+        ) : inventory.length === 0 ? (
+          <div className="text-center py-20">
+            <Package className="w-12 h-12 text-[#D1D5DB] mx-auto mb-4" />
+            <p className="text-[#111827] font-medium text-lg">No hay variantes de productos</p>
+            <p className="text-[#6B7280] text-sm mt-1">
+              Agrega variantes (tallas) a tus productos para gestionar el inventario
+            </p>
+            <Link href="/admin/products">
+              <button className="mt-4 px-4 py-2.5 bg-[#111827] text-white font-semibold rounded-xl text-sm hover:bg-[#1F2937] transition-colors">
+                Ir a Productos
+              </button>
+            </Link>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden md:table-cell">SKU</th>
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Producto</th>
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider hidden sm:table-cell">Variante</th>
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Stock</th>
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Estado</th>
+                  <th className="p-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5E7EB]">
+                {inventory.map((item, index) => {
+                  const isLow = item.stockQuantity <= item.lowStockThreshold && item.stockQuantity > 0
+                  const isOut = item.stockQuantity === 0
+                  const variant = [item.size, item.color].filter(Boolean).join(' / ') || 'Sin variante'
 
-                return (
-                  <motion.tr
-                    key={item.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-[#F9FAFB] transition-colors"
-                  >
-                    <td className="p-3 hidden md:table-cell">
-                      <span className="text-[#111827] font-mono text-sm font-medium">{item.sku}</span>
-                    </td>
-                    <td className="p-3">
-                      <div className="min-w-0">
-                        <span className="text-[#111827] text-sm block truncate">{item.name}</span>
-                        <span className="text-[#9CA3AF] text-xs sm:hidden">{item.variant}</span>
-                      </div>
-                    </td>
-                    <td className="p-3 hidden sm:table-cell">
-                      <span className="px-2.5 py-1 bg-[#F3F4F6] rounded-lg text-[#6B7280] text-sm font-medium">{item.variant}</span>
-                    </td>
-                    <td className="p-3">
-                      <span className={`font-semibold text-sm ${isOut ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-[#111827]'}`}>
-                        {item.stock}
-                      </span>
-                    </td>
-                    <td className="p-3 hidden lg:table-cell">
-                      <span className="text-blue-600 text-sm font-medium">{item.reserved}</span>
-                    </td>
-                    <td className="p-3 hidden lg:table-cell">
-                      <span className="text-[#111827] font-medium text-sm">{available}</span>
-                    </td>
-                    <td className="p-3 hidden xl:table-cell">
-                      {item.incoming > 0 ? (
-                        <span className="text-green-600 text-sm font-medium">+{item.incoming}</span>
-                      ) : (
-                        <span className="text-[#D1D5DB] text-sm">-</span>
-                      )}
-                    </td>
-                    <td className="p-3">
-                      {isOut ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                          <span className="hidden sm:inline">Sin stock</span>
+                  return (
+                    <motion.tr
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                      className="hover:bg-[#F9FAFB] transition-colors"
+                    >
+                      <td className="p-3 hidden md:table-cell">
+                        <span className="text-[#111827] font-mono text-sm font-medium">{item.sku}</span>
+                      </td>
+                      <td className="p-3">
+                        <div className="min-w-0">
+                          <span className="text-[#111827] text-sm block truncate">{item.productName}</span>
+                          <span className="text-[#9CA3AF] text-xs sm:hidden">{variant}</span>
+                        </div>
+                      </td>
+                      <td className="p-3 hidden sm:table-cell">
+                        <span className="px-2.5 py-1 bg-[#F3F4F6] rounded-lg text-[#6B7280] text-sm font-medium">
+                          {variant}
                         </span>
-                      ) : isLow ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          <span className="hidden sm:inline">Stock bajo</span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`font-semibold text-sm ${isOut ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-[#111827]'}`}>
+                          {item.stockQuantity}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          <span className="hidden sm:inline">OK</span>
-                        </span>
-                      )}
-                    </td>
-                  </motion.tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td className="p-3">
+                        {isOut ? (
+                          <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-red-50 text-red-700 rounded-full text-xs font-medium">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                            <span className="hidden sm:inline">Sin stock</span>
+                          </span>
+                        ) : isLow ? (
+                          <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span className="hidden sm:inline">Stock bajo</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            <span className="hidden sm:inline">OK</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        <Link
+                          href={`/admin/products/${item.productId}/edit`}
+                          className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors inline-flex"
+                          title="Editar producto"
+                        >
+                          <Edit className="w-4 h-4 text-[#6B7280]" />
+                        </Link>
+                      </td>
+                    </motion.tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-4 border-t border-[#E5E7EB] bg-[#F9FAFB]">
-          <p className="text-sm text-[#6B7280]">
-            Mostrando {filteredInventory.length} de {inventory.length} items
-          </p>
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-              Anterior
-            </button>
-            <button className="px-3 py-1.5 text-sm bg-[#111827] text-white rounded-lg font-medium">
-              1
-            </button>
-            <button className="px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-white rounded-lg transition-colors">
-              Siguiente
-            </button>
+        {inventory.length > 0 && (
+          <div className="flex items-center justify-between p-4 border-t border-[#E5E7EB] bg-[#F9FAFB] rounded-b-xl">
+            <p className="text-sm text-[#6B7280]">
+              Mostrando {inventory.length} de {pagination.total} variantes
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
+                disabled={pagination.page <= 1}
+                className="px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setPagination((prev) => ({ ...prev, page }))}
+                  className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
+                    page === pagination.page
+                      ? 'bg-[#111827] text-white'
+                      : 'text-[#6B7280] hover:text-[#111827] hover:bg-white'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
+                disabled={pagination.page >= pagination.totalPages}
+                className="px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+      </motion.div>
+
+      {/* Help Text */}
+      <motion.div variants={itemVariants} className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+        <p className="text-sm text-blue-800">
+          <strong>¿Cómo agregar stock?</strong> Ve a <Link href="/admin/products" className="underline">Productos</Link>,
+          edita un producto y agrega variantes (tallas) con la cantidad de stock deseada.
+        </p>
       </motion.div>
     </motion.div>
   )

@@ -289,3 +289,103 @@ export async function getAdminProductById(id: string) {
     },
   })
 }
+
+/**
+ * Get inventory data (all product variants with stock info)
+ */
+export async function getInventory(
+  page = 1,
+  limit = 50,
+  stockFilter?: 'all' | 'low' | 'out' | 'ok',
+  search?: string
+) {
+  const lowStockThreshold = 10
+
+  // First get all variants with their products
+  const whereVariant = {
+    isActive: true,
+    product: {
+      deletedAt: null,
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { slug: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }),
+    },
+    ...(stockFilter === 'out' && { stockQuantity: 0 }),
+    ...(stockFilter === 'low' && {
+      stockQuantity: { gt: 0, lte: lowStockThreshold }
+    }),
+    ...(stockFilter === 'ok' && {
+      stockQuantity: { gt: lowStockThreshold }
+    }),
+  }
+
+  const [variants, total, stats] = await Promise.all([
+    prisma.productVariant.findMany({
+      where: whereVariant,
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: [
+        { stockQuantity: 'asc' },
+        { product: { name: 'asc' } },
+      ],
+    }),
+    prisma.productVariant.count({ where: whereVariant }),
+    // Get stats
+    prisma.productVariant.aggregate({
+      where: { isActive: true, product: { deletedAt: null } },
+      _sum: { stockQuantity: true },
+    }),
+  ])
+
+  // Get additional stats
+  const [lowStockCount, outOfStockCount] = await Promise.all([
+    prisma.productVariant.count({
+      where: {
+        isActive: true,
+        product: { deletedAt: null },
+        stockQuantity: { gt: 0, lte: lowStockThreshold },
+      },
+    }),
+    prisma.productVariant.count({
+      where: {
+        isActive: true,
+        product: { deletedAt: null },
+        stockQuantity: 0,
+      },
+    }),
+  ])
+
+  return {
+    variants: variants.map(v => ({
+      id: v.id,
+      sku: v.sku,
+      productId: v.product.id,
+      productName: v.product.name,
+      productSlug: v.product.slug,
+      size: v.size,
+      color: v.color,
+      stockQuantity: v.stockQuantity,
+      lowStockThreshold,
+    })),
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    stats: {
+      totalStock: stats._sum.stockQuantity || 0,
+      lowStockCount,
+      outOfStockCount,
+    },
+  }
+}
