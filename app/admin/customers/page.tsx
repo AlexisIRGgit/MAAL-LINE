@@ -18,16 +18,38 @@ import {
   Calendar,
   TrendingUp,
   ExternalLink,
+  MapPin,
+  Key,
+  Phone,
+  Copy,
+  Check,
 } from 'lucide-react'
+
+interface Address {
+  id: string
+  type: string
+  isDefault: boolean
+  fullName: string
+  phone: string | null
+  streetLine1: string
+  streetLine2: string | null
+  neighborhood: string | null
+  city: string
+  state: string
+  postalCode: string
+  country: string
+}
 
 interface Customer {
   id: string
   name: string
   email: string
+  phone: string | null
   orders: number
   spent: number
   group: string
   createdAt: string
+  addresses: Address[]
 }
 
 interface CustomersResponse {
@@ -66,6 +88,44 @@ export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState('all')
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [tempPassword, setTempPassword] = useState<string | null>(null)
+  const [copiedPassword, setCopiedPassword] = useState(false)
+
+  const handleResetPassword = async (customerId: string) => {
+    if (!confirm('¿Estás seguro de generar una nueva contraseña temporal para este cliente?')) return
+
+    setIsResettingPassword(true)
+    setTempPassword(null)
+
+    try {
+      const response = await fetch(`/api/customers/${customerId}/reset-password`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) throw new Error('Error al resetear contraseña')
+
+      const data = await response.json()
+      setTempPassword(data.tempPassword)
+    } catch (error) {
+      console.error('Error resetting password:', error)
+      alert('Error al generar la contraseña temporal')
+    } finally {
+      setIsResettingPassword(false)
+    }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedPassword(true)
+    setTimeout(() => setCopiedPassword(false), 2000)
+  }
+
+  const closeModal = () => {
+    setSelectedCustomer(null)
+    setTempPassword(null)
+    setCopiedPassword(false)
+  }
 
   const fetchCustomers = useCallback(async () => {
     setIsLoading(true)
@@ -371,7 +431,7 @@ export default function CustomersPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setSelectedCustomer(null)}
+              onClick={closeModal}
               className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             />
             <motion.div
@@ -383,7 +443,7 @@ export default function CustomersPage() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-[#111827]">Detalles del Cliente</h2>
                 <button
-                  onClick={() => setSelectedCustomer(null)}
+                  onClick={closeModal}
                   className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-[#6B7280]" />
@@ -410,6 +470,12 @@ export default function CustomersPage() {
                       <Mail className="w-4 h-4" />
                       <span className="text-sm truncate">{selectedCustomer.email}</span>
                     </div>
+                    {selectedCustomer.phone && (
+                      <div className="flex items-center gap-1.5 text-[#6B7280] mt-0.5">
+                        <Phone className="w-4 h-4" />
+                        <span className="text-sm">{selectedCustomer.phone}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -457,6 +523,92 @@ export default function CustomersPage() {
                     </div>
                     <p className="text-[#111827] font-medium">{selectedCustomer.createdAt}</p>
                   </div>
+                </div>
+
+                {/* Addresses */}
+                <div className="p-4 bg-[#F9FAFB] rounded-xl">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin className="w-4 h-4 text-[#6B7280]" />
+                    <p className="text-[#6B7280] text-xs uppercase tracking-wider font-semibold">Direcciones</p>
+                  </div>
+                  {selectedCustomer.addresses.length === 0 ? (
+                    <p className="text-[#9CA3AF] text-sm">Sin direcciones guardadas</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {selectedCustomer.addresses.map((addr) => (
+                        <div key={addr.id} className="p-3 bg-white rounded-lg border border-[#E5E7EB]">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[#111827] font-medium text-sm">{addr.fullName}</span>
+                            {addr.isDefault && (
+                              <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
+                                Principal
+                              </span>
+                            )}
+                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                              {addr.type === 'shipping' ? 'Envío' : 'Facturación'}
+                            </span>
+                          </div>
+                          <p className="text-[#6B7280] text-sm">
+                            {addr.streetLine1}
+                            {addr.streetLine2 && `, ${addr.streetLine2}`}
+                          </p>
+                          <p className="text-[#6B7280] text-sm">
+                            {addr.neighborhood && `${addr.neighborhood}, `}
+                            {addr.city}, {addr.state} {addr.postalCode}
+                          </p>
+                          {addr.phone && (
+                            <p className="text-[#9CA3AF] text-xs mt-1">Tel: {addr.phone}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Password Reset */}
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Key className="w-4 h-4 text-amber-600" />
+                    <p className="text-amber-800 text-xs uppercase tracking-wider font-semibold">Resetear Contraseña</p>
+                  </div>
+                  {tempPassword ? (
+                    <div className="space-y-2">
+                      <p className="text-amber-700 text-sm">Contraseña temporal generada:</p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 px-3 py-2 bg-white border border-amber-300 rounded-lg text-[#111827] font-mono text-sm">
+                          {tempPassword}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(tempPassword)}
+                          className="p-2 bg-white border border-amber-300 rounded-lg hover:bg-amber-100 transition-colors"
+                          title="Copiar"
+                        >
+                          {copiedPassword ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-amber-600" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-amber-600 text-xs">Comparte esta contraseña con el cliente de forma segura.</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <p className="text-amber-700 text-sm">Genera una contraseña temporal si el cliente no puede acceder.</p>
+                      <button
+                        onClick={() => handleResetPassword(selectedCustomer.id)}
+                        disabled={isResettingPassword}
+                        className="px-3 py-1.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {isResettingPassword ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Key className="w-4 h-4" />
+                        )}
+                        Generar
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}

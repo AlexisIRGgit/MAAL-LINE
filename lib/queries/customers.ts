@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/db'
-import { UserRole, CustomerGroup } from '@prisma/client'
+import { UserRole, CustomerGroup, AddressType } from '@prisma/client'
+import { randomBytes } from 'crypto'
+import bcrypt from 'bcryptjs'
 
 /**
  * Get customers for admin panel with filtering and pagination
@@ -32,6 +34,9 @@ export async function getAdminCustomers(
       where,
       include: {
         customerProfile: true,
+        addresses: {
+          orderBy: { isDefault: 'desc' },
+        },
         _count: {
           select: { orders: true },
         },
@@ -49,10 +54,25 @@ export async function getAdminCustomers(
       id: customer.id,
       name: `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || customer.email.split('@')[0],
       email: customer.email,
+      phone: customer.phone,
       orders: customer.customerProfile?.orderCount || customer._count.orders || 0,
       spent: parseFloat(customer.customerProfile?.totalSpent?.toString() || '0'),
       group: customer.customerProfile?.customerGroup || 'standard',
       createdAt: customer.createdAt.toISOString().split('T')[0],
+      addresses: customer.addresses.map((addr) => ({
+        id: addr.id,
+        type: addr.type,
+        isDefault: addr.isDefault,
+        fullName: addr.fullName,
+        phone: addr.phone,
+        streetLine1: addr.streetLine1,
+        streetLine2: addr.streetLine2,
+        neighborhood: addr.neighborhood,
+        city: addr.city,
+        state: addr.state,
+        postalCode: addr.postalCode,
+        country: addr.country,
+      })),
     })),
     total,
     page,
@@ -129,4 +149,21 @@ export async function updateCustomerGroup(userId: string, group: CustomerGroup) 
       customerGroup: group,
     },
   })
+}
+
+/**
+ * Generate temporary password for customer
+ */
+export async function resetCustomerPassword(userId: string) {
+  // Generate a random temporary password
+  const tempPassword = randomBytes(4).toString('hex') // 8 character password
+  const hashedPassword = await bcrypt.hash(tempPassword, 12)
+
+  // Update the user's password
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash: hashedPassword },
+  })
+
+  return tempPassword
 }
