@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import {
@@ -16,6 +16,7 @@ import {
   EyeOff,
   Check,
   Loader2,
+  AlertCircle,
 } from 'lucide-react'
 
 const containerVariants = {
@@ -31,15 +32,21 @@ const itemVariants = {
 export default function ProfilePage() {
   const { data: session } = useSession()
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [memberSince, setMemberSince] = useState<string>('')
 
   // Form state
   const [formData, setFormData] = useState({
-    firstName: session?.user?.firstName || '',
-    lastName: session?.user?.lastName || '',
-    email: session?.user?.email || '',
+    firstName: '',
+    lastName: '',
+    email: '',
     phone: '',
     birthDate: '',
   })
@@ -57,16 +64,129 @@ export default function ProfilePage() {
     promotions: true,
   })
 
+  // Load profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/account/profile')
+        if (response.ok) {
+          const data = await response.json()
+          setFormData({
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            birthDate: data.birthDate || '',
+          })
+          setPreferences((prev) => ({
+            ...prev,
+            promotions: data.acceptsMarketing || false,
+          }))
+          // Format member since date
+          if (data.createdAt) {
+            const date = new Date(data.createdAt)
+            const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' }
+            setMemberSince(date.toLocaleDateString('es-MX', options))
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error)
+      } finally {
+        setIsLoadingProfile(false)
+      }
+    }
+
+    if (session?.user) {
+      fetchProfile()
+    } else {
+      setIsLoadingProfile(false)
+    }
+  }, [session])
+
   const handleSaveProfile = async () => {
     setIsLoading(true)
-    // Simular guardado
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setError(null)
+    setSaved(false)
+
+    try {
+      const response = await fetch('/api/account/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          birthDate: formData.birthDate || null,
+          acceptsMarketing: preferences.promotions,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al guardar')
+      }
+
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al guardar cambios')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    setPasswordError(null)
+    setPasswordSuccess(false)
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('Las contraseñas no coinciden')
+      return
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError('La contraseña debe tener al menos 8 caracteres')
+      return
+    }
+
+    setIsChangingPassword(true)
+
+    try {
+      const response = await fetch('/api/account/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al cambiar contraseña')
+      }
+
+      setPasswordSuccess(true)
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setTimeout(() => setPasswordSuccess(false), 3000)
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'Error al cambiar contraseña')
+    } finally {
+      setIsChangingPassword(false)
+    }
   }
 
   const userInitial = formData.firstName?.charAt(0)?.toUpperCase() || session?.user?.email?.charAt(0)?.toUpperCase() || 'U'
+
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 text-[#111827] animate-spin" />
+      </div>
+    )
+  }
 
   return (
     <motion.div
@@ -97,7 +217,9 @@ export default function ProfilePage() {
               {formData.firstName || 'Usuario'} {formData.lastName}
             </h2>
             <p className="text-sm text-[#6B7280]">{formData.email}</p>
-            <p className="text-xs text-[#9CA3AF] mt-1">Miembro desde Enero 2024</p>
+            {memberSince && (
+              <p className="text-xs text-[#9CA3AF] mt-1">Miembro desde {memberSince}</p>
+            )}
           </div>
         </div>
       </motion.div>
@@ -108,6 +230,13 @@ export default function ProfilePage() {
           <User className="w-5 h-5 text-[#6B7280]" />
           Información Personal
         </h3>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700 text-sm">
+            <AlertCircle className="w-4 h-4" />
+            {error}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -137,11 +266,12 @@ export default function ProfilePage() {
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
+                disabled
+                className="w-full pl-10 pr-4 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-sm text-[#6B7280] cursor-not-allowed"
                 placeholder="tu@email.com"
               />
             </div>
+            <p className="text-xs text-[#9CA3AF] mt-1">El email no se puede cambiar</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-[#374151] mb-2">Teléfono</label>
@@ -194,6 +324,20 @@ export default function ProfilePage() {
           <Shield className="w-5 h-5 text-[#6B7280]" />
           Seguridad
         </h3>
+
+        {passwordError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700 text-sm">
+            <AlertCircle className="w-4 h-4" />
+            {passwordError}
+          </div>
+        )}
+
+        {passwordSuccess && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2 text-green-700 text-sm">
+            <Check className="w-4 h-4" />
+            Contraseña actualizada correctamente
+          </div>
+        )}
 
         <div className="space-y-4">
           <div>
@@ -254,8 +398,16 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex justify-end mt-6 pt-4 border-t border-[#E5E7EB]">
-          <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors">
-            <Shield className="w-4 h-4" />
+          <button
+            onClick={handleChangePassword}
+            disabled={isChangingPassword || !passwordData.currentPassword || !passwordData.newPassword}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors disabled:opacity-50"
+          >
+            {isChangingPassword ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Shield className="w-4 h-4" />
+            )}
             Cambiar contraseña
           </button>
         </div>
