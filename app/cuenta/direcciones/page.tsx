@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   MapPin,
@@ -32,41 +32,6 @@ interface Address {
   isDefault: boolean
 }
 
-// Mock data
-const mockAddresses: Address[] = [
-  {
-    id: '1',
-    type: 'home',
-    label: 'Casa',
-    fullName: 'Juan Pérez',
-    phone: '+52 55 1234 5678',
-    street: 'Av. Reforma',
-    number: '123',
-    interior: 'Depto 4B',
-    neighborhood: 'Col. Centro',
-    city: 'Ciudad de México',
-    state: 'CDMX',
-    zipCode: '06600',
-    country: 'México',
-    isDefault: true,
-  },
-  {
-    id: '2',
-    type: 'work',
-    label: 'Oficina',
-    fullName: 'Juan Pérez',
-    phone: '+52 55 8765 4321',
-    street: 'Calle 5 de Mayo',
-    number: '456',
-    neighborhood: 'Roma Norte',
-    city: 'Ciudad de México',
-    state: 'CDMX',
-    zipCode: '06700',
-    country: 'México',
-    isDefault: false,
-  },
-]
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
@@ -78,7 +43,8 @@ const itemVariants = {
 }
 
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState<Address[]>(mockAddresses)
+  const [addresses, setAddresses] = useState<Address[]>([])
+  const [isLoadingPage, setIsLoadingPage] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -86,7 +52,7 @@ export default function AddressesPage() {
 
   const [formData, setFormData] = useState<Partial<Address>>({
     type: 'home',
-    label: '',
+    label: 'Casa',
     fullName: '',
     phone: '',
     street: '',
@@ -100,6 +66,25 @@ export default function AddressesPage() {
     isDefault: false,
   })
 
+  // Load addresses
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const response = await fetch('/api/account/addresses')
+        if (response.ok) {
+          const data = await response.json()
+          setAddresses(data.addresses || [])
+        }
+      } catch (error) {
+        console.error('Error loading addresses:', error)
+      } finally {
+        setIsLoadingPage(false)
+      }
+    }
+
+    fetchAddresses()
+  }, [])
+
   const handleOpenModal = (address?: Address) => {
     if (address) {
       setEditingAddress(address)
@@ -108,7 +93,7 @@ export default function AddressesPage() {
       setEditingAddress(null)
       setFormData({
         type: 'home',
-        label: '',
+        label: 'Casa',
         fullName: '',
         phone: '',
         street: '',
@@ -119,7 +104,7 @@ export default function AddressesPage() {
         state: '',
         zipCode: '',
         country: 'México',
-        isDefault: false,
+        isDefault: addresses.length === 0,
       })
     }
     setShowModal(true)
@@ -127,29 +112,83 @@ export default function AddressesPage() {
 
   const handleSave = async () => {
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    if (editingAddress) {
-      setAddresses(addresses.map((a) => (a.id === editingAddress.id ? { ...a, ...formData } : a)))
-    } else {
-      const newAddress: Address = {
-        ...formData,
-        id: Date.now().toString(),
-      } as Address
-      setAddresses([...addresses, newAddress])
+    try {
+      if (editingAddress) {
+        // Update existing address
+        const response = await fetch(`/api/account/addresses/${editingAddress.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setAddresses(addresses.map((a) =>
+            a.id === editingAddress.id ? data.address : (data.address.isDefault ? { ...a, isDefault: false } : a)
+          ))
+        }
+      } else {
+        // Create new address
+        const response = await fetch('/api/account/addresses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.address.isDefault) {
+            setAddresses([...addresses.map(a => ({ ...a, isDefault: false })), data.address])
+          } else {
+            setAddresses([...addresses, data.address])
+          }
+        }
+      }
+
+      setShowModal(false)
+    } catch (error) {
+      console.error('Error saving address:', error)
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
-    setShowModal(false)
   }
 
   const handleDelete = async (id: string) => {
-    setAddresses(addresses.filter((a) => a.id !== id))
+    try {
+      const response = await fetch(`/api/account/addresses/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        const deletedAddress = addresses.find(a => a.id === id)
+        let newAddresses = addresses.filter((a) => a.id !== id)
+
+        // If deleted was default and there are other addresses, set first as default
+        if (deletedAddress?.isDefault && newAddresses.length > 0) {
+          newAddresses = newAddresses.map((a, i) => i === 0 ? { ...a, isDefault: true } : a)
+        }
+
+        setAddresses(newAddresses)
+      }
+    } catch (error) {
+      console.error('Error deleting address:', error)
+    }
     setDeleteConfirm(null)
   }
 
-  const handleSetDefault = (id: string) => {
-    setAddresses(addresses.map((a) => ({ ...a, isDefault: a.id === id })))
+  const handleSetDefault = async (id: string) => {
+    try {
+      const response = await fetch(`/api/account/addresses/${id}`, {
+        method: 'PATCH',
+      })
+
+      if (response.ok) {
+        setAddresses(addresses.map((a) => ({ ...a, isDefault: a.id === id })))
+      }
+    } catch (error) {
+      console.error('Error setting default:', error)
+    }
   }
 
   const getTypeIcon = (type: string) => {
@@ -161,6 +200,14 @@ export default function AddressesPage() {
       default:
         return <MapPin className="w-4 h-4" />
     }
+  }
+
+  if (isLoadingPage) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 text-[#111827] animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -362,7 +409,7 @@ export default function AddressesPage() {
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="Juan Pérez"
+                      placeholder="Tu nombre completo"
                     />
                   </div>
                   <div>
@@ -479,7 +526,7 @@ export default function AddressesPage() {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={isLoading}
+                  disabled={isLoading || !formData.fullName || !formData.street || !formData.city}
                   className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors disabled:opacity-50"
                 >
                   {isLoading ? (
