@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
@@ -32,6 +32,19 @@ export default function AccountLayout({
   const pathname = usePathname()
   const { data: session } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const userName = session?.user?.firstName || session?.user?.name?.split(' ')[0] || 'Usuario'
   const userEmail = session?.user?.email || ''
@@ -51,12 +64,51 @@ export default function AccountLayout({
           <Link href="/" className="text-lg font-bold text-[#111827]">
             MAAL LINE
           </Link>
-          <Link
-            href="/cuenta/perfil"
-            className="w-8 h-8 bg-gradient-to-br from-[#111827] to-[#374151] rounded-full flex items-center justify-center text-white text-sm font-bold"
-          >
-            {userInitial}
-          </Link>
+
+          {/* User Menu */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="w-8 h-8 bg-gradient-to-br from-[#111827] to-[#374151] rounded-full flex items-center justify-center text-white text-sm font-bold"
+            >
+              {userInitial}
+            </button>
+
+            {/* Dropdown */}
+            <AnimatePresence>
+              {isUserMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-48 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50"
+                >
+                  <div className="p-3 border-b border-[#E5E7EB]">
+                    <p className="font-semibold text-[#111827] text-sm truncate">{userName}</p>
+                    <p className="text-xs text-[#6B7280] truncate">{userEmail}</p>
+                  </div>
+                  <div className="p-1">
+                    <Link
+                      href="/cuenta/perfil"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Mi Perfil
+                    </Link>
+                    <button
+                      onClick={() => signOut({ callbackUrl: '/' })}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </header>
 
