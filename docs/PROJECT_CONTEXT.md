@@ -665,13 +665,43 @@ openssl rand -base64 32
   - Badge "PRINCIPAL" en la primera imagen
 
 ### Fase 10: Diseño Responsivo del Panel Admin
-- [x] Sidebar con menú hamburguesa en móvil
-- [x] Header adaptado para móvil
-- [x] Dashboard con grids responsivos
-- [x] Tablas con scroll horizontal en móvil
-- [x] Formularios adaptados a pantallas pequeñas
-- [x] Modales full-screen en móvil
-- [x] Todas las páginas del admin optimizadas para móvil
+- [x] **Layout General:**
+  - Header con padding izquierdo para botón menú hamburguesa
+  - Búsqueda oculta en móvil
+  - Sidebar con logo "M" cuando está colapsado
+
+- [x] **Dashboard (Overview):**
+  - Header con botones que se ajustan al ancho en móvil
+  - Botón "Add Product" → "Nuevo" en móvil
+  - Tabla Recent Orders: columnas Customer, Product, Actions ocultas en móvil
+  - Gráficos con altura reducida (200px vs 280px)
+  - Quick actions grid 2x2
+
+- [x] **Tablas responsivas** (columnas ocultas según breakpoint):
+  - Productos: checkbox (sm), estado (sm), inventario (md), categoría (lg)
+  - Órdenes: cliente (sm), fecha (md), pago (lg)
+  - Clientes: grupo (sm), pedidos (md), fecha registro (lg)
+  - Inventario: SKU (md), variante (sm), reservado/disponible (lg), en camino (xl)
+  - Usuarios: estado (sm), teléfono (md), puesto (sm)
+
+- [x] **Modales:**
+  - Modal de órdenes: full-screen en móvil (inset-4)
+  - Modal de usuarios: full-screen en móvil (h-full)
+  - Padding reducido en headers y contenido
+
+- [x] **Settings (Configuración):**
+  - Tabs con solo iconos en móvil (texto oculto)
+  - Scroll horizontal en tabs (-mx-4 px-4)
+  - Cards de roles más compactas (p-3 vs p-4)
+  - Toggle switches más pequeños (w-10 h-5)
+  - Botones "Guardar" full-width en móvil
+  - Todas las secciones optimizadas (General, Equipo, Pagos, Envíos, Notificaciones, Seguridad)
+
+- [x] **Otras mejoras:**
+  - Botones de acción siempre visibles en móvil (no solo hover)
+  - Información secundaria inline en celdas compactas
+  - Badges con solo dot de color en pantallas pequeñas
+  - Textos truncados con `truncate` y `line-clamp`
 
 ---
 
