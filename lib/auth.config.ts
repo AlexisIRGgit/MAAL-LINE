@@ -27,26 +27,52 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
       const userRole = auth?.user?.role as string | undefined
+      const adminRoles = ['employee', 'manager', 'admin', 'owner']
+      const isAdminUser = userRole && adminRoles.includes(userRole)
 
       // Routes that require authentication
       const protectedRoutes = ['/account', '/checkout', '/orders']
-      // Routes only for admins/employees
-      const adminRoutes = ['/admin']
-      // Routes only for guests
-      const guestRoutes = ['/login', '/register']
+      // Admin login page (special handling)
+      const isAdminLoginPage = nextUrl.pathname === '/admin/login'
+      // Admin routes (except login)
+      const isAdminRoute = nextUrl.pathname.startsWith('/admin') && !isAdminLoginPage
+      // Public guest routes
+      const isPublicLoginPage = nextUrl.pathname === '/login'
+      const isRegisterPage = nextUrl.pathname === '/register'
 
       const isProtectedRoute = protectedRoutes.some((route) =>
         nextUrl.pathname.startsWith(route)
       )
-      const isAdminRoute = adminRoutes.some((route) =>
-        nextUrl.pathname.startsWith(route)
-      )
-      const isGuestRoute = guestRoutes.some((route) =>
-        nextUrl.pathname.startsWith(route)
-      )
 
-      // Redirect logged-in users away from guest routes
-      if (isGuestRoute && isLoggedIn) {
+      // Admin login page handling
+      if (isAdminLoginPage) {
+        // If logged in as admin, redirect to admin dashboard
+        if (isLoggedIn && isAdminUser) {
+          return Response.redirect(new URL('/admin', nextUrl))
+        }
+        // If logged in as customer, redirect to home
+        if (isLoggedIn && !isAdminUser) {
+          return Response.redirect(new URL('/', nextUrl))
+        }
+        // Allow access to admin login
+        return true
+      }
+
+      // Public login page handling
+      if (isPublicLoginPage) {
+        // If logged in as admin, redirect to admin dashboard
+        if (isLoggedIn && isAdminUser) {
+          return Response.redirect(new URL('/admin', nextUrl))
+        }
+        // If logged in as customer, redirect to home
+        if (isLoggedIn) {
+          return Response.redirect(new URL('/', nextUrl))
+        }
+        return true
+      }
+
+      // Register page - redirect logged-in users
+      if (isRegisterPage && isLoggedIn) {
         return Response.redirect(new URL('/', nextUrl))
       }
 
@@ -59,10 +85,9 @@ export const authConfig: NextAuthConfig = {
       // Check admin access
       if (isAdminRoute) {
         if (!isLoggedIn) {
-          return Response.redirect(new URL('/login', nextUrl))
+          return Response.redirect(new URL('/admin/login', nextUrl))
         }
-        const allowedRoles = ['employee', 'manager', 'admin', 'owner']
-        if (!userRole || !allowedRoles.includes(userRole)) {
+        if (!isAdminUser) {
           return Response.redirect(new URL('/', nextUrl))
         }
       }
