@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -12,41 +13,38 @@ import {
   Truck,
   CheckCircle,
   ShoppingBag,
+  Loader2,
 } from 'lucide-react'
 
-// Mock data - será reemplazado con datos reales
-const recentOrders = [
-  {
-    id: 'ML-2024-001',
-    date: '2024-02-08',
-    status: 'delivered',
-    total: 2450,
-    items: 2,
-    image: '/images/products/hoodie-1.jpg'
-  },
-  {
-    id: 'ML-2024-002',
-    date: '2024-02-05',
-    status: 'shipped',
-    total: 1890,
-    items: 1,
-    image: '/images/products/tee-1.jpg'
-  },
-  {
-    id: 'ML-2024-003',
-    date: '2024-02-01',
-    status: 'processing',
-    total: 3200,
-    items: 3,
-    image: '/images/products/pants-1.jpg'
-  },
-]
+interface RecentOrder {
+  id: string
+  date: string
+  status: string
+  total: number
+  items: number
+  image: string | null
+}
 
-const quickActions = [
-  { href: '/cuenta/pedidos', label: 'Mis Pedidos', icon: Package, count: 3, color: 'bg-blue-50 text-blue-600' },
-  { href: '/cuenta/direcciones', label: 'Direcciones', icon: MapPin, count: 2, color: 'bg-green-50 text-green-600' },
-  { href: '/wishlist', label: 'Lista de Deseos', icon: Heart, count: 5, color: 'bg-red-50 text-red-600' },
-]
+interface QuickAction {
+  type: string
+  count: number
+}
+
+interface DefaultAddress {
+  id: string
+  label: string
+  street: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+}
+
+interface SummaryData {
+  recentOrders: RecentOrder[]
+  quickActions: QuickAction[]
+  defaultAddress: DefaultAddress | null
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -60,7 +58,27 @@ const itemVariants = {
 
 export default function AccountPage() {
   const { data: session } = useSession()
+  const [data, setData] = useState<SummaryData | null>(null)
+  const [loading, setLoading] = useState(true)
   const userName = session?.user?.firstName || session?.user?.name?.split(' ')[0] || 'Usuario'
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const response = await fetch('/api/account/summary')
+        if (response.ok) {
+          const result = await response.json()
+          setData(result)
+        }
+      } catch (error) {
+        console.error('Error fetching summary:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSummary()
+  }, [])
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -74,6 +92,31 @@ export default function AccountPage() {
         return { label: status, icon: Package, color: 'text-gray-600 bg-gray-50' }
     }
   }
+
+  const getActionConfig = (type: string) => {
+    switch (type) {
+      case 'orders':
+        return { href: '/cuenta/pedidos', label: 'Mis Pedidos', icon: Package, color: 'bg-blue-50 text-blue-600' }
+      case 'addresses':
+        return { href: '/cuenta/direcciones', label: 'Direcciones', icon: MapPin, color: 'bg-green-50 text-green-600' }
+      case 'wishlist':
+        return { href: '/wishlist', label: 'Lista de Deseos', icon: Heart, color: 'bg-red-50 text-red-600' }
+      default:
+        return { href: '/', label: type, icon: Package, color: 'bg-gray-50 text-gray-600' }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#6B7280]" />
+      </div>
+    )
+  }
+
+  const recentOrders = data?.recentOrders || []
+  const quickActions = data?.quickActions || []
+  const defaultAddress = data?.defaultAddress
 
   return (
     <motion.div
@@ -94,27 +137,30 @@ export default function AccountPage() {
 
       {/* Quick Actions */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {quickActions.map((action) => (
-          <Link
-            key={action.href}
-            href={action.href}
-            className="group bg-white border border-[#E5E7EB] rounded-2xl p-4 hover:shadow-lg transition-all"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className={`p-2.5 rounded-xl ${action.color}`}>
-                <action.icon className="w-5 h-5" />
+        {quickActions.map((action) => {
+          const config = getActionConfig(action.type)
+          return (
+            <Link
+              key={action.type}
+              href={config.href}
+              className="group bg-white border border-[#E5E7EB] rounded-2xl p-4 hover:shadow-lg transition-all"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className={`p-2.5 rounded-xl ${config.color}`}>
+                  <config.icon className="w-5 h-5" />
+                </div>
+                {action.count > 0 && (
+                  <span className="px-2 py-0.5 bg-[#111827] text-white text-xs font-bold rounded-full">
+                    {action.count}
+                  </span>
+                )}
               </div>
-              {action.count > 0 && (
-                <span className="px-2 py-0.5 bg-[#111827] text-white text-xs font-bold rounded-full">
-                  {action.count}
-                </span>
-              )}
-            </div>
-            <p className="font-semibold text-[#111827] text-sm group-hover:text-[#374151] transition-colors">
-              {action.label}
-            </p>
-          </Link>
-        ))}
+              <p className="font-semibold text-[#111827] text-sm group-hover:text-[#374151] transition-colors">
+                {config.label}
+              </p>
+            </Link>
+          )
+        })}
       </motion.div>
 
       {/* Recent Orders */}
@@ -144,8 +190,16 @@ export default function AccountPage() {
                   className="flex items-center gap-4 p-4 sm:p-5 hover:bg-[#F9FAFB] transition-colors"
                 >
                   {/* Order Image */}
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#F3F4F6] rounded-xl flex items-center justify-center flex-shrink-0">
-                    <ShoppingBag className="w-6 h-6 text-[#9CA3AF]" />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#F3F4F6] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {order.image ? (
+                      <img
+                        src={order.image}
+                        alt={`Pedido ${order.id}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ShoppingBag className="w-6 h-6 text-[#9CA3AF]" />
+                    )}
                   </div>
 
                   {/* Order Info */}
@@ -195,21 +249,38 @@ export default function AccountPage() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-[#111827] text-sm">Dirección Principal</h3>
             <Link href="/cuenta/direcciones" className="text-xs text-[#6B7280] hover:text-[#111827]">
-              Editar
+              {defaultAddress ? 'Editar' : 'Agregar'}
             </Link>
           </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-green-50 rounded-lg">
-              <MapPin className="w-4 h-4 text-green-600" />
+          {defaultAddress ? (
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-green-50 rounded-lg">
+                <MapPin className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="text-sm">
+                <p className="text-[#111827] font-medium">{defaultAddress.label}</p>
+                <p className="text-[#6B7280] text-xs mt-0.5">
+                  {defaultAddress.street}<br />
+                  {defaultAddress.city}, {defaultAddress.state} {defaultAddress.postalCode}
+                </p>
+              </div>
             </div>
-            <div className="text-sm">
-              <p className="text-[#111827] font-medium">Casa</p>
-              <p className="text-[#6B7280] text-xs mt-0.5">
-                Av. Reforma 123, Col. Centro<br />
-                CDMX, 06600
-              </p>
+          ) : (
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <MapPin className="w-4 h-4 text-gray-400" />
+              </div>
+              <div className="text-sm">
+                <p className="text-[#6B7280]">No tienes una dirección principal</p>
+                <Link
+                  href="/cuenta/direcciones"
+                  className="text-[#111827] font-medium text-xs hover:underline"
+                >
+                  Agregar dirección
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </motion.div>
 

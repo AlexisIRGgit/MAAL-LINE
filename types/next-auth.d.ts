@@ -23,5 +23,9 @@ declare module '@auth/core/jwt' {
   interface JWT {
     id: string
     role: UserRole
+    firstName: string | null
+    lastName: string | null
+    email: string
+    avatarUrl: string | null
   }
 }

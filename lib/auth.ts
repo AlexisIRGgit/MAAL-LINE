@@ -139,6 +139,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id as string
         token.role = user.role as UserRole
+        token.firstName = user.firstName as string | null
+        token.lastName = user.lastName as string | null
+        token.email = user.email as string
+        token.avatarUrl = user.avatarUrl as string | null
       }
       return token
     },
@@ -146,6 +150,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as UserRole
+        session.user.firstName = token.firstName as string | null
+        session.user.lastName = token.lastName as string | null
+        session.user.email = token.email as string
+        session.user.avatarUrl = token.avatarUrl as string | null
       }
       return session
     },

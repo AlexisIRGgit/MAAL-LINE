@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import {
@@ -12,63 +12,36 @@ import {
   CheckCircle,
   XCircle,
   ShoppingBag,
-  Filter,
   ChevronDown,
   Eye,
   RotateCcw,
+  Loader2,
 } from 'lucide-react'
 
-// Mock data - será reemplazado con datos reales
-const mockOrders = [
-  {
-    id: 'ML-2024-001',
-    date: '2024-02-08',
-    status: 'delivered',
-    total: 2450,
-    items: [
-      { name: 'Hoodie Oversize Black', size: 'L', quantity: 1, price: 1299, image: null },
-      { name: 'Tee Gothic Print', size: 'M', quantity: 1, price: 699, image: null },
-    ],
-    shippingAddress: 'Av. Reforma 123, Col. Centro, CDMX',
-    trackingNumber: 'DHL1234567890',
-  },
-  {
-    id: 'ML-2024-002',
-    date: '2024-02-05',
-    status: 'shipped',
-    total: 1890,
-    items: [
-      { name: 'Cargo Pants Dark', size: '32', quantity: 1, price: 1890, image: null },
-    ],
-    shippingAddress: 'Calle 5 de Mayo 456, Roma Norte, CDMX',
-    trackingNumber: 'FEDEX9876543210',
-  },
-  {
-    id: 'ML-2024-003',
-    date: '2024-02-01',
-    status: 'processing',
-    total: 3200,
-    items: [
-      { name: 'Jacket Bomber', size: 'M', quantity: 1, price: 2499, image: null },
-      { name: 'Beanie Logo', size: 'Única', quantity: 1, price: 399, image: null },
-      { name: 'Socks Pack x3', size: 'L', quantity: 1, price: 299, image: null },
-    ],
-    shippingAddress: 'Av. Reforma 123, Col. Centro, CDMX',
-    trackingNumber: null,
-  },
-  {
-    id: 'ML-2024-004',
-    date: '2024-01-20',
-    status: 'cancelled',
-    total: 899,
-    items: [
-      { name: 'Tee Basic White', size: 'S', quantity: 1, price: 499, image: null },
-      { name: 'Cap Snapback', size: 'Única', quantity: 1, price: 399, image: null },
-    ],
-    shippingAddress: 'Calle Juárez 789, Centro, Guadalajara',
-    trackingNumber: null,
-  },
-]
+interface OrderItem {
+  name: string
+  size: string
+  quantity: number
+  price: number
+  image: string | null
+}
+
+interface Order {
+  id: string
+  date: string
+  status: string
+  total: number
+  items: OrderItem[]
+  shippingAddress: string
+  trackingNumber: string | null
+}
+
+interface OrderStats {
+  total: number
+  processing: number
+  shipped: number
+  delivered: number
+}
 
 const statusFilters = [
   { value: 'all', label: 'Todos' },
@@ -89,18 +62,45 @@ const itemVariants = {
 }
 
 export default function OrdersPage() {
-  const [orders] = useState(mockOrders)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [stats, setStats] = useState<OrderStats>({ total: 0, processing: 0, shipped: 0, delivered: 0 })
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
 
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams()
+      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (searchQuery) params.set('search', searchQuery)
+
+      const response = await fetch(`/api/account/orders?${params.toString()}`)
+      if (response.ok) {
+        const data = await response.json()
+        setOrders(data.orders)
+        setStats(data.stats)
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [statusFilter, searchQuery])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
+
   const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      searchQuery === '' ||
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter
-    return matchesSearch && matchesStatus
+    if (searchQuery && statusFilter === 'all') {
+      return (
+        order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.items.some((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    }
+    return true
   })
 
   const getStatusInfo = (status: string) => {
@@ -118,11 +118,12 @@ export default function OrdersPage() {
     }
   }
 
-  const stats = {
-    total: orders.length,
-    processing: orders.filter((o) => o.status === 'processing').length,
-    shipped: orders.filter((o) => o.status === 'shipped').length,
-    delivered: orders.filter((o) => o.status === 'delivered').length,
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#6B7280]" />
+      </div>
+    )
   }
 
   return (
@@ -249,8 +250,16 @@ export default function OrdersPage() {
                       <h4 className="text-sm font-semibold text-[#111827]">Productos</h4>
                       {order.items.map((item, idx) => (
                         <div key={idx} className="flex items-center gap-3 p-3 bg-[#F9FAFB] rounded-xl">
-                          <div className="w-12 h-12 bg-[#E5E7EB] rounded-lg flex items-center justify-center flex-shrink-0">
-                            <ShoppingBag className="w-5 h-5 text-[#9CA3AF]" />
+                          <div className="w-12 h-12 bg-[#E5E7EB] rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <ShoppingBag className="w-5 h-5 text-[#9CA3AF]" />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-[#111827] truncate">{item.name}</p>
@@ -277,10 +286,13 @@ export default function OrdersPage() {
 
                     {/* Actions */}
                     <div className="px-4 sm:px-5 pb-4 sm:pb-5 flex flex-wrap gap-2">
-                      <button className="inline-flex items-center gap-2 px-4 py-2 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors">
+                      <Link
+                        href={`/cuenta/pedidos/${order.id}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors"
+                      >
                         <Eye className="w-4 h-4" />
                         Ver detalles
-                      </button>
+                      </Link>
                       {order.status === 'delivered' && (
                         <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-xl hover:bg-[#F9FAFB] transition-colors">
                           <RotateCcw className="w-4 h-4" />
@@ -302,8 +314,25 @@ export default function OrdersPage() {
         ) : (
           <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 text-center">
             <Package className="w-12 h-12 text-[#D1D5DB] mx-auto mb-3" />
-            <p className="text-[#6B7280] font-medium">No se encontraron pedidos</p>
-            <p className="text-sm text-[#9CA3AF] mt-1">Intenta con otro filtro o búsqueda</p>
+            <p className="text-[#6B7280] font-medium">
+              {searchQuery || statusFilter !== 'all'
+                ? 'No se encontraron pedidos'
+                : 'No tienes pedidos aún'}
+            </p>
+            <p className="text-sm text-[#9CA3AF] mt-1">
+              {searchQuery || statusFilter !== 'all'
+                ? 'Intenta con otro filtro o búsqueda'
+                : 'Cuando hagas tu primer pedido, aparecerá aquí'}
+            </p>
+            {!searchQuery && statusFilter === 'all' && (
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Explorar productos
+              </Link>
+            )}
           </div>
         )}
       </motion.div>
