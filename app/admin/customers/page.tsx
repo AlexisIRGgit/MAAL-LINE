@@ -366,19 +366,19 @@ export default function CustomersPage() {
       {/* Customer Detail Modal */}
       <AnimatePresence>
         {selectedCustomer && (
-          <>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedCustomer(null)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-lg bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6 z-50 shadow-xl overflow-y-auto max-h-[90vh]"
+              className="relative w-full max-w-lg bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6 shadow-xl overflow-y-auto max-h-[90vh]"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-[#111827]">Detalles del Cliente</h2>
@@ -481,7 +481,7 @@ export default function CustomersPage() {
                 </div>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </motion.div>
