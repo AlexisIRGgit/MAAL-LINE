@@ -1,9 +1,10 @@
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import type { UserRole } from '@prisma/client'
+import { hasPermission, canAccessAdmin, canManageRole, type Permission } from './permissions'
 
 // Roles that have admin access
-const ADMIN_ROLES: UserRole[] = ['employee', 'manager', 'admin', 'owner']
+const ADMIN_ROLES: UserRole[] = ['viewer', 'employee', 'manager', 'admin', 'owner']
 
 /**
  * Check if current user has admin privileges
@@ -86,4 +87,54 @@ export function handleAuthError(error: unknown): NextResponse {
     { error: 'Internal Server Error' },
     { status: 500 }
   )
+}
+
+/**
+ * Check if user has specific permission
+ */
+export async function requirePermission(permission: Permission) {
+  const session = await auth()
+
+  if (!session?.user) {
+    throw new AuthError('Unauthorized', 401)
+  }
+
+  const userRole = session.user.role as UserRole
+
+  if (!canAccessAdmin(userRole)) {
+    throw new AuthError('Forbidden', 403)
+  }
+
+  if (!hasPermission(userRole, permission)) {
+    throw new AuthError('Permission denied', 403)
+  }
+
+  return session
+}
+
+/**
+ * Check if user can manage a target role
+ */
+export async function requireRoleManagement(targetRole: UserRole) {
+  const session = await auth()
+
+  if (!session?.user) {
+    throw new AuthError('Unauthorized', 401)
+  }
+
+  const userRole = session.user.role as UserRole
+
+  if (!canManageRole(userRole, targetRole)) {
+    throw new AuthError('Cannot manage users with this role', 403)
+  }
+
+  return session
+}
+
+/**
+ * Get user role from session
+ */
+export async function getUserRole(): Promise<UserRole | null> {
+  const session = await auth()
+  return (session?.user?.role as UserRole) ?? null
 }

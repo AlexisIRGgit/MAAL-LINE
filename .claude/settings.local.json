@@ -27,7 +27,8 @@
       "Bash(openssl rand:*)",
       "Bash(source .env)",
       "Bash(npx dotenv:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx next build:*)"
     ]
   }
 }

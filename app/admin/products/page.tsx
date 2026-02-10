@@ -18,6 +18,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import Image from 'next/image'
+import { usePermissions } from '@/hooks/use-permissions'
 
 interface Product {
   id: string
@@ -56,6 +57,7 @@ const itemVariants = {
 
 export default function ProductsPage() {
   const router = useRouter()
+  const { canCreateProducts, canEditProducts, canDeleteProducts } = usePermissions()
   const [products, setProducts] = useState<Product[]>([])
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 })
   const [isLoading, setIsLoading] = useState(true)
@@ -143,16 +145,18 @@ export default function ProductsPage() {
           <h1 className="text-2xl font-bold text-[#111827]">Productos</h1>
           <p className="text-[#6B7280] text-sm mt-1">{pagination.total} productos en total</p>
         </div>
-        <Link href="/admin/products/new">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white font-semibold rounded-xl hover:bg-[#1F2937] transition-colors text-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Nuevo Producto
-          </motion.button>
-        </Link>
+{canCreateProducts && (
+          <Link href="/admin/products/new">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white font-semibold rounded-xl hover:bg-[#1F2937] transition-colors text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo Producto
+            </motion.button>
+          </Link>
+        )}
       </motion.div>
 
       {/* Filters */}
@@ -227,12 +231,16 @@ export default function ProductsPage() {
           <div className="text-center py-20">
             <Package className="w-12 h-12 text-[#D1D5DB] mx-auto mb-4" />
             <p className="text-[#111827] font-medium text-lg">No hay productos</p>
-            <p className="text-[#6B7280] text-sm mt-1">Crea tu primer producto para empezar</p>
-            <Link href="/admin/products/new">
-              <button className="mt-4 px-4 py-2.5 bg-[#111827] text-white font-semibold rounded-xl text-sm hover:bg-[#1F2937] transition-colors">
-                Crear producto
-              </button>
-            </Link>
+            <p className="text-[#6B7280] text-sm mt-1">
+              {canCreateProducts ? 'Crea tu primer producto para empezar' : 'No hay productos disponibles'}
+            </p>
+            {canCreateProducts && (
+              <Link href="/admin/products/new">
+                <button className="mt-4 px-4 py-2.5 bg-[#111827] text-white font-semibold rounded-xl text-sm hover:bg-[#1F2937] transition-colors">
+                  Crear producto
+                </button>
+              </Link>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -344,23 +352,27 @@ export default function ProductsPage() {
                                 <Eye className="w-4 h-4" />
                                 Ver producto
                               </Link>
-                              <Link
-                                href={`/admin/products/${product.id}/edit`}
-                                className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-[#374151] hover:bg-[#F9FAFB] transition-colors text-sm"
-                              >
-                                <Edit className="w-4 h-4" />
-                                Editar
-                              </Link>
-                              <button
-                                onClick={() => {
-                                  setActiveDropdown(null)
-                                  handleDelete(product.id)
-                                }}
-                                className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-red-600 hover:bg-red-50 transition-colors text-sm"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Eliminar
-                              </button>
+                              {canEditProducts && (
+                                <Link
+                                  href={`/admin/products/${product.id}/edit`}
+                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-[#374151] hover:bg-[#F9FAFB] transition-colors text-sm"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Editar
+                                </Link>
+                              )}
+                              {canDeleteProducts && (
+                                <button
+                                  onClick={() => {
+                                    setActiveDropdown(null)
+                                    handleDelete(product.id)
+                                  }}
+                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-red-600 hover:bg-red-50 transition-colors text-sm"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Eliminar
+                                </button>
+                              )}
                             </motion.div>
                           )}
                         </AnimatePresence>

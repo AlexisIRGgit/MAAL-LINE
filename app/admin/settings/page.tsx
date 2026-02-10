@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import {
   Store,
   CreditCard,
@@ -10,10 +11,19 @@ import {
   Shield,
   Save,
   Upload,
+  Users,
+  UserPlus,
+  Crown,
+  UserCog,
+  Eye,
+  ChevronRight,
 } from 'lucide-react'
+import { usePermissions } from '@/hooks/use-permissions'
+import { ROLE_INFO } from '@/lib/permissions'
 
 const tabs = [
   { id: 'general', label: 'General', icon: Store },
+  { id: 'team', label: 'Equipo', icon: Users },
   { id: 'payments', label: 'Pagos', icon: CreditCard },
   { id: 'shipping', label: 'Envíos', icon: Truck },
   { id: 'notifications', label: 'Notificaciones', icon: Bell },
@@ -70,6 +80,7 @@ export default function SettingsPage() {
         className="bg-white border border-[#E5E7EB] rounded-xl p-6 shadow-sm"
       >
         {activeTab === 'general' && <GeneralSettings />}
+        {activeTab === 'team' && <TeamSettings />}
         {activeTab === 'payments' && <PaymentSettings />}
         {activeTab === 'shipping' && <ShippingSettings />}
         {activeTab === 'notifications' && <NotificationSettings />}
@@ -138,6 +149,98 @@ function GeneralSettings() {
           Guardar cambios
         </button>
       </div>
+    </div>
+  )
+}
+
+function TeamSettings() {
+  const { canCreateUsers, canViewUsers } = usePermissions()
+
+  const roles = [
+    { key: 'owner', icon: Crown, color: 'text-red-500 bg-red-50' },
+    { key: 'admin', icon: Shield, color: 'text-purple-500 bg-purple-50' },
+    { key: 'manager', icon: UserCog, color: 'text-amber-500 bg-amber-50' },
+    { key: 'employee', icon: Users, color: 'text-green-500 bg-green-50' },
+    { key: 'viewer', icon: Eye, color: 'text-blue-500 bg-blue-50' },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-[#111827]">Gestión del Equipo</h2>
+          <p className="text-sm text-[#6B7280] mt-1">Administra los usuarios que tienen acceso al panel</p>
+        </div>
+        {canCreateUsers && (
+          <Link
+            href="/admin/users"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Administrar Usuarios
+          </Link>
+        )}
+      </div>
+
+      {/* Quick Access Card */}
+      <Link
+        href="/admin/users"
+        className="block p-6 bg-gradient-to-br from-[#111827] to-[#1F2937] rounded-2xl text-white hover:from-[#1F2937] hover:to-[#374151] transition-all group"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/10 rounded-xl">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Panel de Usuarios</h3>
+              <p className="text-white/70 text-sm">Crear, editar y eliminar miembros del equipo</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all" />
+        </div>
+      </Link>
+
+      {/* Roles Explanation */}
+      <div>
+        <h3 className="text-sm font-semibold text-[#111827] mb-3">Roles Disponibles</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {roles.map(({ key, icon: Icon, color }) => {
+            const info = ROLE_INFO[key as keyof typeof ROLE_INFO]
+            return (
+              <div key={key} className="p-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`p-2 rounded-lg ${color}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="font-semibold text-[#111827] text-sm">{info.label}</span>
+                </div>
+                <p className="text-xs text-[#6B7280]">{info.description}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Permissions Info */}
+      <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+        <h3 className="text-sm font-semibold text-blue-800 mb-2">Acerca de los permisos</h3>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• <strong>Dueño:</strong> Acceso total, puede eliminar admins y cambiar config de pagos</li>
+          <li>• <strong>Admin:</strong> Gestión completa, puede crear usuarios de menor rango</li>
+          <li>• <strong>Gerente:</strong> Operaciones diarias, productos, pedidos y clientes</li>
+          <li>• <strong>Empleado:</strong> Procesar pedidos y actualizar inventario</li>
+          <li>• <strong>Visor:</strong> Solo puede ver información, ideal para contadores</li>
+        </ul>
+      </div>
+
+      {!canViewUsers && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+          <p className="text-sm text-amber-800">
+            <strong>Nota:</strong> No tienes permisos para gestionar usuarios. Contacta a un administrador si necesitas agregar miembros al equipo.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

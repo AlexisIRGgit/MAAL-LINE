@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
+import { useSession } from 'next-auth/react'
 import {
   LayoutDashboard,
   Package,
@@ -15,22 +16,41 @@ import {
   ChevronLeft,
   Menu,
   X,
+  UserCog,
 } from 'lucide-react'
+import { hasPermission, type Permission } from '@/lib/permissions'
+import type { UserRole } from '@prisma/client'
 
-const menuItems = [
-  { name: 'Overview', href: '/admin', icon: LayoutDashboard },
-  { name: 'Productos', href: '/admin/products', icon: Package },
-  { name: 'Pedidos', href: '/admin/orders', icon: ShoppingCart },
-  { name: 'Inventario', href: '/admin/inventory', icon: Warehouse },
-  { name: 'Clientes', href: '/admin/customers', icon: Users },
-  { name: 'Descuentos', href: '/admin/discounts', icon: Percent },
-  { name: 'Configuración', href: '/admin/settings', icon: Settings },
+interface MenuItem {
+  name: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  permission: Permission
+}
+
+const menuItems: MenuItem[] = [
+  { name: 'Overview', href: '/admin', icon: LayoutDashboard, permission: 'dashboard:view' },
+  { name: 'Productos', href: '/admin/products', icon: Package, permission: 'products:view' },
+  { name: 'Pedidos', href: '/admin/orders', icon: ShoppingCart, permission: 'orders:view' },
+  { name: 'Inventario', href: '/admin/inventory', icon: Warehouse, permission: 'inventory:view' },
+  { name: 'Clientes', href: '/admin/customers', icon: Users, permission: 'customers:view' },
+  { name: 'Descuentos', href: '/admin/discounts', icon: Percent, permission: 'discounts:view' },
+  { name: 'Usuarios', href: '/admin/users', icon: UserCog, permission: 'users:view' },
+  { name: 'Configuración', href: '/admin/settings', icon: Settings, permission: 'settings:view' },
 ]
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  const userRole = (session?.user?.role as UserRole) || 'customer'
+
+  // Filter menu items based on user permissions
+  const visibleMenuItems = menuItems.filter((item) =>
+    hasPermission(userRole, item.permission)
+  )
 
   return (
     <>
@@ -98,7 +118,7 @@ export function AdminSidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== '/admin' && pathname.startsWith(item.href))

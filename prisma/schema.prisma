@@ -15,6 +15,7 @@ datasource db {
 
 enum UserRole {
   customer
+  viewer
   employee
   manager
   admin
