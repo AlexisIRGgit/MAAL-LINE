@@ -282,29 +282,31 @@ export default function AddressesPage() {
                   Editar
                 </button>
                 {!address.isDefault && (
-                  <>
-                    <button
-                      onClick={() => handleSetDefault(address.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                    >
-                      <Star className="w-3.5 h-3.5" />
-                      Predeterminada
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(address.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Eliminar
-                    </button>
-                  </>
+                  <button
+                    onClick={() => handleSetDefault(address.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                  >
+                    <Star className="w-3.5 h-3.5" />
+                    Predeterminada
+                  </button>
                 )}
+                <button
+                  onClick={() => setDeleteConfirm(address.id)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Eliminar
+                </button>
               </div>
 
               {/* Delete Confirmation */}
               {deleteConfirm === address.id && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center justify-between">
-                  <p className="text-sm text-red-700">¿Eliminar esta dirección?</p>
+                <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <p className="text-sm text-red-700">
+                    {address.isDefault && addresses.length > 1
+                      ? '¿Eliminar? Otra dirección será la principal.'
+                      : '¿Eliminar esta dirección?'}
+                  </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setDeleteConfirm(null)}
