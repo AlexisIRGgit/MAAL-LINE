@@ -375,10 +375,10 @@ export default function CustomersPage() {
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 w-auto sm:w-full sm:max-w-lg bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6 z-50 shadow-xl overflow-y-auto max-h-[90vh]"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-lg bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6 z-50 shadow-xl overflow-y-auto max-h-[90vh]"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-[#111827]">Detalles del Cliente</h2>
