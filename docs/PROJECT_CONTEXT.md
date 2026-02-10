@@ -27,6 +27,7 @@ MAAL LINE es una plataforma e-commerce de streetwear construida con Next.js 14 (
 | Zustand | 4.x | Estado global (carrito, filtros) |
 | Recharts | 2.x | Gráficos en admin |
 | Lucide React | - | Iconos |
+| Framer Motion | - | Animaciones |
 
 ---
 
@@ -69,24 +70,25 @@ MAAL-LINE/
 │   ├── (auth)/
 │   │   ├── login/
 │   │   │   ├── page.tsx              # Login público (clientes)
-│   │   │   └── login-form.tsx        # Formulario con Google
+│   │   │   └── login-form.tsx        # Formulario con Google OAuth
 │   │   └── register/page.tsx         # Registro de clientes
+│   ├── (admin-auth)/
+│   │   └── admin/
+│   │       └── login/
+│   │           ├── page.tsx          # Login admin (aislado del layout admin)
+│   │           └── admin-login-form.tsx  # Formulario admin
 │   ├── admin/
-│   │   ├── login/
-│   │   │   ├── layout.tsx            # Layout sin sidebar
-│   │   │   ├── page.tsx              # Login admin (sin registro)
-│   │   │   └── admin-login-form.tsx  # Formulario admin
-│   │   ├── layout.tsx                # Layout con sidebar + header
+│   │   ├── layout.tsx                # Layout con sidebar + header (tema claro)
 │   │   ├── page.tsx                  # Dashboard principal
 │   │   ├── products/
-│   │   │   ├── page.tsx              # Lista de productos
-│   │   │   ├── new/page.tsx          # Crear producto
-│   │   │   └── [id]/edit/page.tsx    # Editar producto
-│   │   ├── orders/page.tsx           # Gestión de órdenes
-│   │   ├── customers/page.tsx        # Gestión de clientes
-│   │   ├── inventory/page.tsx        # Control de inventario
-│   │   ├── discounts/page.tsx        # Descuentos y cupones
-│   │   └── settings/page.tsx         # Configuración
+│   │   │   ├── page.tsx              # Lista de productos (tema claro)
+│   │   │   ├── new/page.tsx          # Crear producto (tema claro)
+│   │   │   └── [id]/edit/page.tsx    # Editar producto (tema claro)
+│   │   ├── orders/page.tsx           # Gestión de órdenes (tema claro)
+│   │   ├── customers/page.tsx        # Gestión de clientes (tema claro)
+│   │   ├── inventory/page.tsx        # Control de inventario (tema claro)
+│   │   ├── discounts/page.tsx        # Descuentos y cupones (tema claro)
+│   │   └── settings/page.tsx         # Configuración (tema claro)
 │   ├── producto/[slug]/page.tsx      # Detalle de producto
 │   ├── categoria/[slug]/page.tsx     # Productos por categoría
 │   ├── coleccion/[slug]/page.tsx     # Productos por colección
@@ -95,14 +97,14 @@ MAAL-LINE/
 │   │   ├── products/route.ts         # CRUD productos (GET, POST)
 │   │   ├── products/[id]/route.ts    # Producto individual (GET, PUT, DELETE)
 │   │   └── upload/route.ts           # Upload de imágenes (placeholder)
-│   └── page.tsx                      # Landing page
+│   └── page.tsx                      # Landing page (tema oscuro)
 ├── components/
 │   ├── admin/
-│   │   ├── sidebar.tsx               # Sidebar moderno (tema claro)
+│   │   ├── sidebar.tsx               # Sidebar moderno (tema claro, colapsable)
 │   │   ├── header.tsx                # Header con search, notificaciones, user menu
-│   │   ├── product-form.tsx          # Formulario de producto
-│   │   ├── variant-manager.tsx       # Gestor de variantes/tallas
-│   │   └── image-uploader.tsx        # Uploader de imágenes (URLs)
+│   │   ├── product-form.tsx          # Formulario de producto (tema claro)
+│   │   ├── variant-manager.tsx       # Gestor de variantes/tallas (tema claro)
+│   │   └── image-uploader.tsx        # Uploader de imágenes (tema claro)
 │   ├── navigation/
 │   │   ├── navbar.tsx                # Navbar público
 │   │   ├── promo-bar.tsx             # Barra de promociones
@@ -112,7 +114,7 @@ MAAL-LINE/
 │   └── ui/                           # Componentes UI reutilizables
 ├── lib/
 │   ├── auth.ts                       # Configuración NextAuth completa
-│   ├── auth.config.ts                # Config NextAuth para Edge (middleware)
+│   ├── auth.config.ts                # Config NextAuth para Edge (middleware) con trustHost
 │   ├── auth-utils.ts                 # Utilidades de autenticación
 │   ├── db.ts                         # Cliente Prisma
 │   ├── queries/
@@ -125,13 +127,14 @@ MAAL-LINE/
 │   │   ├── cart-store.ts             # Estado del carrito (Zustand)
 │   │   └── filter-store.ts           # Estado de filtros
 │   └── utils/
-│       ├── cn.ts                     # Utility para clases CSS
+│       ├── cn.ts                     # Utility para clases CSS (clsx + twMerge)
 │       └── formatters.ts             # Formateadores (precios, fechas)
 ├── prisma/
 │   ├── schema.prisma                 # Schema con 42 tablas
 │   └── prisma.config.ts              # Configuración Prisma
 ├── public/
 │   └── images/                       # Imágenes estáticas
+│       └── logo-maal-negro.png       # Logo para admin
 └── docs/
     └── PROJECT_CONTEXT.md            # Este archivo
 ```
@@ -140,12 +143,14 @@ MAAL-LINE/
 
 ## Sistema de Autenticación
 
-### Logins Separados
+### Logins Separados (Route Groups)
 
-| Ruta | Propósito | Características |
-|------|-----------|-----------------|
-| `/login` | Clientes | Formulario + Google OAuth + Registro |
-| `/admin/login` | Administradores | Solo formulario, sin registro |
+| Ruta | Route Group | Propósito | Características |
+|------|-------------|-----------|-----------------|
+| `/login` | `(auth)` | Clientes | Formulario + Google OAuth colorido + Registro |
+| `/admin/login` | `(admin-auth)` | Administradores | Solo formulario, sin registro, tema claro |
+
+**Nota importante:** El login de admin usa el route group `(admin-auth)` para evitar heredar el layout del panel admin (sidebar/header). Esto permite mostrar solo el formulario de login sin navegación.
 
 ### Flujo de Redirección
 
@@ -179,55 +184,142 @@ Los siguientes roles pueden acceder a `/admin/*`:
 - `admin`
 - `owner`
 
----
+### Configuración NextAuth para Vercel
 
-## Diseño del Panel Admin
+En `lib/auth.config.ts` se requiere `trustHost: true` para que funcione en Vercel:
 
-### Tema Claro Moderno
-
-El panel de administración usa un diseño moderno y limpio inspirado en dashboards tipo Web3/SaaS:
-
-```css
-/* Paleta de Colores - Admin */
---background: #F5F5F7
---surface: #FFFFFF
---border: #E5E7EB
---text-primary: #111827
---text-secondary: #6B7280
---text-muted: #9CA3AF
---accent-success: #10B981
---accent-warning: #F59E0B
---accent-error: #EF4444
---accent-info: #3B82F6
+```typescript
+export default {
+  trustHost: true,
+  // ... resto de la configuración
+} satisfies NextAuthConfig
 ```
 
-### Componentes Principales
+---
 
-1. **Sidebar** (`components/admin/sidebar.tsx`)
-   - Fondo blanco con borde sutil
-   - Iconos Lucide minimalistas
-   - Item activo con fondo oscuro (#111827)
-   - Colapsable en desktop
-   - Drawer en mobile
+## Diseño del Panel Admin (Tema Claro)
 
-2. **Header** (`components/admin/header.tsx`)
-   - Barra de búsqueda
-   - Notificaciones con badge
-   - Menú de usuario con dropdown
-   - Sticky al top
+### Paleta de Colores Completa
 
-3. **Dashboard** (`app/admin/page.tsx`)
-   - Cards de estadísticas con indicadores
-   - Gráfico de ventas (AreaChart)
-   - Gráfico de categorías (PieChart donut)
-   - Tabla de órdenes recientes
-   - Quick actions grid
+```css
+/* Fondos */
+--background: #F5F5F7        /* Fondo general del layout */
+--surface: #FFFFFF           /* Cards, tablas, formularios */
+--surface-hover: #F9FAFB     /* Hover en filas de tabla */
+--surface-secondary: #F3F4F6 /* Inputs deshabilitados, badges neutros */
+
+/* Bordes */
+--border: #E5E7EB            /* Bordes de cards, inputs, tablas */
+--border-light: #D1D5DB      /* Bordes más sutiles */
+
+/* Texto */
+--text-primary: #111827      /* Títulos, texto principal */
+--text-secondary: #374151    /* Labels, texto secundario */
+--text-muted: #6B7280        /* Texto terciario, hints */
+--text-placeholder: #9CA3AF  /* Placeholders */
+
+/* Botones Principales */
+--button-primary: #111827    /* Botones de acción principal */
+--button-primary-hover: #1F2937
+
+/* Estados */
+--success: #10B981           /* Verde - Activo, completado */
+--success-bg: #ECFDF5
+--warning: #F59E0B           /* Amarillo - Pendiente, stock bajo */
+--warning-bg: #FFFBEB
+--error: #EF4444             /* Rojo - Error, sin stock */
+--error-bg: #FEF2F2
+--info: #3B82F6              /* Azul - Info, procesando */
+--info-bg: #EFF6FF
+
+/* Acentos Especiales */
+--purple: #8B5CF6            /* VIP, premium */
+--purple-bg: #F5F3FF
+```
+
+### Componentes del Panel Admin
+
+#### 1. Sidebar (`components/admin/sidebar.tsx`)
+- Fondo blanco `#FFFFFF` con borde derecho `#E5E7EB`
+- Logo MAAL LINE en negro
+- Iconos Lucide minimalistas en gris `#6B7280`
+- Item activo: fondo `#111827`, texto blanco
+- Item hover: fondo `#F9FAFB`
+- Colapsable en desktop con botón toggle
+- Drawer con overlay en mobile
+- Botón de logout en la parte inferior
+
+#### 2. Header (`components/admin/header.tsx`)
+- Fondo blanco `#FFFFFF` con borde inferior
+- Barra de búsqueda con icono
+- Botón de notificaciones con badge rojo
+- Avatar de usuario con dropdown menu
+- Sticky al top del viewport
+
+#### 3. Dashboard (`app/admin/page.tsx`)
+- Grid de 4 cards de estadísticas con iconos coloridos
+- Gráfico de ventas (Recharts AreaChart)
+- Gráfico de categorías (Recharts PieChart donut)
+- Tabla de órdenes recientes con badges de estado
+- Quick actions grid
+
+#### 4. Páginas de Listado (products, orders, customers, inventory)
+- Header con título y botón de acción principal
+- Cards de estadísticas relevantes
+- Barra de filtros (búsqueda, dropdowns, botones)
+- Tabla con:
+  - Header en `#F9FAFB`
+  - Filas con hover en `#F9FAFB`
+  - Bordes `#E5E7EB`
+  - Acciones en dropdown
+- Paginación en footer de tabla
+
+#### 5. Formularios (product-form, settings)
+- Cards blancas con sombra sutil
+- Labels en `#374151`
+- Inputs con borde `#E5E7EB`
+- Focus: ring `#111827`
+- Botones de acción en `#111827`
+
+#### 6. Badges de Estado
+
+```tsx
+// Activo/Completado
+<span className="bg-green-50 text-green-700">
+  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+  Activo
+</span>
+
+// Pendiente/Warning
+<span className="bg-amber-50 text-amber-700">
+  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+  Pendiente
+</span>
+
+// Error/Cancelado
+<span className="bg-red-50 text-red-700">
+  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+  Sin stock
+</span>
+
+// Info/Procesando
+<span className="bg-blue-50 text-blue-700">
+  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+  Procesando
+</span>
+
+// VIP/Premium
+<span className="bg-purple-50 text-purple-700">
+  <Crown className="w-3 h-3" />
+  VIP
+</span>
+```
 
 ---
 
-## Diseño del Login Público
+## Diseño del Login Público (Tema Oscuro)
 
-### Tema Oscuro
+### Paleta de Colores
 
 ```css
 /* Paleta de Colores - Login Público */
@@ -241,11 +333,25 @@ El panel de administración usa un diseño moderno y limpio inspirado en dashboa
 
 ### Características
 
-- Botón de Google con logo colorido
-- Formulario con iconos
-- Toggle de visibilidad de contraseña
+- Botón de Google con logo colorido oficial
+- Formulario con iconos (Mail, Lock)
+- Toggle de visibilidad de contraseña (Eye/EyeOff)
 - Link a registro
 - Términos y privacidad
+- Checkbox "Recordar sesión"
+
+---
+
+## Diseño del Login Admin (Tema Claro)
+
+### Características
+
+- Layout split: formulario a la izquierda, decorativo a la derecha
+- Logo MAAL LINE en negro
+- Formulario minimalista con iconos
+- Panel decorativo con stats (24/7, SSL, 2FA)
+- Sin opción de registro (solo admins existentes)
+- Sin Google OAuth (solo credenciales)
 
 ---
 
@@ -361,7 +467,7 @@ openssl rand -base64 32
 - [x] NextAuth v5 con credenciales y Google
 
 ### Fase 2: Landing Page
-- [x] Diseño de landing con productos
+- [x] Diseño de landing con productos (tema oscuro)
 - [x] Navbar con carrito y menú
 - [x] ProductCard component
 - [x] Conexión con base de datos
@@ -386,33 +492,100 @@ openssl rand -base64 32
 - [x] Fix prisma.config.ts
 
 ### Fase 6: Separación de Logins y Rediseño Admin
-- [x] Login separado para admin (`/admin/login`)
+- [x] Login separado para admin (`/admin/login`) con route group `(admin-auth)`
 - [x] Login público mejorado con Google colorido
 - [x] Rediseño completo del panel admin (tema claro moderno)
 - [x] Nuevo header con búsqueda, notificaciones y user menu
 - [x] Nuevo sidebar minimalista colapsable
-- [x] Dashboard moderno con gráficos y tabla de órdenes
+- [x] Dashboard moderno con gráficos (Recharts) y tabla de órdenes
 - [x] Middleware actualizado para manejar ambos logins
+
+### Fase 7: Actualización Completa del Panel Admin (Tema Claro)
+- [x] `/admin/products` - Lista de productos con tabla clara, filtros, paginación
+- [x] `/admin/orders` - Pedidos con stats, badges de estado, modal de detalle
+- [x] `/admin/customers` - Clientes con grupos VIP, métricas
+- [x] `/admin/inventory` - Inventario con indicadores de stock (OK/bajo/sin stock)
+- [x] `/admin/discounts` - Descuentos en grid de cards con progress bars
+- [x] `/admin/settings` - Configuración con tabs (General, Pagos, Envíos, Notificaciones, Seguridad)
+- [x] `/admin/products/new` - Formulario crear producto (tema claro)
+- [x] `/admin/products/[id]/edit` - Formulario editar producto (tema claro)
+- [x] `components/admin/product-form.tsx` - Formulario completo con tema claro
+- [x] `components/admin/image-uploader.tsx` - Uploader con drag & drop
+- [x] `components/admin/variant-manager.tsx` - Gestor de tallas con quick-add
+
+---
+
+## Commits Recientes
+
+```
+4406cc7 feat: Update admin panel to light theme
+520cd13 fix: Separate admin login from admin layout
+8414894 feat: Separate logins and redesign admin panel
+63d25be Add trustHost for Vercel NextAuth deployment
+7b1da26 Make database pages dynamic for Vercel deployment
+6b25cdd Fix Vercel deployment issues
+```
 
 ---
 
 ## Próximos Pasos (Pendientes)
 
 ### Corto Plazo
-- [ ] Actualizar páginas secundarias de admin (products, orders, etc.) al nuevo tema
-- [ ] Integrar Cloudinary/Vercel Blob para imágenes
+- [ ] Integrar Cloudinary/Vercel Blob para imágenes reales
 - [ ] Implementar checkout con Stripe
+- [ ] Dashboard con métricas reales de la DB
 
 ### Mediano Plazo
-- [ ] Sistema de notificaciones real
-- [ ] Dashboard con métricas reales de la DB
-- [ ] Sistema de envíos
-- [ ] Emails transaccionales
+- [ ] Sistema de notificaciones real (push/email)
+- [ ] Sistema de envíos (integración con carriers)
+- [ ] Emails transaccionales (confirmación, envío, etc.)
+- [ ] Panel de analytics
 
 ### Largo Plazo
 - [ ] App móvil (React Native)
 - [ ] Sistema de puntos/rewards
-- [ ] Integración con marketplaces
+- [ ] Integración con marketplaces (MercadoLibre, Amazon)
+- [ ] Multi-idioma (i18n)
+
+---
+
+## Patrones de Código
+
+### Clases CSS Consistentes (Tailwind)
+
+```tsx
+// Input estándar
+"w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
+
+// Botón primario
+"px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors"
+
+// Botón secundario
+"px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm rounded-xl hover:bg-[#F9FAFB] transition-colors"
+
+// Card
+"bg-white border border-[#E5E7EB] rounded-xl p-6 shadow-sm"
+
+// Tabla header
+"border-b border-[#E5E7EB] bg-[#F9FAFB]"
+
+// Tabla row
+"hover:bg-[#F9FAFB] transition-colors"
+```
+
+### Animaciones con Framer Motion
+
+```tsx
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+}
+```
 
 ---
 
