@@ -10,13 +10,10 @@ import {
   Package,
   User,
   MapPin,
-  CreditCard,
   LogOut,
   Menu,
   X,
   ChevronLeft,
-  Bell,
-  Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -25,7 +22,6 @@ const menuItems = [
   { href: '/cuenta/pedidos', label: 'Mis Pedidos', icon: Package },
   { href: '/cuenta/perfil', label: 'Mi Perfil', icon: User },
   { href: '/cuenta/direcciones', label: 'Direcciones', icon: MapPin },
-  { href: '/cuenta/pagos', label: 'Métodos de Pago', icon: CreditCard },
 ]
 
 export default function AccountLayout({

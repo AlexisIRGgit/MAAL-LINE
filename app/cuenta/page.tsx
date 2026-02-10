@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import {
   Package,
   MapPin,
-  CreditCard,
   Heart,
   ChevronRight,
   Clock,
@@ -46,7 +45,6 @@ const recentOrders = [
 const quickActions = [
   { href: '/cuenta/pedidos', label: 'Mis Pedidos', icon: Package, count: 3, color: 'bg-blue-50 text-blue-600' },
   { href: '/cuenta/direcciones', label: 'Direcciones', icon: MapPin, count: 2, color: 'bg-green-50 text-green-600' },
-  { href: '/cuenta/pagos', label: 'Métodos de Pago', icon: CreditCard, count: 1, color: 'bg-purple-50 text-purple-600' },
   { href: '/wishlist', label: 'Lista de Deseos', icon: Heart, count: 5, color: 'bg-red-50 text-red-600' },
 ]
 
@@ -95,7 +93,7 @@ export default function AccountPage() {
       </motion.div>
 
       {/* Quick Actions */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {quickActions.map((action) => (
           <Link
             key={action.href}
@@ -191,9 +189,8 @@ export default function AccountPage() {
         )}
       </motion.div>
 
-      {/* Account Summary Cards */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Default Address */}
+      {/* Default Address Card */}
+      <motion.div variants={itemVariants}>
         <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-[#111827] text-sm">Dirección Principal</h3>
@@ -210,27 +207,6 @@ export default function AccountPage() {
               <p className="text-[#6B7280] text-xs mt-0.5">
                 Av. Reforma 123, Col. Centro<br />
                 CDMX, 06600
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Default Payment */}
-        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-[#111827] text-sm">Método de Pago</h3>
-            <Link href="/cuenta/pagos" className="text-xs text-[#6B7280] hover:text-[#111827]">
-              Editar
-            </Link>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <CreditCard className="w-4 h-4 text-purple-600" />
-            </div>
-            <div className="text-sm">
-              <p className="text-[#111827] font-medium">Visa •••• 4532</p>
-              <p className="text-[#6B7280] text-xs mt-0.5">
-                Expira 12/25
               </p>
             </div>
           </div>

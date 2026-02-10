@@ -82,8 +82,7 @@ MAAL-LINE/
 │   │   ├── page.tsx                  # Dashboard con resumen
 │   │   ├── pedidos/page.tsx          # Lista de pedidos del usuario
 │   │   ├── perfil/page.tsx           # Información personal y seguridad
-│   │   ├── direcciones/page.tsx      # Gestión de direcciones de envío
-│   │   └── pagos/page.tsx            # Métodos de pago
+│   │   └── direcciones/page.tsx      # Gestión de direcciones de envío
 │   ├── admin/
 │   │   ├── layout.tsx                # Layout con sidebar + header (tema claro)
 │   │   ├── page.tsx                  # Dashboard principal
@@ -676,15 +675,15 @@ openssl rand -base64 32
   - Sidebar en desktop con navegación
   - Drawer con overlay en móvil
   - Avatar del usuario con inicial
-  - Menú: Resumen, Pedidos, Perfil, Direcciones, Pagos
+  - Menú: Resumen, Pedidos, Perfil, Direcciones
   - Botón "Volver a la tienda"
   - Botón de cerrar sesión
 
 - [x] **Dashboard** (`/cuenta/page.tsx`):
   - Saludo personalizado con nombre del usuario
-  - Grid de acciones rápidas (Pedidos, Direcciones, Pagos, Wishlist)
+  - Grid de acciones rápidas (Pedidos, Direcciones, Wishlist)
   - Lista de pedidos recientes con estado
-  - Cards de dirección y método de pago principales
+  - Card de dirección principal
   - Banner de ayuda con contacto y FAQ
 
 - [x] **Pedidos** (`/cuenta/pedidos/page.tsx`):
@@ -722,18 +721,7 @@ openssl rand -base64 32
   - Full-screen modal en móvil
   - Confirmación inline para eliminar
 
-- [x] **Métodos de Pago** (`/cuenta/pagos/page.tsx`):
-  - Cards de tarjetas con diseño de tarjeta de crédito real
-  - Gradientes por tipo (Visa azul, Mastercard naranja, Amex cyan)
-  - Badge "Principal" para tarjeta por defecto
-  - Detección automática de tipo de tarjeta
-  - Modal para agregar tarjeta:
-    - Número de tarjeta con formato automático
-    - Fecha de expiración (mes/año)
-    - CVV
-    - Nombre del titular
-  - Aviso de seguridad (encriptación bancaria)
-  - Acciones: hacer principal, eliminar
+*Nota: No se implementó sección de métodos de pago para evitar manejo de datos sensibles de tarjetas (PCI DSS). El pago se manejará en el checkout con proveedores externos (Stripe, PayPal, etc.)*
 
 ### Fase 11: Diseño Responsivo (Admin + Usuario)
 - [x] **Layout Admin General:**
@@ -759,7 +747,6 @@ openssl rand -base64 32
   - Modal de órdenes: full-screen en móvil (inset-4)
   - Modal de usuarios: full-screen en móvil (h-full)
   - Modal de direcciones: full-screen en móvil
-  - Modal de tarjetas: full-screen en móvil
   - Padding reducido en headers y contenido
 
 - [x] **Settings Admin (Configuración):**
