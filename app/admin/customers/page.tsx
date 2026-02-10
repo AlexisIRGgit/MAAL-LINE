@@ -93,6 +93,16 @@ export default function CustomersPage() {
   const [copiedPassword, setCopiedPassword] = useState(false)
   const [showGroupSelector, setShowGroupSelector] = useState(false)
   const [isChangingGroup, setIsChangingGroup] = useState(false)
+  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false)
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false)
+  const [newCustomerPassword, setNewCustomerPassword] = useState<string | null>(null)
+  const [newCustomerForm, setNewCustomerForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    group: 'standard',
+  })
 
   const handleResetPassword = async (customerId: string) => {
     if (!confirm('¿Estás seguro de generar una nueva contraseña temporal para este cliente?')) return
@@ -121,6 +131,63 @@ export default function CustomersPage() {
     navigator.clipboard.writeText(text)
     setCopiedPassword(true)
     setTimeout(() => setCopiedPassword(false), 2000)
+  }
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomerForm.email) {
+      alert('El email es requerido')
+      return
+    }
+
+    setIsCreatingCustomer(true)
+    try {
+      const response = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCustomerForm),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al crear cliente')
+      }
+
+      // Show the temp password
+      setNewCustomerPassword(data.tempPassword)
+
+      // Add customer to list
+      setCustomers([data.customer, ...customers])
+
+      // Reset form
+      setNewCustomerForm({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        group: 'standard',
+      })
+
+      // Refresh stats
+      fetchCustomers()
+    } catch (error) {
+      console.error('Error creating customer:', error)
+      alert(error instanceof Error ? error.message : 'Error al crear el cliente')
+    } finally {
+      setIsCreatingCustomer(false)
+    }
+  }
+
+  const closeNewCustomerModal = () => {
+    setShowNewCustomerModal(false)
+    setNewCustomerPassword(null)
+    setNewCustomerForm({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      group: 'standard',
+    })
   }
 
   const handleChangeGroup = async (customerId: string, newGroup: string) => {
@@ -213,7 +280,10 @@ export default function CustomersPage() {
           <h1 className="text-2xl font-bold text-[#111827]">Clientes</h1>
           <p className="text-[#6B7280] mt-1 text-sm">Gestiona tu base de clientes</p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white font-semibold rounded-xl hover:bg-[#1F2937] transition-colors text-sm">
+        <button
+          onClick={() => setShowNewCustomerModal(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#111827] text-white font-semibold rounded-xl hover:bg-[#1F2937] transition-colors text-sm"
+        >
           <UserPlus className="w-4 h-4" />
           Nuevo Cliente
         </button>
@@ -716,6 +786,163 @@ export default function CustomersPage() {
                   </a>
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* New Customer Modal */}
+      <AnimatePresence>
+        {showNewCustomerModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeNewCustomerModal}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6 shadow-xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-[#111827]">Nuevo Cliente</h2>
+                <button
+                  onClick={closeNewCustomerModal}
+                  className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-[#6B7280]" />
+                </button>
+              </div>
+
+              {newCustomerPassword ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-center">
+                    <Check className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                    <p className="text-green-800 font-semibold">Cliente creado exitosamente</p>
+                  </div>
+
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-amber-800 text-sm font-medium mb-2">Contraseña temporal:</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 px-3 py-2 bg-white border border-amber-300 rounded-lg text-[#111827] font-mono text-sm">
+                        {newCustomerPassword}
+                      </code>
+                      <button
+                        onClick={() => copyToClipboard(newCustomerPassword)}
+                        className="p-2 bg-white border border-amber-300 rounded-lg hover:bg-amber-100 transition-colors"
+                        title="Copiar"
+                      >
+                        {copiedPassword ? (
+                          <Check className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <Copy className="w-4 h-4 text-amber-600" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-amber-600 text-xs mt-2">Comparte esta contraseña con el cliente de forma segura.</p>
+                  </div>
+
+                  <button
+                    onClick={closeNewCustomerModal}
+                    className="w-full py-2.5 bg-[#111827] text-white font-semibold text-sm rounded-xl hover:bg-[#1F2937] transition-colors"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-[#374151] mb-1.5">Nombre</label>
+                      <input
+                        type="text"
+                        value={newCustomerForm.firstName}
+                        onChange={(e) => setNewCustomerForm({ ...newCustomerForm, firstName: e.target.value })}
+                        className="w-full px-3 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] text-sm focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent"
+                        placeholder="Juan"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[#374151] mb-1.5">Apellido</label>
+                      <input
+                        type="text"
+                        value={newCustomerForm.lastName}
+                        onChange={(e) => setNewCustomerForm({ ...newCustomerForm, lastName: e.target.value })}
+                        className="w-full px-3 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] text-sm focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent"
+                        placeholder="Pérez"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#374151] mb-1.5">Email *</label>
+                    <input
+                      type="email"
+                      value={newCustomerForm.email}
+                      onChange={(e) => setNewCustomerForm({ ...newCustomerForm, email: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] text-sm focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent"
+                      placeholder="cliente@email.com"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#374151] mb-1.5">Teléfono</label>
+                    <input
+                      type="tel"
+                      value={newCustomerForm.phone}
+                      onChange={(e) => setNewCustomerForm({ ...newCustomerForm, phone: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] text-sm focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent"
+                      placeholder="+52 55 1234 5678"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#374151] mb-1.5">Grupo</label>
+                    <select
+                      value={newCustomerForm.group}
+                      onChange={(e) => setNewCustomerForm({ ...newCustomerForm, group: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] text-sm focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent cursor-pointer"
+                    >
+                      <option value="standard">Standard</option>
+                      <option value="vip">VIP</option>
+                      <option value="wholesale">Mayorista</option>
+                      <option value="influencer">Influencer</option>
+                    </select>
+                  </div>
+
+                  <div className="p-3 bg-[#F9FAFB] rounded-xl">
+                    <p className="text-sm text-[#6B7280]">
+                      Se generará una contraseña temporal que podrás compartir con el cliente.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={closeNewCustomerModal}
+                      className="flex-1 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] font-medium text-sm rounded-xl hover:bg-[#F9FAFB] transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleCreateCustomer}
+                      disabled={isCreatingCustomer || !newCustomerForm.email}
+                      className="flex-1 py-2.5 bg-[#111827] text-white font-semibold text-sm rounded-xl hover:bg-[#1F2937] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                    >
+                      {isCreatingCustomer ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <UserPlus className="w-4 h-4" />
+                      )}
+                      Crear Cliente
+                    </button>
+                  </div>
+                </div>
+              )}
             </motion.div>
           </div>
         )}
