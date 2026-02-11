@@ -80,7 +80,10 @@ const steps = [
 export default function CheckoutPage() {
   const router = useRouter()
   const { data: session, status: sessionStatus } = useSession()
-  const { items, subtotal, clearCart } = useCartStore()
+  const { items, getSubtotal, clearCart } = useCartStore()
+
+  // Calculate subtotal from items (reactive)
+  const subtotal = items.reduce((total, item) => total + item.product.price * item.quantity, 0)
 
   const [currentStep, setCurrentStep] = useState(0)
   const [addresses, setAddresses] = useState<Address[]>([])

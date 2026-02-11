@@ -34,8 +34,8 @@ interface CartActions {
 }
 
 interface CartComputed {
-  itemCount: number
-  subtotal: number
+  getItemCount: () => number
+  getSubtotal: () => number
   getItem: (productId: string, size: string) => CartItem | undefined
 }
 
@@ -51,13 +51,13 @@ export const useCartStore = create<CartStore>()(
       isOpen: false,
 
       // ============================================
-      // COMPUTED
+      // COMPUTED (as functions for proper reactivity with persist)
       // ============================================
-      get itemCount() {
+      getItemCount: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0)
       },
 
-      get subtotal() {
+      getSubtotal: () => {
         return get().items.reduce(
           (total, item) => total + item.product.price * item.quantity,
           0
@@ -161,6 +161,6 @@ export const useCartStore = create<CartStore>()(
 // ============================================
 
 export const selectCartItems = (state: CartStore) => state.items
-export const selectCartItemCount = (state: CartStore) => state.itemCount
-export const selectCartSubtotal = (state: CartStore) => state.subtotal
+export const selectCartItemCount = (state: CartStore) => state.getItemCount()
+export const selectCartSubtotal = (state: CartStore) => state.getSubtotal()
 export const selectCartIsOpen = (state: CartStore) => state.isOpen

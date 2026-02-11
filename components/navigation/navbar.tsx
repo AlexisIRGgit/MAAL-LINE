@@ -19,7 +19,10 @@ export function Navbar() {
   const { data: session } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const { openCart, itemCount } = useCartStore()
+  const { openCart, items } = useCartStore()
+
+  // Calculate itemCount directly from items for proper reactivity
+  const itemCount = items.reduce((total, item) => total + item.quantity, 0)
 
   // Prevent hydration mismatch
   useEffect(() => {

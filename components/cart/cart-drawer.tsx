@@ -9,7 +9,11 @@ import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
 
 export function CartDrawer() {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal, itemCount } = useCartStore()
+  const { items, isOpen, closeCart, removeItem, updateQuantity } = useCartStore()
+
+  // Calculate values directly from items for proper reactivity
+  const itemCount = items.reduce((total, item) => total + item.quantity, 0)
+  const subtotal = items.reduce((total, item) => total + item.product.price * item.quantity, 0)
 
   // Prevent body scroll when cart is open
   useEffect(() => {
