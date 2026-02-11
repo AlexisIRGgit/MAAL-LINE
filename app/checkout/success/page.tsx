@@ -1,27 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { CheckCircle, Package, ArrowRight, Mail, Loader2 } from 'lucide-react'
 
-export default function CheckoutSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order')
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#E8E4D9]" />
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4">
@@ -129,5 +116,21 @@ export default function CheckoutSuccessPage() {
         </motion.p>
       </motion.div>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-[#E8E4D9]" />
+    </div>
+  )
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <SuccessContent />
+    </Suspense>
   )
 }
