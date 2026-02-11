@@ -135,7 +135,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return true
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id as string
         token.role = user.role as UserRole
@@ -144,6 +144,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.email = user.email as string
         token.avatarUrl = user.avatarUrl as string | null
       }
+
+      // Refresh user data from DB if firstName is missing (for existing sessions)
+      if (token.id && token.firstName === undefined) {
+        const { prisma } = await import('./db')
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { firstName: true, lastName: true, avatarUrl: true, role: true },
+        })
+        if (dbUser) {
+          token.firstName = dbUser.firstName
+          token.lastName = dbUser.lastName
+          token.avatarUrl = dbUser.avatarUrl
+          token.role = dbUser.role
+        }
+      }
+
       return token
     },
     async session({ session, token }) {
