@@ -21,14 +21,20 @@ export async function GET() {
         label: addr.type === AddressType.shipping ? 'Casa' : 'Oficina',
         fullName: addr.fullName,
         phone: addr.phone,
+        // New format for checkout
+        streetLine1: addr.streetLine1,
+        streetLine2: addr.streetLine2,
+        postalCode: addr.postalCode,
+        // Old format for direcciones page (backward compat)
         street: addr.streetLine1,
         number: '',
         interior: addr.streetLine2,
+        zipCode: addr.postalCode,
+        // Common fields
         neighborhood: addr.neighborhood,
         city: addr.city,
         state: addr.state,
-        zipCode: addr.postalCode,
-        country: addr.country === 'MX' ? 'México' : addr.country,
+        country: addr.country,
         isDefault: addr.isDefault,
       })),
     })
@@ -48,13 +54,17 @@ export async function POST(request: NextRequest) {
       type,
       fullName,
       phone,
+      // Support both old format (street, zipCode) and new format (streetLine1, postalCode)
       street,
+      streetLine1: streetLine1Input,
       number,
       interior,
+      streetLine2: streetLine2Input,
       neighborhood,
       city,
       state,
       zipCode,
+      postalCode: postalCodeInput,
       country,
       isDefault,
     } = body
@@ -71,7 +81,10 @@ export async function POST(request: NextRequest) {
     const addressCount = await prisma.address.count({ where: { userId } })
     const shouldBeDefault = isDefault || addressCount === 0
 
-    const streetLine1 = number ? `${street} ${number}` : street
+    // Handle both field naming conventions
+    const streetLine1 = streetLine1Input || (number ? `${street} ${number}` : street)
+    const streetLine2 = streetLine2Input || interior || null
+    const postalCode = postalCodeInput || zipCode
 
     const newAddress = await prisma.address.create({
       data: {
@@ -80,11 +93,11 @@ export async function POST(request: NextRequest) {
         fullName,
         phone,
         streetLine1,
-        streetLine2: interior || null,
+        streetLine2,
         neighborhood,
         city,
         state,
-        postalCode: zipCode,
+        postalCode,
         country: 'MX',
         isDefault: shouldBeDefault,
       },
@@ -94,18 +107,24 @@ export async function POST(request: NextRequest) {
       success: true,
       address: {
         id: newAddress.id,
-        type: type,
+        type: type || 'home',
         label: type === 'work' ? 'Oficina' : 'Casa',
         fullName: newAddress.fullName,
         phone: newAddress.phone,
-        street: streetLine1,
+        // New format for checkout
+        streetLine1: newAddress.streetLine1,
+        streetLine2: newAddress.streetLine2,
+        postalCode: newAddress.postalCode,
+        // Old format for direcciones page (backward compat)
+        street: newAddress.streetLine1,
         number: '',
         interior: newAddress.streetLine2,
+        zipCode: newAddress.postalCode,
+        // Common fields
         neighborhood: newAddress.neighborhood,
         city: newAddress.city,
         state: newAddress.state,
-        zipCode: newAddress.postalCode,
-        country: newAddress.country === 'MX' ? 'México' : newAddress.country,
+        country: newAddress.country,
         isDefault: newAddress.isDefault,
       },
     })
