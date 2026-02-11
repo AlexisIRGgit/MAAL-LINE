@@ -89,7 +89,7 @@ export default function CheckoutPage() {
   const [addresses, setAddresses] = useState<Address[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const [selectedShipping, setSelectedShipping] = useState<string>('standard')
-  const [loading, setLoading] = useState(true)
+  const [loadingAddresses, setLoadingAddresses] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -120,30 +120,37 @@ export default function CheckoutPage() {
     }
   }, [items, sessionStatus, router])
 
-  // Fetch addresses
+  // Fetch addresses when session is available
   useEffect(() => {
     const fetchAddresses = async () => {
+      setLoadingAddresses(true)
       try {
         const response = await fetch('/api/account/addresses')
         if (response.ok) {
           const data = await response.json()
-          setAddresses(data.addresses || [])
-          const defaultAddr = data.addresses?.find((a: Address) => a.isDefault)
+          const fetchedAddresses = data.addresses || []
+          setAddresses(fetchedAddresses)
+
+          // Pre-select default address if exists
+          const defaultAddr = fetchedAddresses.find((a: Address) => a.isDefault)
           if (defaultAddr) {
             setSelectedAddressId(defaultAddr.id)
+          } else if (fetchedAddresses.length > 0) {
+            // If no default, select first address
+            setSelectedAddressId(fetchedAddresses[0].id)
           }
         }
       } catch (err) {
         console.error('Error fetching addresses:', err)
       } finally {
-        setLoading(false)
+        setLoadingAddresses(false)
       }
     }
 
-    if (session) {
+    if (sessionStatus === 'authenticated') {
       fetchAddresses()
     }
-  }, [session])
+  }, [sessionStatus])
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('es-MX', {
@@ -160,7 +167,7 @@ export default function CheckoutPage() {
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId)
 
   // Check if new address form is being shown (either explicitly or because no addresses exist)
-  const isNewAddressFormVisible = showNewAddress || addresses.length === 0
+  const isNewAddressFormVisible = !loadingAddresses && (showNewAddress || addresses.length === 0)
 
   const isNewAddressValid = newAddress.fullName.trim() !== '' &&
     newAddress.streetLine1.trim() !== '' &&
@@ -171,6 +178,8 @@ export default function CheckoutPage() {
   const canProceed = () => {
     switch (currentStep) {
       case 0:
+        // Don't allow proceeding while loading
+        if (loadingAddresses) return false
         // Either have a selected address OR have a valid new address form
         return selectedAddressId !== null || (isNewAddressFormVisible && isNewAddressValid)
       case 1:
@@ -253,7 +262,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (sessionStatus === 'loading' || loading) {
+  if (sessionStatus === 'loading') {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#E8E4D9]" />
@@ -337,7 +346,16 @@ export default function CheckoutPage() {
                   >
                     <h2 className="text-xl font-bold text-[#E8E4D9]">Dirección de Envío</h2>
 
-                    {addresses.length > 0 && !showNewAddress && (
+                    {/* Loading addresses */}
+                    {loadingAddresses && (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-[#E8E4D9]" />
+                        <span className="ml-2 text-[#E8E4D9]/60">Cargando direcciones...</span>
+                      </div>
+                    )}
+
+                    {/* Show saved addresses if available */}
+                    {!loadingAddresses && addresses.length > 0 && !showNewAddress && (
                       <div className="space-y-3">
                         {addresses.map((address) => (
                           <button
@@ -390,7 +408,8 @@ export default function CheckoutPage() {
                       </div>
                     )}
 
-                    {(addresses.length === 0 || showNewAddress) && (
+                    {/* Show new address form only when no addresses exist or user clicked to add new */}
+                    {!loadingAddresses && (addresses.length === 0 || showNewAddress) && (
                       <div className="space-y-4 p-4 border border-[#E8E4D9]/20 rounded-xl">
                         <div className="grid grid-cols-2 gap-4">
                           <div className="col-span-2 sm:col-span-1">
