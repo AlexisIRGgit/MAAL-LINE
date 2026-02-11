@@ -159,10 +159,20 @@ export default function CheckoutPage() {
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId)
 
+  // Check if new address form is being shown (either explicitly or because no addresses exist)
+  const isNewAddressFormVisible = showNewAddress || addresses.length === 0
+
+  const isNewAddressValid = newAddress.fullName.trim() !== '' &&
+    newAddress.streetLine1.trim() !== '' &&
+    newAddress.city.trim() !== '' &&
+    newAddress.state.trim() !== '' &&
+    newAddress.postalCode.trim() !== ''
+
   const canProceed = () => {
     switch (currentStep) {
       case 0:
-        return selectedAddressId !== null || (showNewAddress && newAddress.fullName && newAddress.streetLine1 && newAddress.city && newAddress.state && newAddress.postalCode)
+        // Either have a selected address OR have a valid new address form
+        return selectedAddressId !== null || (isNewAddressFormVisible && isNewAddressValid)
       case 1:
         return selectedShipping !== null
       case 2:
@@ -173,8 +183,8 @@ export default function CheckoutPage() {
   }
 
   const handleNext = async () => {
-    if (currentStep === 0 && showNewAddress) {
-      // Save new address first
+    // If on address step and new address form is visible with valid data, save it first
+    if (currentStep === 0 && isNewAddressFormVisible && isNewAddressValid && !selectedAddressId) {
       try {
         const response = await fetch('/api/account/addresses', {
           method: 'POST',
@@ -190,6 +200,10 @@ export default function CheckoutPage() {
           setAddresses([...addresses, data.address])
           setSelectedAddressId(data.address.id)
           setShowNewAddress(false)
+        } else {
+          const errorData = await response.json()
+          setError(errorData.error || 'Error al guardar la dirección')
+          return
         }
       } catch (err) {
         setError('Error al guardar la dirección')
