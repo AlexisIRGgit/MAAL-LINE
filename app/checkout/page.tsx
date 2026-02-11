@@ -91,6 +91,7 @@ export default function CheckoutPage() {
   const [selectedShipping, setSelectedShipping] = useState<string>('standard')
   const [loadingAddresses, setLoadingAddresses] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [orderCompleted, setOrderCompleted] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // New address form
@@ -113,12 +114,12 @@ export default function CheckoutPage() {
     }
   }, [sessionStatus, router])
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty (but not if order was just completed)
   useEffect(() => {
-    if (items.length === 0 && sessionStatus === 'authenticated') {
+    if (items.length === 0 && sessionStatus === 'authenticated' && !orderCompleted) {
       router.push('/')
     }
-  }, [items, sessionStatus, router])
+  }, [items, sessionStatus, router, orderCompleted])
 
   // Fetch addresses when session is available
   useEffect(() => {
@@ -249,6 +250,8 @@ export default function CheckoutPage() {
 
       if (response.ok) {
         const data = await response.json()
+        // Mark order as completed BEFORE clearing cart to prevent redirect to home
+        setOrderCompleted(true)
         clearCart()
         router.push(`/checkout/success?order=${data.orderNumber}`)
       } else {
