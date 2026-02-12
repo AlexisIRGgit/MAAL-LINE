@@ -96,7 +96,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         })
 
         if (existingUser) {
-          // Update OAuth info if user exists
+          // Update OAuth info and fill missing profile data
+          const firstName = user.name?.split(' ')[0] || null
+          const lastName = user.name?.split(' ').slice(1).join(' ') || null
+
           await prisma.user.update({
             where: { id: existingUser.id },
             data: {
@@ -105,6 +108,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               emailVerified: true,
               emailVerifiedAt: new Date(),
               lastLoginAt: new Date(),
+              // Update name and avatar if not already set
+              ...((!existingUser.firstName && firstName) && { firstName }),
+              ...((!existingUser.lastName && lastName) && { lastName }),
+              ...((!existingUser.avatarUrl && user.image) && { avatarUrl: user.image }),
             },
           })
         } else {
