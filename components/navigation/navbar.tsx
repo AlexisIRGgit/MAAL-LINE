@@ -82,6 +82,17 @@ export function Navbar() {
               </svg>
             </button>
 
+            {/* Wishlist */}
+            <Link
+              href="/wishlist"
+              className="hidden md:block p-2 text-[#E8E4D9]/70 hover:text-[#E8E4D9] transition-colors"
+              aria-label="Lista de deseos"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </Link>
+
             {/* Account */}
             <Link
               href={session ? '/cuenta' : '/login'}
@@ -129,8 +140,15 @@ export function Navbar() {
                 </Link>
               ))}
 
-              {/* Account link in mobile */}
-              <div className="pt-4 border-t border-[#E8E4D9]/10">
+              {/* Account & Wishlist links in mobile */}
+              <div className="pt-4 border-t border-[#E8E4D9]/10 space-y-4">
+                <Link
+                  href="/wishlist"
+                  className="block text-sm font-bold tracking-[0.15em] uppercase text-[#E8E4D9]/70"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  LISTA DE DESEOS
+                </Link>
                 <Link
                   href={session ? '/cuenta' : '/login'}
                   className="block text-sm font-bold tracking-[0.15em] uppercase text-[#E8E4D9]/70"

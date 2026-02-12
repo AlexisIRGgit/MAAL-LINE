@@ -6,13 +6,14 @@ import { OrderStatus, PaymentStatus, ShipmentStatus } from '@prisma/client'
 // GET - Get single order details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requirePermission('orders:view')
+    const { id } = await params
 
     const order = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -44,7 +45,7 @@ export async function GET(
         statusHistory: {
           orderBy: { createdAt: 'desc' },
           include: {
-            changedBy: {
+            createdBy: {
               select: {
                 firstName: true,
                 lastName: true,
@@ -77,17 +78,18 @@ export async function GET(
 // PATCH - Update order (status, notes, etc.)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await requirePermission('orders:edit')
+    const session = await requirePermission('orders:process')
     const userId = session.user.id
+    const { id } = await params
 
     const body = await request.json()
     const { status, paymentStatus, internalNotes, trackingNumber, carrier } = body
 
     const order = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!order) {
@@ -124,10 +126,10 @@ export async function PATCH(
 
       // Record status change in history
       statusHistoryData.push({
-        orderId: params.id,
+        orderId: id,
         status: status,
         previousStatus: order.status,
-        changedById: userId,
+        createdById: userId,
         notes: `Estado cambiado de ${order.status} a ${status}`,
       })
     }
@@ -137,9 +139,9 @@ export async function PATCH(
       updateData.paymentStatus = paymentStatus
 
       statusHistoryData.push({
-        orderId: params.id,
+        orderId: id,
         status: order.status,
-        changedById: userId,
+        createdById: userId,
         notes: `Estado de pago cambiado a ${paymentStatus}`,
       })
     }
@@ -152,7 +154,7 @@ export async function PATCH(
     // Handle tracking info (create/update shipment)
     if (trackingNumber || carrier) {
       const existingShipment = await prisma.shipment.findFirst({
-        where: { orderId: params.id },
+        where: { orderId: id },
         orderBy: { createdAt: 'desc' },
       })
 
@@ -169,11 +171,11 @@ export async function PATCH(
       } else {
         await prisma.shipment.create({
           data: {
-            orderId: params.id,
+            orderId: id,
             trackingNumber,
             carrier,
             status: 'pending',
-            shippingAddress: order.shippingAddress,
+            shippingAddress: order.shippingAddress || {},
           },
         })
       }
@@ -184,10 +186,10 @@ export async function PATCH(
         updateData.shippedAt = new Date()
 
         statusHistoryData.push({
-          orderId: params.id,
+          orderId: id,
           status: 'shipped',
           previousStatus: order.status,
-          changedById: userId,
+          createdById: userId,
           notes: `Pedido enviado con número de rastreo: ${trackingNumber}`,
         })
       }
@@ -195,7 +197,7 @@ export async function PATCH(
 
     // Update order
     const updatedOrder = await prisma.order.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         items: true,

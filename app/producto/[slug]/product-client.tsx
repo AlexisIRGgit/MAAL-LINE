@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/navigation/navbar'
 import { PromoBar } from '@/components/navigation/promo-bar'
 import { Footer } from '@/components/navigation/footer'
@@ -11,7 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { ProductCard } from '@/components/product/product-card'
 import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
-import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw, Shield, Check } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw, Shield, Check, Loader2 } from 'lucide-react'
 import type { ProductDetailData, ProductCardData } from '@/lib/transformers/product'
 
 interface ProductPageClientProps {
@@ -25,7 +27,60 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
+  const [inWishlist, setInWishlist] = useState(false)
+  const [wishlistLoading, setWishlistLoading] = useState(false)
   const { addItem } = useCartStore()
+  const { data: session, status: sessionStatus } = useSession()
+  const router = useRouter()
+
+  // Check if product is in wishlist
+  useEffect(() => {
+    const checkWishlist = async () => {
+      if (sessionStatus !== 'authenticated') return
+      try {
+        const response = await fetch(`/api/wishlist/${product.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setInWishlist(data.inWishlist)
+        }
+      } catch (error) {
+        console.error('Error checking wishlist:', error)
+      }
+    }
+    checkWishlist()
+  }, [product.id, sessionStatus])
+
+  const handleWishlistToggle = async () => {
+    if (sessionStatus !== 'authenticated') {
+      router.push(`/auth/login?redirect=/producto/${product.slug}`)
+      return
+    }
+
+    setWishlistLoading(true)
+    try {
+      if (inWishlist) {
+        const response = await fetch(`/api/wishlist/${product.id}`, {
+          method: 'DELETE',
+        })
+        if (response.ok) {
+          setInWishlist(false)
+        }
+      } else {
+        const response = await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: product.id }),
+        })
+        if (response.ok) {
+          setInWishlist(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error)
+    } finally {
+      setWishlistLoading(false)
+    }
+  }
 
   const {
     name,
@@ -306,8 +361,22 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                     'AÑADIR AL CARRITO'
                   )}
                 </Button>
-                <button className="w-12 h-12 border border-[#E8E4D9]/30 flex items-center justify-center text-[#E8E4D9] hover:bg-[#E8E4D9]/10 transition-colors">
-                  <Heart className="w-5 h-5" />
+                <button
+                  onClick={handleWishlistToggle}
+                  disabled={wishlistLoading}
+                  className={cn(
+                    "w-12 h-12 border flex items-center justify-center transition-colors disabled:opacity-50",
+                    inWishlist
+                      ? "bg-red-500/20 border-red-500 text-red-500 hover:bg-red-500/30"
+                      : "border-[#E8E4D9]/30 text-[#E8E4D9] hover:bg-[#E8E4D9]/10"
+                  )}
+                  title={inWishlist ? "Quitar de favoritos" : "Agregar a favoritos"}
+                >
+                  {wishlistLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Heart className={cn("w-5 h-5", inWishlist && "fill-current")} />
+                  )}
                 </button>
                 <button className="w-12 h-12 border border-[#E8E4D9]/30 flex items-center justify-center text-[#E8E4D9] hover:bg-[#E8E4D9]/10 transition-colors">
                   <Share2 className="w-5 h-5" />

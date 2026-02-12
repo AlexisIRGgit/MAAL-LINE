@@ -463,20 +463,25 @@ export default function AdminOrdersPage() {
       {/* Order Detail Modal */}
       <AnimatePresence>
         {showModal && selectedOrder && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-10 pb-10">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowModal(false)}
-              className="fixed inset-0 bg-black/50"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden"
-            >
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowModal(false)}
+                className="fixed inset-0 bg-black/50 transition-opacity"
+              />
+
+              {/* Trick to center modal */}
+              <span className="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="inline-block w-full max-w-4xl my-8 text-left align-middle bg-white rounded-2xl shadow-xl overflow-hidden relative"
+              >
               {/* Modal Header */}
               <div className="sticky top-0 bg-white border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between z-10">
                 <div>
@@ -768,6 +773,7 @@ export default function AdminOrdersPage() {
                 )}
               </div>
             </motion.div>
+          </div>
           </div>
         )}
       </AnimatePresence>
