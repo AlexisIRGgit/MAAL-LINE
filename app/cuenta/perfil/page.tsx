@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   User,
@@ -31,6 +32,7 @@ const itemVariants = {
 
 export default function ProfilePage() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
@@ -56,6 +58,12 @@ export default function ProfilePage() {
     newPassword: '',
     confirmPassword: '',
   })
+
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
@@ -175,6 +183,38 @@ export default function ProfilePage() {
       setPasswordError(err instanceof Error ? err.message : 'Error al cambiar contraseña')
     } finally {
       setIsChangingPassword(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'ELIMINAR') {
+      setDeleteError('Escribe ELIMINAR para confirmar')
+      return
+    }
+
+    setIsDeleting(true)
+    setDeleteError(null)
+
+    try {
+      const response = await fetch('/api/account/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmation: deleteConfirmation }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al eliminar cuenta')
+      }
+
+      // Sign out and redirect to home
+      await signOut({ redirect: false })
+      router.push('/')
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Error al eliminar cuenta')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -454,10 +494,76 @@ export default function ProfilePage() {
         <p className="text-sm text-[#6B7280] mb-4">
           Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, estás seguro.
         </p>
-        <button className="px-4 py-2.5 border border-red-300 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors">
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          className="px-4 py-2.5 border border-red-300 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors"
+        >
           Eliminar mi cuenta
         </button>
       </motion.div>
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
+          >
+            <h3 className="text-lg font-bold text-red-600 mb-2">¿Eliminar tu cuenta?</h3>
+            <p className="text-sm text-[#6B7280] mb-4">
+              Esta acción es permanente y no se puede deshacer. Se eliminarán todos tus datos, pedidos e historial.
+            </p>
+
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700 text-sm">
+                <AlertCircle className="w-4 h-4" />
+                {deleteError}
+              </div>
+            )}
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#374151] mb-2">
+                Escribe <span className="font-bold text-red-600">ELIMINAR</span> para confirmar
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                placeholder="ELIMINAR"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setDeleteConfirmation('')
+                  setDeleteError(null)
+                }}
+                className="flex-1 px-4 py-2.5 border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-xl hover:bg-[#F9FAFB] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={isDeleting || deleteConfirmation !== 'ELIMINAR'}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  'Eliminar cuenta'
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   )
 }
