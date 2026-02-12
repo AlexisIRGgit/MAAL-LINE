@@ -306,32 +306,45 @@ export default function AdminOrdersPage() {
         </div>
       </motion.div>
 
-      {/* Stats */}
+      {/* Stats Bar */}
       {stats && (
-        <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-[#6B7280] mr-1">Filtrar:</span>
           {[
-            { key: '', label: 'Total', value: stats.total, color: 'bg-[#111827]', textColor: 'text-white', labelColor: 'text-white/70' },
-            { key: 'pending', label: 'Pendientes', value: stats.pending, color: 'bg-yellow-50', textColor: 'text-yellow-700', labelColor: 'text-yellow-600' },
-            { key: 'processing', label: 'Procesando', value: stats.processing, color: 'bg-purple-50', textColor: 'text-purple-700', labelColor: 'text-purple-600' },
-            { key: 'shipped', label: 'Enviados', value: stats.shipped, color: 'bg-indigo-50', textColor: 'text-indigo-700', labelColor: 'text-indigo-600' },
-            { key: 'delivered', label: 'Entregados', value: stats.delivered, color: 'bg-green-50', textColor: 'text-green-700', labelColor: 'text-green-600' },
-            { key: 'cancelled', label: 'Cancelados', value: stats.cancelled, color: 'bg-red-50', textColor: 'text-red-700', labelColor: 'text-red-600' },
-          ].map((stat) => (
-            <button
-              key={stat.label}
-              onClick={() => setStatusFilter(stat.key)}
-              className={cn(
-                'p-4 rounded-2xl text-left transition-all hover:scale-105',
-                stat.color,
-                statusFilter === stat.key && 'ring-2 ring-[#111827]'
-              )}
-            >
-              <p className={cn('text-2xl font-bold', stat.textColor)}>{stat.value}</p>
-              <p className={cn('text-sm font-medium', stat.labelColor)}>
+            { key: '', label: 'Todos', value: stats.total, icon: ShoppingCart },
+            { key: 'pending', label: 'Pendientes', value: stats.pending, icon: Clock, dot: 'bg-yellow-500' },
+            { key: 'processing', label: 'Procesando', value: stats.processing, icon: Package, dot: 'bg-purple-500' },
+            { key: 'shipped', label: 'Enviados', value: stats.shipped, icon: Truck, dot: 'bg-indigo-500' },
+            { key: 'delivered', label: 'Entregados', value: stats.delivered, icon: CheckCircle, dot: 'bg-green-500' },
+            { key: 'cancelled', label: 'Cancelados', value: stats.cancelled, icon: XCircle, dot: 'bg-red-500' },
+          ].map((stat) => {
+            const Icon = stat.icon
+            const isActive = statusFilter === stat.key
+            return (
+              <button
+                key={stat.label}
+                onClick={() => setStatusFilter(stat.key)}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all',
+                  isActive
+                    ? 'bg-[#111827] text-white'
+                    : 'bg-white border border-[#E5E7EB] text-[#374151] hover:border-[#111827]'
+                )}
+              >
+                {stat.dot && !isActive && (
+                  <span className={cn('w-2 h-2 rounded-full', stat.dot)} />
+                )}
+                {!stat.dot && <Icon className="w-3.5 h-3.5" />}
                 {stat.label}
-              </p>
-            </button>
-          ))}
+                <span className={cn(
+                  'ml-0.5 px-1.5 py-0.5 text-xs rounded-full',
+                  isActive ? 'bg-white/20' : 'bg-[#F3F4F6]'
+                )}>
+                  {stat.value}
+                </span>
+              </button>
+            )
+          })}
         </motion.div>
       )}
 
