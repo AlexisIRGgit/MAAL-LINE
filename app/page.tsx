@@ -113,24 +113,17 @@ export default async function HomePage() {
       <Navbar />
 
       <main className="overflow-hidden bg-[#0A0A0A]">
-        {/* HERO SECTION - Dark Gothic */}
-        <section className="relative min-h-[100svh] flex items-center tribal-pattern noise-overlay">
-          {/* Gothic decorative elements */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-20 left-10 w-px h-40 bg-gradient-to-b from-transparent via-[#E8E4D9]/20 to-transparent" />
-            <div className="absolute top-40 right-20 w-px h-60 bg-gradient-to-b from-transparent via-[#E8E4D9]/10 to-transparent" />
-            <div className="absolute bottom-20 left-1/4 w-32 h-px bg-gradient-to-r from-transparent via-[#E8E4D9]/20 to-transparent" />
-          </div>
-
+        {/* HERO SECTION - Modern Rounded */}
+        <section className="relative min-h-[100svh] flex items-center">
           <div className="container mx-auto px-4 py-20 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left - Content */}
               <div className="text-center lg:text-left">
-                <Badge variant="new" size="md" className="mb-8">
+                <span className="inline-block px-4 py-2 bg-[#1A1A1A] border border-[#2A2A2A] text-[#C9A962] text-xs font-bold tracking-wider rounded-full mb-8">
                   NEW DROP 2026
-                </Badge>
+                </span>
 
-                {/* Gothic Title */}
+                {/* Title */}
                 <h1 className="mb-8">
                   <span className="block text-6xl md:text-8xl lg:text-9xl font-gothic text-[#E8E4D9] leading-none tracking-wide">
                     MAAL
@@ -158,36 +151,28 @@ export default async function HomePage() {
                 </div>
 
                 {/* Stats */}
-                <div className="flex gap-12 mt-16 justify-center lg:justify-start">
-                  <div className="text-center lg:text-left">
-                    <p className="text-3xl font-black text-[#E8E4D9]">500+</p>
-                    <p className="text-xs text-[#E8E4D9]/40 tracking-wider uppercase">Diseños</p>
-                  </div>
-                  <div className="text-center lg:text-left">
-                    <p className="text-3xl font-black text-[#E8E4D9]">10K+</p>
-                    <p className="text-xs text-[#E8E4D9]/40 tracking-wider uppercase">Clientes</p>
-                  </div>
-                  <div className="text-center lg:text-left">
-                    <p className="text-3xl font-black text-[#E8E4D9]">24h</p>
-                    <p className="text-xs text-[#E8E4D9]/40 tracking-wider uppercase">Express</p>
-                  </div>
+                <div className="flex gap-6 mt-16 justify-center lg:justify-start">
+                  {[
+                    { value: '500+', label: 'Diseños' },
+                    { value: '10K+', label: 'Clientes' },
+                    { value: '24h', label: 'Express' },
+                  ].map((stat) => (
+                    <div key={stat.label} className="text-center lg:text-left px-4 py-3 bg-[#1A1A1A]/50 rounded-2xl border border-[#2A2A2A]">
+                      <p className="text-2xl font-black text-[#E8E4D9]">{stat.value}</p>
+                      <p className="text-[10px] text-[#E8E4D9]/40 tracking-wider uppercase">{stat.label}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Right - Hero Image with gothic frame */}
+              {/* Right - Hero Image with rounded frame */}
               <div className="relative">
                 <div className="relative aspect-[3/4] max-w-md mx-auto">
-                  {/* Gothic border frame */}
-                  <div className="absolute -inset-4 border-2 border-[#E8E4D9]/20" />
-                  <div className="absolute -inset-2 border border-[#E8E4D9]/10" />
+                  {/* Rounded frame */}
+                  <div className="absolute -inset-3 bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] rounded-3xl" />
+                  <div className="absolute -inset-2 bg-[#0A0A0A] rounded-2xl" />
 
-                  {/* Corner decorations */}
-                  <div className="absolute -top-6 -left-6 w-12 h-12 border-l-2 border-t-2 border-[#E8E4D9]/40" />
-                  <div className="absolute -top-6 -right-6 w-12 h-12 border-r-2 border-t-2 border-[#E8E4D9]/40" />
-                  <div className="absolute -bottom-6 -left-6 w-12 h-12 border-l-2 border-b-2 border-[#E8E4D9]/40" />
-                  <div className="absolute -bottom-6 -right-6 w-12 h-12 border-r-2 border-b-2 border-[#E8E4D9]/40" />
-
-                  <div className="relative h-full overflow-hidden">
+                  <div className="relative h-full overflow-hidden rounded-2xl">
                     <Image
                       src="/images/IMG_3009.PNG"
                       alt="MAAL Line Streetwear"
@@ -200,11 +185,11 @@ export default async function HomePage() {
                   </div>
                 </div>
 
-                {/* Floating badge */}
-                <div className="absolute -left-4 top-1/4 glass-dark px-4 py-3">
+                {/* Floating badges */}
+                <div className="absolute -left-4 top-1/4 px-4 py-3 bg-[#1A1A1A]/90 backdrop-blur-sm rounded-2xl border border-[#2A2A2A]">
                   <p className="text-sm font-bold text-[#E8E4D9] tracking-wider">✦ TRENDING</p>
                 </div>
-                <div className="absolute -right-4 bottom-1/4 glass-dark px-4 py-3">
+                <div className="absolute -right-4 bottom-1/4 px-4 py-3 bg-[#1A1A1A]/90 backdrop-blur-sm rounded-2xl border border-[#2A2A2A]">
                   <p className="text-sm font-bold text-[#C9A962] tracking-wider">NEW DROP</p>
                 </div>
               </div>
@@ -213,14 +198,14 @@ export default async function HomePage() {
 
           {/* Scroll indicator */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block">
-            <div className="w-6 h-10 border border-[#E8E4D9]/30 flex justify-center">
-              <div className="w-1 h-2 bg-[#E8E4D9] mt-2 animate-bounce" />
+            <div className="w-8 h-12 border-2 border-[#E8E4D9]/30 rounded-full flex justify-center">
+              <div className="w-1.5 h-3 bg-[#E8E4D9] mt-2 rounded-full animate-bounce" />
             </div>
           </div>
         </section>
 
-        {/* MARQUEE - Dark */}
-        <section className="py-4 bg-[#E8E4D9] overflow-hidden">
+        {/* MARQUEE */}
+        <section className="py-4 bg-[#E8E4D9] overflow-hidden rounded-t-3xl">
           <div className="marquee-container">
             <div className="marquee-content whitespace-nowrap">
               {[...Array(10)].map((_, i) => (
@@ -244,7 +229,7 @@ export default async function HomePage() {
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <span className="inline-block px-4 py-1 bg-[#E8E4D9] text-[#0A0A0A] text-[10px] font-bold tracking-[0.2em] mb-4">
+                <span className="inline-block px-4 py-2 bg-[#E8E4D9] text-[#0A0A0A] text-[10px] font-bold tracking-[0.2em] rounded-full mb-4">
                   JUST DROPPED
                 </span>
                 <h2 className="text-4xl md:text-5xl font-black text-[#E8E4D9]">
@@ -258,7 +243,7 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {newArrivals.map((product, index) => (
                 <ProductCard
                   key={product.id}
@@ -278,8 +263,8 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* CATEGORIES GRID - Gothic Cards */}
-        <section className="py-20 md:py-28 bg-[#111111] tribal-pattern">
+        {/* CATEGORIES GRID - Rounded Cards */}
+        <section className="py-20 md:py-28 bg-[#111111]">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-black text-[#E8E4D9]">
@@ -293,7 +278,7 @@ export default async function HomePage() {
                 <Link
                   key={slug}
                   href={`/coleccion/${slug}`}
-                  className={`group relative overflow-hidden border border-[#E8E4D9]/10 hover:border-[#E8E4D9]/40 transition-all duration-500 ${
+                  className={`group relative overflow-hidden rounded-2xl border border-[#2A2A2A] hover:border-[#3A3A3A] transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 ${
                     large ? 'md:col-span-2 md:row-span-2 aspect-square' :
                     wide ? 'md:col-span-2 aspect-[2/1]' : 'aspect-square'
                   }`}
@@ -303,25 +288,21 @@ export default async function HomePage() {
                     alt={name}
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-cover transition-all duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0"
+                    className="object-cover transition-all duration-700 group-hover:scale-110"
                   />
 
                   {/* Dark overlay */}
-                  <div className="absolute inset-0 bg-[#0A0A0A]/60 group-hover:bg-[#0A0A0A]/40 transition-colors duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent group-hover:via-[#0A0A0A]/20 transition-all duration-500" />
 
                   {/* Content */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                    <span className="text-[#E8E4D9] font-black text-xl md:text-2xl tracking-[0.2em] text-center group-hover:scale-110 transition-transform duration-300">
+                  <div className="absolute inset-0 flex flex-col items-center justify-end p-6">
+                    <span className="text-[#E8E4D9] font-black text-lg md:text-xl tracking-wider text-center mb-2">
                       {name}
                     </span>
-                    <span className="mt-3 text-[#E8E4D9]/50 text-xs tracking-[0.15em] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="px-4 py-1.5 bg-[#E8E4D9]/10 backdrop-blur-sm rounded-full text-[#E8E4D9]/70 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
                       EXPLORAR →
                     </span>
                   </div>
-
-                  {/* Corner accent */}
-                  <div className="absolute top-0 left-0 w-8 h-8 border-l border-t border-[#E8E4D9]/0 group-hover:border-[#E8E4D9]/40 transition-colors duration-300" />
-                  <div className="absolute bottom-0 right-0 w-8 h-8 border-r border-b border-[#E8E4D9]/0 group-hover:border-[#E8E4D9]/40 transition-colors duration-300" />
                 </Link>
               ))}
             </div>
@@ -333,7 +314,7 @@ export default async function HomePage() {
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <span className="inline-block px-4 py-1 border border-[#E8E4D9] text-[#E8E4D9] text-[10px] font-bold tracking-[0.2em] mb-4">
+                <span className="inline-block px-4 py-2 border border-[#E8E4D9]/50 text-[#E8E4D9] text-[10px] font-bold tracking-[0.2em] rounded-full mb-4">
                   TOP PICKS
                 </span>
                 <h2 className="text-4xl md:text-5xl font-black text-[#E8E4D9]">
@@ -347,7 +328,7 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {bestSellers.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -363,7 +344,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* LOOKBOOK PREVIEW - Dark Artistic */}
+        {/* LOOKBOOK PREVIEW */}
         <section className="relative py-32 md:py-40 overflow-hidden">
           {/* Background */}
           <div className="absolute inset-0">
@@ -376,15 +357,11 @@ export default async function HomePage() {
             <div className="absolute inset-0 bg-[#0A0A0A]/80" />
           </div>
 
-          {/* Decorative lines */}
-          <div className="absolute top-20 left-10 w-px h-40 bg-gradient-to-b from-transparent via-[#E8E4D9]/20 to-transparent" />
-          <div className="absolute bottom-20 right-10 w-px h-40 bg-gradient-to-b from-transparent via-[#E8E4D9]/20 to-transparent" />
-
           <div className="relative container mx-auto px-4 text-center">
-            <span className="inline-block px-4 py-1 border border-[#E8E4D9]/30 text-[#E8E4D9]/60 text-[10px] font-bold tracking-[0.2em] mb-6">
+            <span className="inline-block px-5 py-2 bg-[#1A1A1A]/80 backdrop-blur-sm border border-[#2A2A2A] text-[#E8E4D9]/60 text-xs font-bold tracking-[0.2em] rounded-full mb-6">
               FALL/WINTER 2026
             </span>
-            <h2 className="text-5xl md:text-7xl font-gothic text-[#E8E4D9] mb-6 text-glow-cream">
+            <h2 className="text-5xl md:text-7xl font-gothic text-[#E8E4D9] mb-6">
               LOOKBOOK
             </h2>
             <p className="text-[#E8E4D9]/50 max-w-md mx-auto mb-10 text-lg">
@@ -398,17 +375,14 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* NEWSLETTER SECTION - Dark */}
-        <section className="py-20 md:py-28 bg-[#111111] relative overflow-hidden border-t border-[#E8E4D9]/10">
-          {/* Decorative elements */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-20 bg-gradient-to-b from-[#E8E4D9]/20 to-transparent" />
-
+        {/* NEWSLETTER SECTION */}
+        <section className="py-20 md:py-28 bg-[#111111] relative overflow-hidden">
           <div className="container mx-auto px-4 text-center relative z-10">
-            <div className="max-w-2xl mx-auto">
-              <h2 className="text-4xl md:text-5xl font-black text-[#E8E4D9] mb-4">
+            <div className="max-w-2xl mx-auto bg-[#1A1A1A] border border-[#2A2A2A] rounded-3xl p-8 md:p-12">
+              <h2 className="text-3xl md:text-4xl font-black text-[#E8E4D9] mb-4">
                 ÚNETE AL <span className="text-[#C9A962]">CREW</span>
               </h2>
-              <p className="text-[#E8E4D9]/50 mb-10 max-w-md mx-auto">
+              <p className="text-[#E8E4D9]/50 mb-8 max-w-md mx-auto">
                 Acceso anticipado a drops, restocks y contenido exclusivo. Sin spam.
               </p>
 
@@ -418,7 +392,7 @@ export default async function HomePage() {
                     type="email"
                     placeholder="tu@email.com"
                     required
-                    className="flex-1 h-14 px-6 bg-transparent border-2 border-[#E8E4D9]/30 text-[#E8E4D9] placeholder:text-[#E8E4D9]/30 focus:outline-none focus:border-[#E8E4D9] transition-colors tracking-wider"
+                    className="flex-1 h-14 px-6 bg-[#0A0A0A] border-2 border-[#2A2A2A] rounded-xl text-[#E8E4D9] placeholder:text-[#E8E4D9]/30 focus:outline-none focus:border-[#E8E4D9] transition-colors tracking-wider"
                   />
                   <Button type="submit" size="lg">
                     SUSCRIBIR

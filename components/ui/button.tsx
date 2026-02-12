@@ -28,18 +28,20 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       inline-flex items-center justify-center font-bold
       uppercase tracking-[0.15em]
       transition-all duration-300 ease-out
+      rounded-xl
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8E4D9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]
       disabled:opacity-50 disabled:pointer-events-none
       active:scale-[0.98]
     `
 
     const variants = {
-      // Primary - Cream button with brutal shadow
+      // Primary - Cream button
       primary: `
         bg-[#E8E4D9] text-[#0A0A0A]
-        hover:shadow-[4px_4px_0_#6B6860]
-        hover:translate-x-[-2px] hover:translate-y-[-2px]
+        hover:bg-[#D4D0C5]
         border-2 border-[#E8E4D9]
+        hover:border-[#D4D0C5]
+        shadow-lg hover:shadow-xl
       `,
       // Secondary - Dark with cream border
       secondary: `
@@ -55,6 +57,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       outline: `
         bg-transparent text-[#E8E4D9] border-2 border-[#E8E4D9]/50
         hover:border-[#C9A962] hover:text-[#C9A962]
+        hover:bg-[#C9A962]/10
       `,
     }
 
