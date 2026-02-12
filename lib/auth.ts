@@ -142,8 +142,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return true
     },
-    async jwt({ token, user, trigger }) {
-      if (user) {
+    async jwt({ token, user, trigger, account }) {
+      // For OAuth logins (like Google), fetch user data from DB by email
+      // because user.id is the OAuth provider ID, not our database ID
+      if (user && account?.provider === 'google') {
+        const { prisma } = await import('./db')
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+          select: { id: true, firstName: true, lastName: true, avatarUrl: true, role: true },
+        })
+        if (dbUser) {
+          token.id = dbUser.id
+          token.role = dbUser.role
+          token.firstName = dbUser.firstName
+          token.lastName = dbUser.lastName
+          token.email = user.email as string
+          token.avatarUrl = dbUser.avatarUrl || (user.image as string | null)
+        }
+      } else if (user) {
+        // For credentials login, user object already has our DB data
         token.id = user.id as string
         token.role = user.role as UserRole
         token.firstName = user.firstName as string | null
