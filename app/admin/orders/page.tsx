@@ -310,12 +310,12 @@ export default function AdminOrdersPage() {
       {stats && (
         <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
-            { key: '', label: 'Total', value: stats.total, color: 'bg-[#111827]', textColor: 'text-white' },
-            { key: 'pending', label: 'Pendientes', value: stats.pending, color: 'bg-yellow-50', textColor: 'text-yellow-700' },
-            { key: 'processing', label: 'Procesando', value: stats.processing, color: 'bg-purple-50', textColor: 'text-purple-700' },
-            { key: 'shipped', label: 'Enviados', value: stats.shipped, color: 'bg-indigo-50', textColor: 'text-indigo-700' },
-            { key: 'delivered', label: 'Entregados', value: stats.delivered, color: 'bg-green-50', textColor: 'text-green-700' },
-            { key: 'cancelled', label: 'Cancelados', value: stats.cancelled, color: 'bg-red-50', textColor: 'text-red-700' },
+            { key: '', label: 'Total', value: stats.total, color: 'bg-[#111827]', textColor: 'text-white', labelColor: 'text-white/70' },
+            { key: 'pending', label: 'Pendientes', value: stats.pending, color: 'bg-yellow-50', textColor: 'text-yellow-700', labelColor: 'text-yellow-600' },
+            { key: 'processing', label: 'Procesando', value: stats.processing, color: 'bg-purple-50', textColor: 'text-purple-700', labelColor: 'text-purple-600' },
+            { key: 'shipped', label: 'Enviados', value: stats.shipped, color: 'bg-indigo-50', textColor: 'text-indigo-700', labelColor: 'text-indigo-600' },
+            { key: 'delivered', label: 'Entregados', value: stats.delivered, color: 'bg-green-50', textColor: 'text-green-700', labelColor: 'text-green-600' },
+            { key: 'cancelled', label: 'Cancelados', value: stats.cancelled, color: 'bg-red-50', textColor: 'text-red-700', labelColor: 'text-red-600' },
           ].map((stat) => (
             <button
               key={stat.label}
@@ -327,7 +327,7 @@ export default function AdminOrdersPage() {
               )}
             >
               <p className={cn('text-2xl font-bold', stat.textColor)}>{stat.value}</p>
-              <p className={cn('text-sm', stat.textColor === 'text-white' ? 'text-white/70' : 'opacity-70')}>
+              <p className={cn('text-sm font-medium', stat.labelColor)}>
                 {stat.label}
               </p>
             </button>
