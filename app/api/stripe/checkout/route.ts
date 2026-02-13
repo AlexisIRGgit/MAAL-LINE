@@ -246,35 +246,21 @@ export async function POST(request: NextRequest) {
     // Create Stripe Checkout Session
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://maalline.com'
 
-    // Build session config
-    const sessionConfig: Parameters<typeof stripe.checkout.sessions.create>[0] = {
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: stripeLineItems,
-      metadata: {
-        orderId: order.id,
-        orderNumber: order.orderNumber,
-        userId,
-      },
-      success_url: `${baseUrl}/checkout/success?order=${order.orderNumber}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/checkout?canceled=true`,
-      locale: 'es-419',
-    }
-
-    // Add customer email if available
-    if (session.user.email) {
-      sessionConfig.customer_email = session.user.email
-    }
-
-    // Add discount if applicable
-    if (discountTotal > 0) {
-      const couponId = await createStripeCoupon(discountTotal)
-      sessionConfig.discounts = [{ coupon: couponId }]
-    }
-
     let stripeSession
     try {
-      stripeSession = await stripe.checkout.sessions.create(sessionConfig)
+      stripeSession = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: stripeLineItems,
+        customer_email: session.user.email || undefined,
+        metadata: {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          userId,
+        },
+        success_url: `${baseUrl}/checkout/success?order=${order.orderNumber}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/checkout?canceled=true`,
+      })
     } catch (stripeError: unknown) {
       console.error('Stripe session creation error:', stripeError)
       // Delete the order since payment session failed
