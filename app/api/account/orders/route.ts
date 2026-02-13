@@ -104,6 +104,7 @@ export async function GET(request: NextRequest) {
         id: order.orderNumber,
         date: order.createdAt.toISOString().split('T')[0],
         status: mapOrderStatus(order.status),
+        paymentStatus: order.paymentStatus,
         total: parseFloat(order.total.toString()),
         items: order.items.map((item) => ({
           name: item.productName,

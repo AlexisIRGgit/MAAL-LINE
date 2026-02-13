@@ -37,6 +37,7 @@ interface Order {
   id: string
   date: string
   status: string
+  paymentStatus: string
   total: number
   items: OrderItem[]
   shippingAddress: string
@@ -229,6 +230,12 @@ export default function OrdersPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-[#111827]">{order.id}</span>
+                        {order.paymentStatus === 'paid' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            <CheckCircle className="w-3 h-3" />
+                            Pagado
+                          </span>
+                        )}
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
                           {statusInfo.label}
@@ -387,7 +394,13 @@ export default function OrdersPage() {
               {/* Modal Content */}
               <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6 space-y-6">
                 {/* Status & Date */}
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  {selectedOrder.paymentStatus === 'paid' && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                      <CheckCircle className="w-4 h-4" />
+                      Pagado
+                    </span>
+                  )}
                   {(() => {
                     const statusInfo = getStatusInfo(selectedOrder.status)
                     return (
