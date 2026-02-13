@@ -128,15 +128,13 @@ export async function POST(request: NextRequest) {
       const itemTotal = price * item.quantity
       subtotal += itemTotal
 
-      // Stripe line item
-      const imageUrl = product.images[0]?.url
+      // Stripe line item (without images to avoid URL length issues)
       stripeLineItems.push({
         price_data: {
           currency: 'mxn',
           product_data: {
             name: product.name,
             description: item.variantName ? `Talla: ${item.variantName}` : undefined,
-            images: imageUrl ? [imageUrl] : undefined,
           },
           unit_amount: formatAmountForStripe(price),
         },
