@@ -28,7 +28,9 @@
       "Bash(source .env)",
       "Bash(npx dotenv:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx next build:*)"
+      "Bash(npx next build:*)",
+      "WebSearch",
+      "WebFetch(domain:www.godaddy.com)"
     ]
   }
 }

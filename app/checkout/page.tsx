@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -77,10 +77,14 @@ const steps = [
   { id: 'payment', label: 'Pago', icon: CreditCard },
 ]
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: session, status: sessionStatus } = useSession()
   const { items, getSubtotal, clearCart } = useCartStore()
+
+  // Check if user returned from Stripe without completing payment
+  const wasCanceled = searchParams.get('canceled') === 'true'
 
   // Calculate subtotal from items (reactive)
   const subtotal = items.reduce((total, item) => total + item.product.price * item.quantity, 0)
@@ -92,7 +96,7 @@ export default function CheckoutPage() {
   const [loadingAddresses, setLoadingAddresses] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [orderCompleted, setOrderCompleted] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(wasCanceled ? 'Tu pago fue cancelado. Puedes intentar de nuevo.' : null)
 
   // New address form
   const [showNewAddress, setShowNewAddress] = useState(false)
@@ -233,7 +237,7 @@ export default function CheckoutPage() {
     setError(null)
 
     try {
-      const response = await fetch('/api/checkout', {
+      const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -253,7 +257,12 @@ export default function CheckoutPage() {
         // Mark order as completed BEFORE clearing cart to prevent redirect to home
         setOrderCompleted(true)
         clearCart()
-        router.push(`/checkout/success?order=${data.orderNumber}`)
+        // Redirect to Stripe Checkout
+        if (data.sessionUrl) {
+          window.location.href = data.sessionUrl
+        } else {
+          setError('Error al crear sesión de pago')
+        }
       } else {
         const data = await response.json()
         setError(data.error || 'Error al procesar el pedido')
@@ -615,13 +624,22 @@ export default function CheckoutPage() {
 
                     {/* Payment Info */}
                     <div className="p-4 border border-[#E8E4D9]/20 rounded-xl">
-                      <div className="flex items-center gap-2 text-[#E8E4D9]/60 text-sm mb-3">
+                      <div className="flex items-center gap-2 text-[#E8E4D9] text-sm mb-3">
                         <CreditCard className="w-4 h-4" />
-                        <span>Pago contra entrega</span>
+                        <span className="font-medium">Pago con tarjeta</span>
                       </div>
-                      <p className="text-xs text-[#E8E4D9]/40">
-                        Por el momento solo aceptamos pago contra entrega. Próximamente tarjeta de crédito/débito.
+                      <p className="text-xs text-[#E8E4D9]/60 mb-3">
+                        Al hacer clic en &quot;Pagar&quot; serás redirigido a Stripe para completar tu pago de forma segura.
                       </p>
+                      <div className="flex items-center gap-2 text-xs text-[#E8E4D9]/40">
+                        <Shield className="w-3 h-3" />
+                        <span>Pago procesado de forma segura por Stripe</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-3">
+                        <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">Visa</div>
+                        <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">Mastercard</div>
+                        <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">AMEX</div>
+                      </div>
                     </div>
 
                     {error && (
@@ -667,7 +685,7 @@ export default function CheckoutPage() {
                   <button
                     onClick={handleSubmitOrder}
                     disabled={submitting}
-                    className="px-6 py-3 bg-[#E8E4D9] text-[#0A0A0A] font-bold tracking-wider hover:bg-[#C9A962] transition-all flex items-center gap-2"
+                    className="px-6 py-3 bg-[#E8E4D9] text-[#0A0A0A] font-bold tracking-wider hover:bg-[#C9A962] transition-all flex items-center gap-2 rounded-xl"
                   >
                     {submitting ? (
                       <>
@@ -675,7 +693,10 @@ export default function CheckoutPage() {
                         PROCESANDO...
                       </>
                     ) : (
-                      <>CONFIRMAR PEDIDO</>
+                      <>
+                        <CreditCard className="w-4 h-4" />
+                        PAGAR {formatPrice(total)}
+                      </>
                     )}
                   </button>
                 )}
@@ -739,5 +760,21 @@ export default function CheckoutPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-[#E8E4D9]" />
+    </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CheckoutContent />
+    </Suspense>
   )
 }
