@@ -246,14 +246,11 @@ export async function POST(request: NextRequest) {
     // Create Stripe Checkout Session
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://maalline.com'
 
-    const stripeSession = await stripe.checkout.sessions.create({
+    // Build session config
+    const sessionConfig: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       mode: 'payment',
       payment_method_types: ['card'],
       line_items: stripeLineItems,
-      discounts: discountTotal > 0 ? [{
-        coupon: await createStripeCoupon(discountTotal),
-      }] : undefined,
-      customer_email: session.user.email || undefined,
       metadata: {
         orderId: order.id,
         orderNumber: order.orderNumber,
@@ -261,28 +258,33 @@ export async function POST(request: NextRequest) {
       },
       success_url: `${baseUrl}/checkout/success?order=${order.orderNumber}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/checkout?canceled=true`,
-      locale: 'es',
-      shipping_options: shippingTotal === 0 ? [{
-        shipping_rate_data: {
-          type: 'fixed_amount',
-          fixed_amount: {
-            amount: 0,
-            currency: 'mxn',
-          },
-          display_name: 'Envío Gratis',
-          delivery_estimate: {
-            minimum: {
-              unit: 'business_day',
-              value: 5,
-            },
-            maximum: {
-              unit: 'business_day',
-              value: 7,
-            },
-          },
-        },
-      }] : undefined,
-    })
+      locale: 'es-419',
+    }
+
+    // Add customer email if available
+    if (session.user.email) {
+      sessionConfig.customer_email = session.user.email
+    }
+
+    // Add discount if applicable
+    if (discountTotal > 0) {
+      const couponId = await createStripeCoupon(discountTotal)
+      sessionConfig.discounts = [{ coupon: couponId }]
+    }
+
+    let stripeSession
+    try {
+      stripeSession = await stripe.checkout.sessions.create(sessionConfig)
+    } catch (stripeError: unknown) {
+      console.error('Stripe session creation error:', stripeError)
+      // Delete the order since payment session failed
+      await prisma.order.delete({ where: { id: order.id } })
+      const errorMessage = stripeError instanceof Error ? stripeError.message : 'Error al crear sesión de pago'
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 500 }
+      )
+    }
 
     // Update order with Stripe session ID
     await prisma.order.update({
@@ -306,9 +308,20 @@ export async function POST(request: NextRequest) {
       sessionUrl: stripeSession.url,
       orderNumber: order.orderNumber,
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Stripe checkout error:', error)
-    return handleAuthError(error)
+
+    // Check if it's an auth error
+    if (error instanceof Error && error.message.includes('autenticado')) {
+      return handleAuthError(error)
+    }
+
+    // Return generic error with details in dev
+    const errorMessage = error instanceof Error ? error.message : 'Error interno del servidor'
+    return NextResponse.json(
+      { error: errorMessage },
+      { status: 500 }
+    )
   }
 }
 
