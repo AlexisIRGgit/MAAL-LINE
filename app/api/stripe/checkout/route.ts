@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        notes: `Stripe Session: ${stripeSession.id}`,
+        internalNotes: `Stripe Session: ${stripeSession.id}`,
       },
     })
 
