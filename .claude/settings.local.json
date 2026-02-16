@@ -30,7 +30,10 @@
       "Bash(npx tsc:*)",
       "Bash(npx next build:*)",
       "WebSearch",
-      "WebFetch(domain:www.godaddy.com)"
+      "WebFetch(domain:www.godaddy.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:www.mercadopago.com.br)"
     ]
   }
 }

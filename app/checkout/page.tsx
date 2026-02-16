@@ -19,9 +19,13 @@ import {
   Loader2,
   AlertCircle,
   Shield,
+  Store,
+  Building2,
 } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
+
+type PaymentMethod = 'stripe' | 'mercadopago'
 
 interface Address {
   id: string
@@ -97,6 +101,7 @@ function CheckoutContent() {
   const [submitting, setSubmitting] = useState(false)
   const [orderCompleted, setOrderCompleted] = useState(false)
   const [error, setError] = useState<string | null>(wasCanceled ? 'Tu pago fue cancelado. Puedes intentar de nuevo.' : null)
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe')
 
   // New address form
   const [showNewAddress, setShowNewAddress] = useState(false)
@@ -236,36 +241,59 @@ function CheckoutContent() {
     setSubmitting(true)
     setError(null)
 
-    try {
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          addressId: selectedAddressId,
-          shippingMethod: selectedShipping,
-          items: items.map((item) => ({
-            productId: item.productId,
-            variantName: item.size,
-            quantity: item.quantity,
-            unitPrice: item.product.price,
-          })),
-        }),
-      })
+    const checkoutData = {
+      addressId: selectedAddressId,
+      shippingMethod: selectedShipping,
+      items: items.map((item) => ({
+        productId: item.productId,
+        variantName: item.size,
+        quantity: item.quantity,
+        unitPrice: item.product.price,
+      })),
+    }
 
-      if (response.ok) {
-        const data = await response.json()
-        // Mark order as completed BEFORE clearing cart to prevent redirect to home
-        setOrderCompleted(true)
-        clearCart()
-        // Redirect to Stripe Checkout
-        if (data.sessionUrl) {
-          window.location.href = data.sessionUrl
+    try {
+      if (paymentMethod === 'stripe') {
+        const response = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(checkoutData),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setOrderCompleted(true)
+          clearCart()
+          if (data.sessionUrl) {
+            window.location.href = data.sessionUrl
+          } else {
+            setError('Error al crear sesión de pago')
+          }
         } else {
-          setError('Error al crear sesión de pago')
+          const data = await response.json()
+          setError(data.error || 'Error al procesar el pedido')
         }
-      } else {
-        const data = await response.json()
-        setError(data.error || 'Error al procesar el pedido')
+      } else if (paymentMethod === 'mercadopago') {
+        const response = await fetch('/api/mercadopago/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(checkoutData),
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setOrderCompleted(true)
+          clearCart()
+          // initPoint is used for production MercadoPago checkout
+          if (data.initPoint) {
+            window.location.href = data.initPoint
+          } else {
+            setError('Error al crear sesión de pago')
+          }
+        } else {
+          const data = await response.json()
+          setError(data.error || 'Error al procesar el pedido')
+        }
       }
     } catch (err) {
       setError('Error de conexión. Intenta de nuevo.')
@@ -622,24 +650,104 @@ function CheckoutContent() {
                       )}
                     </div>
 
-                    {/* Payment Info */}
-                    <div className="p-4 border border-[#E8E4D9]/20 rounded-xl">
-                      <div className="flex items-center gap-2 text-[#E8E4D9] text-sm mb-3">
-                        <CreditCard className="w-4 h-4" />
-                        <span className="font-medium">Pago con tarjeta</span>
-                      </div>
-                      <p className="text-xs text-[#E8E4D9]/60 mb-3">
-                        Al hacer clic en &quot;Pagar&quot; serás redirigido a Stripe para completar tu pago de forma segura.
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-[#E8E4D9]/40">
-                        <Shield className="w-3 h-3" />
-                        <span>Pago procesado de forma segura por Stripe</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-3">
-                        <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">Visa</div>
-                        <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">Mastercard</div>
-                        <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">AMEX</div>
-                      </div>
+                    {/* Payment Method Selection */}
+                    <div className="space-y-3">
+                      <h3 className="font-medium text-[#E8E4D9]">Método de Pago</h3>
+
+                      {/* Stripe Option */}
+                      <button
+                        onClick={() => setPaymentMethod('stripe')}
+                        className={cn(
+                          'w-full p-4 border rounded-xl text-left transition-all',
+                          paymentMethod === 'stripe'
+                            ? 'border-[#E8E4D9] bg-[#E8E4D9]/5'
+                            : 'border-[#E8E4D9]/20 hover:border-[#E8E4D9]/40'
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[#635BFF] rounded-lg flex items-center justify-center">
+                              <CreditCard className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-[#E8E4D9]">Tarjeta de Crédito/Débito</p>
+                              <p className="text-xs text-[#E8E4D9]/50">Stripe - Visa, Mastercard, AMEX</p>
+                            </div>
+                          </div>
+                          <div
+                            className={cn(
+                              'w-5 h-5 rounded-full border-2 flex items-center justify-center',
+                              paymentMethod === 'stripe'
+                                ? 'border-[#E8E4D9] bg-[#E8E4D9]'
+                                : 'border-[#E8E4D9]/30'
+                            )}
+                          >
+                            {paymentMethod === 'stripe' && (
+                              <Check className="w-3 h-3 text-[#0A0A0A]" />
+                            )}
+                          </div>
+                        </div>
+                        {paymentMethod === 'stripe' && (
+                          <div className="mt-3 pt-3 border-t border-[#E8E4D9]/10">
+                            <div className="flex items-center gap-2">
+                              <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">Visa</div>
+                              <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">Mastercard</div>
+                              <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">AMEX</div>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+
+                      {/* MercadoPago Option */}
+                      <button
+                        onClick={() => setPaymentMethod('mercadopago')}
+                        className={cn(
+                          'w-full p-4 border rounded-xl text-left transition-all',
+                          paymentMethod === 'mercadopago'
+                            ? 'border-[#E8E4D9] bg-[#E8E4D9]/5'
+                            : 'border-[#E8E4D9]/20 hover:border-[#E8E4D9]/40'
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[#00A1E4] rounded-lg flex items-center justify-center">
+                              <Building2 className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-[#E8E4D9]">MercadoPago</p>
+                              <p className="text-xs text-[#E8E4D9]/50">Tarjetas, OXXO, Transferencia SPEI</p>
+                            </div>
+                          </div>
+                          <div
+                            className={cn(
+                              'w-5 h-5 rounded-full border-2 flex items-center justify-center',
+                              paymentMethod === 'mercadopago'
+                                ? 'border-[#E8E4D9] bg-[#E8E4D9]'
+                                : 'border-[#E8E4D9]/30'
+                            )}
+                          >
+                            {paymentMethod === 'mercadopago' && (
+                              <Check className="w-3 h-3 text-[#0A0A0A]" />
+                            )}
+                          </div>
+                        </div>
+                        {paymentMethod === 'mercadopago' && (
+                          <div className="mt-3 pt-3 border-t border-[#E8E4D9]/10">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">Tarjetas</div>
+                              <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">OXXO</div>
+                              <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">SPEI</div>
+                              <div className="px-2 py-1 bg-[#E8E4D9]/10 rounded text-xs text-[#E8E4D9]/60">Saldo MP</div>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Security Info */}
+                    <div className="flex items-center gap-2 text-xs text-[#E8E4D9]/40 mt-4">
+                      <Shield className="w-3 h-3" />
+                      <span>Pago procesado de forma segura</span>
                     </div>
 
                     {error && (
