@@ -9,6 +9,8 @@ import {
   ShoppingBag,
   DollarSign,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   MoreVertical,
   Eye,
   UserPlus,
@@ -24,6 +26,8 @@ import {
   Copy,
   Check,
 } from 'lucide-react'
+
+const ITEMS_PER_PAGE = 10
 import { toast } from '@/lib/toast'
 
 interface Address {
@@ -237,7 +241,7 @@ export default function CustomersPage() {
     try {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
-        limit: '20',
+        limit: ITEMS_PER_PAGE.toString(),
         ...(filterGroup !== 'all' && { group: filterGroup }),
         ...(searchQuery && { search: searchQuery }),
       })
@@ -493,38 +497,54 @@ export default function CustomersPage() {
         )}
 
         {/* Pagination */}
-        {customers.length > 0 && (
+        {customers.length > 0 && pagination.totalPages > 1 && (
           <div className="flex items-center justify-between p-4 border-t border-[#E5E7EB] bg-[#F9FAFB]">
             <p className="text-sm text-[#6B7280]">
-              Mostrando {customers.length} de {pagination.total} clientes
+              Mostrando {((pagination.page - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(pagination.page * ITEMS_PER_PAGE, pagination.total)} de {pagination.total} clientes
             </p>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
                 disabled={pagination.page <= 1}
-                className="px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-lg border border-[#E5E7EB] hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Anterior
+                <ChevronLeft className="w-4 h-4" />
               </button>
-              {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setPagination((prev) => ({ ...prev, page }))}
-                  className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
-                    page === pagination.page
-                      ? 'bg-[#111827] text-white'
-                      : 'text-[#6B7280] hover:text-[#111827] hover:bg-white'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  if (pagination.totalPages <= 5) return true
+                  if (page === 1 || page === pagination.totalPages) return true
+                  if (Math.abs(page - pagination.page) <= 1) return true
+                  return false
+                })
+                .map((page, index, array) => {
+                  const showEllipsis = index > 0 && page - array[index - 1] > 1
+                  return (
+                    <div key={page} className="flex items-center">
+                      {showEllipsis && (
+                        <span className="px-2 text-[#9CA3AF]">...</span>
+                      )}
+                      <button
+                        onClick={() => setPagination((prev) => ({ ...prev, page }))}
+                        className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                          page === pagination.page
+                            ? 'bg-[#111827] text-white'
+                            : 'hover:bg-white text-[#374151]'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    </div>
+                  )
+                })}
+
               <button
                 onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
                 disabled={pagination.page >= pagination.totalPages}
-                className="px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-lg border border-[#E5E7EB] hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Siguiente
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>

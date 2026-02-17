@@ -9,6 +9,7 @@ import {
   Filter,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   Clock,
   Package,
   Truck,
@@ -98,6 +99,15 @@ interface Stats {
   cancelled: number
 }
 
+interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+const ITEMS_PER_PAGE = 10
+
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   pending: { label: 'Pendiente', color: 'text-yellow-700', bg: 'bg-yellow-50', icon: Clock },
   confirmed: { label: 'Confirmado', color: 'text-blue-700', bg: 'bg-blue-50', icon: CheckCircle },
@@ -129,6 +139,8 @@ const itemVariants = {
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
+  const [pagination, setPagination] = useState<Pagination | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -145,9 +157,11 @@ export default function AdminOrdersPage() {
   const [internalNotes, setInternalNotes] = useState('')
   const [editingNotes, setEditingNotes] = useState(false)
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (page: number = currentPage) => {
     try {
       const params = new URLSearchParams()
+      params.set('page', page.toString())
+      params.set('limit', ITEMS_PER_PAGE.toString())
       if (search) params.set('search', search)
       if (statusFilter) params.set('status', statusFilter)
 
@@ -156,6 +170,7 @@ export default function AdminOrdersPage() {
         const data = await response.json()
         setOrders(data.orders)
         setStats(data.stats)
+        setPagination(data.pagination)
       }
     } catch (error) {
       console.error('Error fetching orders:', error)
@@ -165,8 +180,13 @@ export default function AdminOrdersPage() {
   }
 
   useEffect(() => {
-    fetchOrders()
+    setCurrentPage(1)
+    fetchOrders(1)
   }, [search, statusFilter])
+
+  useEffect(() => {
+    fetchOrders(currentPage)
+  }, [currentPage])
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('es-MX', {
@@ -394,7 +414,7 @@ export default function AdminOrdersPage() {
           </select>
 
           <button
-            onClick={fetchOrders}
+            onClick={() => fetchOrders()}
             className="p-2.5 bg-white border border-[#E5E7EB] rounded-xl hover:bg-[#F3F4F6] transition-colors"
           >
             <RefreshCw className="w-5 h-5 text-[#6B7280]" />
@@ -486,6 +506,61 @@ export default function AdminOrdersPage() {
             <ShoppingCart className="w-12 h-12 text-[#D1D5DB] mx-auto mb-3" />
             <p className="text-[#6B7280] font-medium">No hay pedidos</p>
             <p className="text-sm text-[#9CA3AF] mt-1">Los pedidos aparecerán aquí cuando se realicen</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="px-4 py-3 border-t border-[#E5E7EB] flex items-center justify-between">
+            <p className="text-sm text-[#6B7280]">
+              Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, pagination.total)} de {pagination.total} pedidos
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F3F4F6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  if (pagination.totalPages <= 5) return true
+                  if (page === 1 || page === pagination.totalPages) return true
+                  if (Math.abs(page - currentPage) <= 1) return true
+                  return false
+                })
+                .map((page, index, array) => {
+                  const showEllipsis = index > 0 && page - array[index - 1] > 1
+                  return (
+                    <div key={page} className="flex items-center">
+                      {showEllipsis && (
+                        <span className="px-2 text-[#9CA3AF]">...</span>
+                      )}
+                      <button
+                        onClick={() => setCurrentPage(page)}
+                        className={cn(
+                          'w-8 h-8 rounded-lg text-sm font-medium transition-colors',
+                          currentPage === page
+                            ? 'bg-[#111827] text-white'
+                            : 'hover:bg-[#F3F4F6] text-[#374151]'
+                        )}
+                      >
+                        {page}
+                      </button>
+                    </div>
+                  )
+                })}
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                disabled={currentPage === pagination.totalPages}
+                className="p-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F3F4F6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
       </motion.div>

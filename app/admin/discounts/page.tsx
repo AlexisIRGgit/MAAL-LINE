@@ -21,8 +21,19 @@ import {
   DollarSign,
   Truck,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { toast } from '@/lib/toast'
+
+const ITEMS_PER_PAGE = 10
+
+interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
 
 interface Discount {
   id: string
@@ -96,6 +107,13 @@ export default function DiscountsPage() {
     totalUsage: 0,
     totalSavings: 0,
   })
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: ITEMS_PER_PAGE,
+    total: 0,
+    totalPages: 1,
+  })
+  const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -119,6 +137,8 @@ export default function DiscountsPage() {
     setIsLoading(true)
     try {
       const params = new URLSearchParams()
+      params.append('page', currentPage.toString())
+      params.append('limit', ITEMS_PER_PAGE.toString())
       if (searchQuery) params.append('search', searchQuery)
       if (filterStatus !== 'all') params.append('status', filterStatus)
 
@@ -128,16 +148,24 @@ export default function DiscountsPage() {
       const data = await response.json()
       setDiscounts(data.discounts)
       setStats(data.stats)
+      if (data.pagination) {
+        setPagination(data.pagination)
+      }
     } catch (error) {
       console.error('Error fetching discounts:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [searchQuery, filterStatus])
+  }, [searchQuery, filterStatus, currentPage])
 
   useEffect(() => {
     fetchDiscounts()
   }, [fetchDiscounts])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, filterStatus])
 
   // Debounce search
   useEffect(() => {
@@ -145,7 +173,7 @@ export default function DiscountsPage() {
       fetchDiscounts()
     }, 300)
     return () => clearTimeout(timer)
-  }, [searchQuery, filterStatus, fetchDiscounts])
+  }, [searchQuery, filterStatus, currentPage, fetchDiscounts])
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code)
@@ -450,6 +478,7 @@ export default function DiscountsPage() {
           )}
         </motion.div>
       ) : (
+        <>
         <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {discounts.map((discount, index) => (
             <motion.div
@@ -617,6 +646,75 @@ export default function DiscountsPage() {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <motion.div
+            variants={itemVariants}
+            className="flex items-center justify-center gap-2 mt-6"
+          >
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-1">
+              {(() => {
+                const pages: (number | string)[] = []
+                const total = pagination.totalPages
+                const current = currentPage
+
+                if (total <= 7) {
+                  for (let i = 1; i <= total; i++) pages.push(i)
+                } else {
+                  pages.push(1)
+                  if (current > 3) pages.push('...')
+                  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+                    pages.push(i)
+                  }
+                  if (current < total - 2) pages.push('...')
+                  pages.push(total)
+                }
+
+                return pages.map((page, idx) =>
+                  typeof page === 'string' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-[#9CA3AF]">
+                      {page}
+                    </span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`min-w-[36px] h-9 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === page
+                          ? 'bg-[#111827] text-white'
+                          : 'text-[#6B7280] hover:bg-[#F9FAFB]'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )
+              })()}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))}
+              disabled={currentPage === pagination.totalPages}
+              className="p-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            <span className="ml-4 text-sm text-[#6B7280]">
+              {pagination.total} descuentos
+            </span>
+          </motion.div>
+        )}
+        </>
       )}
 
       {/* Create/Edit Modal */}

@@ -9,8 +9,12 @@ export async function GET(request: NextRequest) {
     await requirePermission('discounts:view')
 
     const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search')
     const status = searchParams.get('status')
+
+    const skip = (page - 1) * limit
 
     const where: Record<string, unknown> = {
       deletedAt: null,
@@ -25,9 +29,13 @@ export async function GET(request: NextRequest) {
 
     if (status === 'active') {
       where.isActive = true
-      where.OR = [
-        { expiresAt: null },
-        { expiresAt: { gte: new Date() } },
+      where.AND = [
+        {
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gte: new Date() } },
+          ]
+        }
       ]
     } else if (status === 'expired') {
       where.OR = [
@@ -36,17 +44,22 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    const discounts = await prisma.discount.findMany({
-      where,
-      include: {
-        usages: {
-          select: {
-            amountSaved: true,
+    const [discounts, total] = await Promise.all([
+      prisma.discount.findMany({
+        where,
+        include: {
+          usages: {
+            select: {
+              amountSaved: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.discount.count({ where }),
+    ])
 
     // Calculate stats
     const now = new Date()
@@ -93,8 +106,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       discounts: formattedDiscounts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
       stats: {
-        total: discounts.length,
+        total,
         active: activeDiscounts.length,
         totalUsage,
         totalSavings,
