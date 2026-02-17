@@ -1,6 +1,6 @@
 # MAAL LINE - Contexto del Proyecto
 
-**Última actualización:** 2026-02-10
+**Última actualización:** 2026-02-17
 
 ## Descripción General
 
@@ -27,7 +27,10 @@ MAAL LINE es una plataforma e-commerce de streetwear construida con Next.js 14 (
 | Zustand | 4.x | Estado global (carrito, filtros) |
 | Recharts | 2.x | Gráficos en admin |
 | Lucide React | - | Iconos |
-| Framer Motion | - | Animaciones |
+| Framer Motion | 12.x | Animaciones |
+| Sileo | - | Toast notifications (gooey SVG) |
+| Stripe | - | Procesamiento de pagos |
+| MercadoPago | - | Procesamiento de pagos (LATAM) |
 
 ---
 
@@ -56,9 +59,14 @@ GOOGLE_CLIENT_SECRET=""
 | Variable | Descripción | Requerido |
 |----------|-------------|-----------|
 | `DATABASE_URL` | URL de conexión a Neon PostgreSQL (con pooler) | Sí |
-| `AUTH_SECRET` | Secret para NextAuth (min 32 chars). Generar con: `openssl rand -base64 32` | Sí |
+| `AUTH_SECRET` | Secret para NextAuth (min 32 chars) | Sí |
+| `NEXTAUTH_URL` | URL de la app (https://www.maalline.com) | Sí |
 | `GOOGLE_CLIENT_ID` | Client ID de Google OAuth | No |
 | `GOOGLE_CLIENT_SECRET` | Client Secret de Google OAuth | No |
+| `STRIPE_SECRET_KEY` | Secret key de Stripe (sk_live_...) | Sí |
+| `STRIPE_WEBHOOK_SECRET` | Webhook secret de Stripe (whsec_...) | Sí |
+| `MERCADOPAGO_ACCESS_TOKEN` | Access token de MercadoPago | Sí |
+| `NEXT_PUBLIC_APP_URL` | URL pública de la app | Sí |
 
 ---
 
@@ -549,8 +557,131 @@ Las siguientes páginas tienen `export const dynamic = 'force-dynamic'` porque h
 
 ## Deployment URLs
 
-- **Producción:** https://maal-line-liard.vercel.app
+- **Dominio Principal:** https://maalline.com
+- **WWW:** https://www.maalline.com (redirige a principal)
+- **Vercel:** https://maal-line-liard.vercel.app
 - **GitHub:** https://github.com/AlexisIRGgit/MAAL-LINE
+
+---
+
+## Dominio y DNS
+
+### Configuración
+- **Dominio:** maalline.com
+- **Registrador:** GoDaddy
+- **Renovación:** 13 febrero 2027
+
+### DNS (GoDaddy → Vercel)
+- Registro A: `@` → `216.198.79.1`
+- Registro CNAME: `www` → `cb0d90cf5718f446.vercel-dns-017.com`
+
+---
+
+## Pasarelas de Pago
+
+### Stripe (Completo y Funcionando)
+- `lib/stripe.ts` - Configuración del SDK
+- `app/api/stripe/checkout/route.ts` - Crear sesión de Checkout
+- `app/api/stripe/webhook/route.ts` - Webhook para confirmación
+
+**Webhook URL:** `https://www.maalline.com/api/stripe/webhook`
+**Eventos:** `checkout.session.completed`, `checkout.session.expired`
+
+**Tarjetas de Prueba:**
+- Visa: `4242 4242 4242 4242`
+- CVV: cualquier 3 dígitos
+- Fecha: cualquier fecha futura
+
+### MercadoPago (Checkout Pro)
+- `lib/mercadopago.ts` - Configuración del SDK
+- `app/api/mercadopago/checkout/route.ts` - Crear preferencia
+- `app/api/mercadopago/webhook/route.ts` - Webhook para notificaciones
+
+**Webhook URL:** `https://www.maalline.com/api/mercadopago/webhook`
+**Eventos:** Pagos
+
+**Credenciales de Prueba:**
+- Usuario: `TESTUSER898793941676202824`
+- Contraseña: `NR7EdC9ycd`
+
+**Tarjetas de Prueba:**
+- Visa: `4509 9535 6623 3704`
+- Mastercard: `5031 7557 3453 0604`
+- CVV: `123`
+- Vencimiento: `11/25`
+
+### Checkout Page
+- `app/checkout/page.tsx` - Proceso completo
+  - Paso 1: Selección/creación de dirección
+  - Paso 2: Método de envío (estándar, express, siguiente día)
+  - Paso 3: Selección de método de pago (Stripe o MercadoPago)
+  - Envío gratis en pedidos mayores a $999 MXN
+
+---
+
+## Sistema de Notificaciones Toast (Sileo)
+
+### Configuración
+- **Librería:** sileo (gooey SVG morphing animations)
+- **Posición:** `top-center`
+- **Fill (fondo):** `#1F2937` (gris oscuro)
+- **Descripción por defecto en success:** "Guardado correctamente"
+
+### Archivos
+```
+components/providers/toast-provider.tsx  # Provider con Toaster
+lib/toast.ts                              # Utility wrapper
+```
+
+### Uso
+```typescript
+import { toast } from '@/lib/toast'
+
+toast.success('Título')  // Descripción por defecto: "Guardado correctamente"
+toast.success('Título', 'Descripción personalizada')
+toast.error('Título', 'Descripción opcional')
+toast.warning('Título', 'Descripción opcional')
+toast.info('Título', 'Descripción opcional')
+
+// Toast con acción (botón)
+toast.action('Producto eliminado', 'Deshacer', () => {
+  // Callback al hacer clic
+}, 'Descripción opcional')
+```
+
+### Toasts Implementados
+**Panel Cliente:**
+- Carrito (agregar, eliminar con deshacer)
+- Producto (agregar al carrito, toggle wishlist)
+- Checkout (errores, redirección a pago)
+- Wishlist (eliminar, agregar al carrito)
+- Perfil (guardar, cambiar contraseña, eliminar cuenta)
+- Direcciones (CRUD)
+
+**Panel Admin:**
+- Productos (crear, editar, eliminar)
+- Pedidos (estado, tracking, notas)
+- Clientes (crear, reset password, cambiar grupo)
+- Descuentos (CRUD, copiar código, activar/desactivar)
+- Usuarios (crear, editar, eliminar)
+
+---
+
+## Wishlist
+
+### APIs
+- `app/api/wishlist/route.ts` - GET (listar), POST (agregar)
+- `app/api/wishlist/[productId]/route.ts` - GET (check), DELETE (quitar)
+
+### Páginas
+- `app/wishlist/page.tsx` - Página de wishlist con grid de productos
+- `app/producto/[slug]/product-client.tsx` - Botón corazón funcional
+
+### Funcionalidades
+- Toggle wishlist con animación
+- Estado visual (corazón lleno/vacío)
+- Agregar al carrito desde wishlist
+- Estado vacío con link a explorar
 
 ---
 
