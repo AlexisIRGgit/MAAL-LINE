@@ -2,13 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Sileo toast styles protection - prevent Tailwind from resetting */
-[data-sileo-viewport],
-[data-sileo-toast],
-[data-sileo-toast] * {
-  all: revert-layer;
-}
-
 /* ============================================
    MAAL LINE - DARK GOTHIC STREETWEAR
    ============================================ */
