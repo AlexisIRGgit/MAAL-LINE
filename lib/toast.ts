@@ -4,7 +4,7 @@ import { sileo } from 'sileo'
 const DARK_FILL = '#1F2937'
 
 export const toast = {
-  success: (title: string, description?: string) => {
+  success: (title: string, description: string = 'Guardado correctamente') => {
     sileo.success({ title, description, fill: DARK_FILL })
   },
 
