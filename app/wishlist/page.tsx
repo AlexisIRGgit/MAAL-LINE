@@ -15,6 +15,7 @@ import {
   ShoppingCart,
 } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart-store'
+import { toast } from '@/lib/toast'
 
 interface WishlistProduct {
   id: string
@@ -88,15 +89,18 @@ export default function WishlistPage() {
 
   const handleRemove = async (productId: string) => {
     setRemoving(productId)
+    const itemToRemove = items.find((item) => item.product.id === productId)
     try {
       const response = await fetch(`/api/wishlist/${productId}`, {
         method: 'DELETE',
       })
       if (response.ok) {
         setItems((prev) => prev.filter((item) => item.product.id !== productId))
+        toast.success('Eliminado de favoritos', itemToRemove?.product.name)
       }
     } catch (error) {
       console.error('Error removing from wishlist:', error)
+      toast.error('Error al eliminar de favoritos')
     } finally {
       setRemoving(null)
     }
@@ -122,11 +126,14 @@ export default function WishlistPage() {
       }
 
       addItem(productForCart as any, availableVariant.name, 1)
+      toast.success('Agregado al carrito', `${item.product.name} - Talla ${availableVariant.name}`)
 
       // Optionally remove from wishlist after adding to cart
-      await handleRemove(item.product.id)
+      await fetch(`/api/wishlist/${item.product.id}`, { method: 'DELETE' })
+      setItems((prev) => prev.filter((i) => i.product.id !== item.product.id))
     } catch (error) {
       console.error('Error adding to cart:', error)
+      toast.error('Error al agregar al carrito')
     } finally {
       setAddingToCart(null)
     }

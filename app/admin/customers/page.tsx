@@ -24,6 +24,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react'
+import { toast } from '@/lib/toast'
 
 interface Address {
   id: string
@@ -119,9 +120,10 @@ export default function CustomersPage() {
 
       const data = await response.json()
       setTempPassword(data.tempPassword)
+      toast.success('Contraseña temporal generada')
     } catch (error) {
       console.error('Error resetting password:', error)
-      alert('Error al generar la contraseña temporal')
+      toast.error('Error al generar la contraseña temporal')
     } finally {
       setIsResettingPassword(false)
     }
@@ -130,12 +132,13 @@ export default function CustomersPage() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     setCopiedPassword(true)
+    toast.success('Copiado al portapapeles')
     setTimeout(() => setCopiedPassword(false), 2000)
   }
 
   const handleCreateCustomer = async () => {
     if (!newCustomerForm.email) {
-      alert('El email es requerido')
+      toast.warning('El email es requerido')
       return
     }
 
@@ -168,11 +171,12 @@ export default function CustomersPage() {
         group: 'standard',
       })
 
+      toast.success('Cliente creado exitosamente')
       // Refresh stats
       fetchCustomers()
     } catch (error) {
       console.error('Error creating customer:', error)
-      alert(error instanceof Error ? error.message : 'Error al crear el cliente')
+      toast.error(error instanceof Error ? error.message : 'Error al crear el cliente')
     } finally {
       setIsCreatingCustomer(false)
     }
@@ -210,11 +214,12 @@ export default function CustomersPage() {
       }
       setShowGroupSelector(false)
 
+      toast.success('Grupo actualizado')
       // Update stats if needed
       fetchCustomers()
     } catch (error) {
       console.error('Error changing group:', error)
-      alert('Error al cambiar el grupo del cliente')
+      toast.error('Error al cambiar el grupo del cliente')
     } finally {
       setIsChangingGroup(false)
     }

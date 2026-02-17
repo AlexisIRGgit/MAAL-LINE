@@ -22,6 +22,7 @@ import {
   Truck,
   ChevronDown,
 } from 'lucide-react'
+import { toast } from '@/lib/toast'
 
 interface Discount {
   id: string
@@ -149,6 +150,7 @@ export default function DiscountsPage() {
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code)
     setCopiedCode(code)
+    toast.success('Código copiado', code)
     setTimeout(() => setCopiedCode(null), 2000)
   }
 
@@ -239,10 +241,13 @@ export default function DiscountsPage() {
         throw new Error(data.error || 'Error al guardar')
       }
 
+      toast.success(editingDiscount ? 'Descuento actualizado' : 'Descuento creado', formData.code)
       closeModal()
       fetchDiscounts()
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Error al guardar')
+      const errorMessage = error instanceof Error ? error.message : 'Error al guardar'
+      setFormError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsSaving(false)
     }
@@ -259,10 +264,11 @@ export default function DiscountsPage() {
 
       setDiscounts(discounts.filter((d) => d.id !== id))
       setDeleteConfirm(null)
+      toast.success('Descuento eliminado')
       fetchDiscounts()
     } catch (error) {
       console.error('Error deleting discount:', error)
-      alert('Error al eliminar el descuento')
+      toast.error('Error al eliminar el descuento')
     } finally {
       setIsDeleting(false)
     }
@@ -285,8 +291,10 @@ export default function DiscountsPage() {
         )
       )
       setOpenMenu(null)
+      toast.success(data.isActive ? 'Descuento activado' : 'Descuento desactivado', discount.code)
     } catch (error) {
       console.error('Error toggling discount:', error)
+      toast.error('Error al cambiar estado')
     }
   }
 

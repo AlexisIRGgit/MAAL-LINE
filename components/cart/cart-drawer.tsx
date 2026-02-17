@@ -7,13 +7,45 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
+import { toast } from '@/lib/toast'
 
 export function CartDrawer() {
-  const { items, isOpen, closeCart, removeItem, updateQuantity } = useCartStore()
+  const { items, isOpen, closeCart, removeItem, updateQuantity, addItem } = useCartStore()
 
   // Calculate values directly from items for proper reactivity
   const itemCount = items.reduce((total, item) => total + item.quantity, 0)
   const subtotal = items.reduce((total, item) => total + item.product.price * item.quantity, 0)
+
+  const handleRemoveItem = (productId: string, size: string) => {
+    const item = items.find(i => i.productId === productId && i.size === size)
+    if (!item) return
+
+    removeItem(productId, size)
+    toast.action(
+      'Producto eliminado',
+      'Deshacer',
+      () => {
+        // Restore item
+        addItem({
+          id: item.product.id,
+          slug: item.product.slug,
+          name: item.product.name,
+          price: item.product.price,
+          compareAtPrice: item.product.compareAtPrice,
+          images: [item.product.image],
+          category: undefined,
+          variants: [],
+          sizes: [size],
+          isNew: false,
+          isBestSeller: false,
+          isRestock: false,
+          isSoldOut: false,
+        }, size, item.quantity)
+        toast.success('Producto restaurado')
+      },
+      item.product.name
+    )
+  }
 
   // Prevent body scroll when cart is open
   useEffect(() => {
@@ -161,7 +193,7 @@ export function CartDrawer() {
                             </button>
                           </div>
                           <button
-                            onClick={() => removeItem(item.productId, item.size)}
+                            onClick={() => handleRemoveItem(item.productId, item.size)}
                             className="p-2 text-[#E8E4D9]/40 hover:text-red-500 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />

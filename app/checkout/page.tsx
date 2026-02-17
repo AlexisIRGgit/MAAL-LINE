@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
+import { toast } from '@/lib/toast'
 
 type PaymentMethod = 'stripe' | 'mercadopago'
 
@@ -264,13 +265,16 @@ function CheckoutContent() {
           const data = await response.json()
           setOrderCompleted(true)
           clearCart()
+          toast.info('Redirigiendo al pago...')
           if (data.sessionUrl) {
             window.location.href = data.sessionUrl
           } else {
+            toast.error('Error al crear sesión de pago')
             setError('Error al crear sesión de pago')
           }
         } else {
           const data = await response.json()
+          toast.error('Error al procesar pedido', data.error)
           setError(data.error || 'Error al procesar el pedido')
         }
       } else if (paymentMethod === 'mercadopago') {
@@ -284,18 +288,22 @@ function CheckoutContent() {
           const data = await response.json()
           setOrderCompleted(true)
           clearCart()
+          toast.info('Redirigiendo a MercadoPago...')
           // initPoint is used for production MercadoPago checkout
           if (data.initPoint) {
             window.location.href = data.initPoint
           } else {
+            toast.error('Error al crear sesión de pago')
             setError('Error al crear sesión de pago')
           }
         } else {
           const data = await response.json()
+          toast.error('Error al procesar pedido', data.error)
           setError(data.error || 'Error al procesar el pedido')
         }
       }
     } catch (err) {
+      toast.error('Error de conexión', 'Intenta de nuevo')
       setError('Error de conexión. Intenta de nuevo.')
     } finally {
       setSubmitting(false)

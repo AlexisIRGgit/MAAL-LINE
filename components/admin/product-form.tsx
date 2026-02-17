@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, Loader2 } from 'lucide-react'
 import { ImageUploader } from './image-uploader'
+import { toast } from '@/lib/toast'
 import { VariantManager } from './variant-manager'
 
 interface Category {
@@ -114,10 +115,13 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
         throw new Error(data.error || 'Error al guardar el producto')
       }
 
+      toast.success(mode === 'create' ? 'Producto creado' : 'Producto actualizado')
       router.push('/admin/products')
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar el producto')
+      const errorMessage = err instanceof Error ? err.message : 'Error al guardar el producto'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }

@@ -29,6 +29,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { toast } from '@/lib/toast'
 
 interface OrderItem {
   id: string
@@ -199,9 +200,13 @@ export default function AdminOrdersPage() {
         if (selectedOrder?.id === orderId) {
           setSelectedOrder((prev) => prev ? { ...prev, status: newStatus } : null)
         }
+        toast.success('Estado actualizado')
+      } else {
+        toast.error('Error al actualizar estado')
       }
     } catch (error) {
       console.error('Error updating status:', error)
+      toast.error('Error al actualizar estado')
     } finally {
       setUpdating(false)
     }
@@ -221,9 +226,13 @@ export default function AdminOrdersPage() {
         if (selectedOrder?.id === orderId) {
           setSelectedOrder((prev) => prev ? { ...prev, paymentStatus: newStatus } : null)
         }
+        toast.success('Estado de pago actualizado')
+      } else {
+        toast.error('Error al actualizar estado de pago')
       }
     } catch (error) {
       console.error('Error updating payment status:', error)
+      toast.error('Error al actualizar estado de pago')
     } finally {
       setUpdating(false)
     }
@@ -245,9 +254,13 @@ export default function AdminOrdersPage() {
         setShowTrackingForm(false)
         setTrackingNumber('')
         setCarrier('')
+        toast.success('Número de rastreo guardado')
+      } else {
+        toast.error('Error al guardar tracking')
       }
     } catch (error) {
       console.error('Error adding tracking:', error)
+      toast.error('Error al guardar tracking')
     } finally {
       setUpdating(false)
     }
@@ -267,9 +280,13 @@ export default function AdminOrdersPage() {
       if (response.ok) {
         setSelectedOrder((prev) => prev ? { ...prev, internalNotes } : null)
         setEditingNotes(false)
+        toast.success('Notas guardadas')
+      } else {
+        toast.error('Error al guardar notas')
       }
     } catch (error) {
       console.error('Error saving notes:', error)
+      toast.error('Error al guardar notas')
     } finally {
       setUpdating(false)
     }

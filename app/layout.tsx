@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Space_Grotesk, Inter } from 'next/font/google'
 import { SessionProvider } from '@/components/providers/session-provider'
+import { ToastProvider } from '@/components/providers/toast-provider'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import './globals.css'
 
@@ -33,6 +34,7 @@ export default function RootLayout({
         <SessionProvider>
           {children}
           <CartDrawer />
+          <ToastProvider />
         </SessionProvider>
       </body>
     </html>

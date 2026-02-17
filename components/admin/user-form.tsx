@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { ROLE_INFO } from '@/lib/permissions'
+import { toast } from '@/lib/toast'
 
 interface TeamMember {
   id: string
@@ -70,9 +71,12 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         throw new Error(data.error || 'Error al guardar usuario')
       }
 
+      toast.success(user ? 'Usuario actualizado' : 'Usuario creado')
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar usuario')
+      const errorMessage = err instanceof Error ? err.message : 'Error al guardar usuario'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { ROLE_INFO } from '@/lib/permissions'
+import { toast } from '@/lib/toast'
 import { UserForm } from '@/components/admin/user-form'
 
 interface TeamMember {
@@ -96,9 +97,13 @@ export default function UsersPage() {
       if (res.ok) {
         setUsers(users.filter((u) => u.id !== id))
         setShowDeleteConfirm(null)
+        toast.success('Usuario eliminado')
+      } else {
+        toast.error('Error al eliminar usuario')
       }
     } catch (error) {
       console.error('Error deleting user:', error)
+      toast.error('Error al eliminar usuario')
     }
   }
 

@@ -15,6 +15,7 @@ import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
 import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw, Shield, Check, Loader2 } from 'lucide-react'
 import type { ProductDetailData, ProductCardData } from '@/lib/transformers/product'
+import { toast } from '@/lib/toast'
 
 interface ProductPageClientProps {
   product: ProductDetailData
@@ -52,7 +53,8 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
   const handleWishlistToggle = async () => {
     if (sessionStatus !== 'authenticated') {
-      router.push(`/auth/login?redirect=/producto/${product.slug}`)
+      toast.info('Inicia sesión para guardar favoritos')
+      router.push(`/login?redirect=/producto/${product.slug}`)
       return
     }
 
@@ -64,6 +66,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
         })
         if (response.ok) {
           setInWishlist(false)
+          toast.success('Eliminado de favoritos')
         }
       } else {
         const response = await fetch('/api/wishlist', {
@@ -73,10 +76,12 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
         })
         if (response.ok) {
           setInWishlist(true)
+          toast.success('Agregado a favoritos')
         }
       }
     } catch (error) {
       console.error('Error toggling wishlist:', error)
+      toast.error('Error al actualizar favoritos')
     } finally {
       setWishlistLoading(false)
     }
@@ -142,6 +147,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
     setIsAdding(true)
     addItem(product, selectedSize, quantity)
+    toast.success('Producto agregado al carrito', `${name} - Talla ${selectedSize}`)
 
     // Show confirmation
     setJustAdded(true)

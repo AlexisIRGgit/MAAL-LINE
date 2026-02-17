@@ -19,6 +19,7 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react'
+import { toast } from '@/lib/toast'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -136,9 +137,12 @@ export default function ProfilePage() {
       }
 
       setSaved(true)
+      toast.success('Perfil actualizado')
       setTimeout(() => setSaved(false), 3000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar cambios')
+      const message = err instanceof Error ? err.message : 'Error al guardar cambios'
+      setError(message)
+      toast.error('Error al guardar', message)
     } finally {
       setIsLoading(false)
     }
@@ -150,11 +154,13 @@ export default function ProfilePage() {
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setPasswordError('Las contraseñas no coinciden')
+      toast.error('Las contraseñas no coinciden')
       return
     }
 
     if (passwordData.newPassword.length < 8) {
       setPasswordError('La contraseña debe tener al menos 8 caracteres')
+      toast.error('Contraseña muy corta', 'Mínimo 8 caracteres')
       return
     }
 
@@ -177,10 +183,13 @@ export default function ProfilePage() {
       }
 
       setPasswordSuccess(true)
+      toast.success('Contraseña actualizada')
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setTimeout(() => setPasswordSuccess(false), 3000)
     } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : 'Error al cambiar contraseña')
+      const message = err instanceof Error ? err.message : 'Error al cambiar contraseña'
+      setPasswordError(message)
+      toast.error('Error al cambiar contraseña', message)
     } finally {
       setIsChangingPassword(false)
     }
@@ -189,6 +198,7 @@ export default function ProfilePage() {
   const handleDeleteAccount = async () => {
     if (deleteConfirmation !== 'ELIMINAR') {
       setDeleteError('Escribe ELIMINAR para confirmar')
+      toast.warning('Escribe ELIMINAR para confirmar')
       return
     }
 
@@ -208,11 +218,14 @@ export default function ProfilePage() {
         throw new Error(data.error || 'Error al eliminar cuenta')
       }
 
+      toast.info('Cuenta eliminada')
       // Sign out and redirect to home
       await signOut({ redirect: false })
       router.push('/')
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Error al eliminar cuenta')
+      const message = err instanceof Error ? err.message : 'Error al eliminar cuenta'
+      setDeleteError(message)
+      toast.error('Error al eliminar cuenta', message)
     } finally {
       setIsDeleting(false)
     }

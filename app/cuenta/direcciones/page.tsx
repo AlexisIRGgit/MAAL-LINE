@@ -14,6 +14,7 @@ import {
   Loader2,
   Star,
 } from 'lucide-react'
+import { toast } from '@/lib/toast'
 
 interface Address {
   id: string
@@ -127,6 +128,9 @@ export default function AddressesPage() {
           setAddresses(addresses.map((a) =>
             a.id === editingAddress.id ? data.address : (data.address.isDefault ? { ...a, isDefault: false } : a)
           ))
+          toast.success('Dirección actualizada')
+        } else {
+          toast.error('Error al actualizar dirección')
         }
       } else {
         // Create new address
@@ -143,12 +147,16 @@ export default function AddressesPage() {
           } else {
             setAddresses([...addresses, data.address])
           }
+          toast.success('Dirección agregada')
+        } else {
+          toast.error('Error al agregar dirección')
         }
       }
 
       setShowModal(false)
     } catch (error) {
       console.error('Error saving address:', error)
+      toast.error('Error al guardar dirección')
     } finally {
       setIsLoading(false)
     }
@@ -170,9 +178,13 @@ export default function AddressesPage() {
         }
 
         setAddresses(newAddresses)
+        toast.success('Dirección eliminada')
+      } else {
+        toast.error('Error al eliminar dirección')
       }
     } catch (error) {
       console.error('Error deleting address:', error)
+      toast.error('Error al eliminar dirección')
     }
     setDeleteConfirm(null)
   }
@@ -185,9 +197,13 @@ export default function AddressesPage() {
 
       if (response.ok) {
         setAddresses(addresses.map((a) => ({ ...a, isDefault: a.id === id })))
+        toast.success('Dirección principal actualizada')
+      } else {
+        toast.error('Error al actualizar dirección')
       }
     } catch (error) {
       console.error('Error setting default:', error)
+      toast.error('Error al actualizar dirección')
     }
   }
 

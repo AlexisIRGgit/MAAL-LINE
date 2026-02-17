@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { usePermissions } from '@/hooks/use-permissions'
+import { toast } from '@/lib/toast'
 
 interface Product {
   id: string
@@ -137,10 +138,11 @@ export default function ProductsPage() {
     try {
       const response = await fetch(`/api/products/${id}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Error deleting product')
+      toast.success('Producto eliminado')
       fetchProducts()
     } catch (error) {
       console.error('Error deleting product:', error)
-      alert('Error al eliminar el producto')
+      toast.error('Error al eliminar el producto')
     }
   }
 
