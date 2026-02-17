@@ -41,7 +41,7 @@ export const toast = {
     }
   ) => {
     return sileo.promise(promise, {
-      loading: { title: messages.loading, fill: DARK_FILL },
+      loading: { title: messages.loading },
       success: { title: messages.success, fill: DARK_FILL },
       error: { title: messages.error, fill: DARK_FILL },
     })
