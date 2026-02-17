@@ -1,28 +1,27 @@
-import { sileo } from 'sileo'
+import { toast as sonnerToast } from 'sonner'
 
 export const toast = {
   success: (title: string, description?: string) => {
-    sileo.success({ title, description })
+    sonnerToast.success(title, { description })
   },
 
   error: (title: string, description?: string) => {
-    sileo.error({ title, description })
+    sonnerToast.error(title, { description })
   },
 
   warning: (title: string, description?: string) => {
-    sileo.warning({ title, description })
+    sonnerToast.warning(title, { description })
   },
 
   info: (title: string, description?: string) => {
-    sileo.info({ title, description })
+    sonnerToast.info(title, { description })
   },
 
   action: (title: string, buttonText: string, onClick: () => void, description?: string) => {
-    sileo.action({
-      title,
+    sonnerToast(title, {
       description,
-      button: {
-        title: buttonText,
+      action: {
+        label: buttonText,
         onClick,
       },
     })
@@ -36,13 +35,13 @@ export const toast = {
       error: string
     }
   ) => {
-    return sileo.promise(promise, {
-      loading: { title: messages.loading },
-      success: { title: messages.success },
-      error: { title: messages.error },
+    return sonnerToast.promise(promise, {
+      loading: messages.loading,
+      success: messages.success,
+      error: messages.error,
     })
   },
 }
 
-// Also export sileo directly for advanced usage
-export { sileo }
+// Also export sonner directly for advanced usage
+export { sonnerToast }

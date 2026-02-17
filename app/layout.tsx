@@ -4,7 +4,6 @@ import { SessionProvider } from '@/components/providers/session-provider'
 import { ToastProvider } from '@/components/providers/toast-provider'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import './globals.css'
-import 'sileo/styles.css'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
