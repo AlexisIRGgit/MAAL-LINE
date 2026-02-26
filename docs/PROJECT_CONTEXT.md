@@ -1,6 +1,6 @@
 # MAAL LINE - Contexto del Proyecto
 
-**Última actualización:** 2026-02-17
+**Última actualización:** 2026-02-25
 
 ## Descripción General
 
@@ -950,20 +950,35 @@ openssl rand -base64 32
   3. Poner cantidad de stock en cada variante
   4. Guardar producto
 
+### Fase 14: Paginación en Tablas Admin
+- [x] **Todas las tablas con 10 items por página:**
+  - `/admin/orders` - Paginación con ellipsis para muchas páginas
+  - `/admin/products` - Cambiado de 20 a 10 items
+  - `/admin/customers` - Cambiado de 20 a 10 items
+  - `/admin/discounts` - Agregada paginación completa (API + UI)
+
+- [x] **Características de paginación:**
+  - Botones anterior/siguiente con ChevronLeft/ChevronRight
+  - Numeración con ellipsis (...) cuando hay muchas páginas
+  - Contador de registros totales
+  - Reset automático a página 1 al cambiar filtros
+  - API con parámetros `page` y `limit`
+
 ---
 
 ## Commits Recientes
 
 ```
+c058a0a feat: Add pagination to admin tables (10 items per page)
+4ce99e6 docs: Update PROJECT_CONTEXT.md with payment, toasts, domain, wishlist
+a542837 fix: Update Sileo toast position to top-center and add default description
+a2b0226 fix: Sileo toast type error for promise loading state
+fb18d86 fix: Sileo toast with dark fill color
 6126fa1 feat: Connect inventory page to real database
 bbc41eb fix: Dropdown menu now escapes table container
 950b294 fix: Protect /cuenta routes - require authentication
 d5821c3 fix: Check auth status before navigating to account
 20b990a fix: Add dropdown menu to avatar for logout option
-ce0a63a refactor: Remove payment methods section from customer panel
-55cf437 feat: Add customer account panel (/cuenta)
-d18c01e fix: Allow users to edit their own profile
-e2eb54d feat: Add user management system with role-based permissions
 ```
 
 ---
@@ -972,16 +987,21 @@ e2eb54d feat: Add user management system with role-based permissions
 
 ### Corto Plazo
 - [ ] Integrar Cloudinary/Vercel Blob para imágenes reales
-- [ ] Implementar checkout con Stripe
-- [ ] Dashboard con métricas reales de la DB
-- [ ] Funcionalidad real en páginas de órdenes y clientes
-- [x] ~~Inventario conectado a base de datos~~
+- [ ] MercadoPago producción (cambiar credenciales de prueba)
+- [ ] Carrito persistente en DB para usuarios logueados
+- [ ] Sincronización carrito anónimo → usuario al login
+- [x] ~~Implementar checkout con Stripe~~ ✓
+- [x] ~~Implementar checkout con MercadoPago~~ ✓ (modo pruebas)
+- [x] ~~Dashboard con métricas reales de la DB~~ ✓
+- [x] ~~Funcionalidad real en páginas de órdenes y clientes~~ ✓
+- [x] ~~Inventario conectado a base de datos~~ ✓
+- [x] ~~Paginación en tablas admin~~ ✓
 
 ### Mediano Plazo
-- [ ] Sistema de notificaciones real (push/email)
-- [ ] Sistema de envíos (integración con carriers)
 - [ ] Emails transaccionales (confirmación, envío, etc.)
-- [ ] Panel de analytics
+- [ ] Sistema de envíos (integración con carriers)
+- [ ] Sistema de notificaciones real (push/email)
+- [ ] Panel de analytics y reportes
 - [ ] Invitación de usuarios por email con link temporal
 
 ### Largo Plazo
