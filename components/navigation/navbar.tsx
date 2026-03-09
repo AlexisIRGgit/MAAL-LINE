@@ -31,13 +31,13 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 glass-dark border-b border-[#E8E4D9]/10">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#E5E7EB]">
         <nav className="container mx-auto px-4 h-20 flex items-center justify-between">
           {/* Left - Mobile Menu + Logo */}
           <div className="flex items-center gap-6">
             {/* Mobile Menu Toggle */}
             <button
-              className="lg:hidden p-2 -ml-2 text-[#E8E4D9] hover:text-[#E8E4D9]/70 transition-colors"
+              className="lg:hidden p-2 -ml-2 text-[#111827] hover:text-[#6B7280] transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Abrir menú"
             >
@@ -61,8 +61,8 @@ export function Navbar() {
                 className={cn(
                   'text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300',
                   highlight
-                    ? 'text-[#E8E4D9] hover:text-[#C9A962]'
-                    : 'text-[#E8E4D9]/70 hover:text-[#E8E4D9]'
+                    ? 'text-[#111827] hover:text-[#6B7280]'
+                    : 'text-[#6B7280] hover:text-[#111827]'
                 )}
               >
                 {label}
@@ -74,7 +74,7 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             {/* Search */}
             <button
-              className="p-2 text-[#E8E4D9]/70 hover:text-[#E8E4D9] transition-colors"
+              className="p-2 text-[#6B7280] hover:text-[#111827] transition-colors"
               aria-label="Buscar"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -85,7 +85,7 @@ export function Navbar() {
             {/* Wishlist */}
             <Link
               href="/wishlist"
-              className="hidden md:block p-2 text-[#E8E4D9]/70 hover:text-[#E8E4D9] transition-colors"
+              className="hidden md:block p-2 text-[#6B7280] hover:text-[#111827] transition-colors"
               aria-label="Lista de deseos"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -96,7 +96,7 @@ export function Navbar() {
             {/* Account */}
             <Link
               href={session ? '/cuenta' : '/login'}
-              className="hidden md:block p-2 text-[#E8E4D9]/70 hover:text-[#E8E4D9] transition-colors"
+              className="hidden md:block p-2 text-[#6B7280] hover:text-[#111827] transition-colors"
               aria-label={session ? 'Mi cuenta' : 'Iniciar sesión'}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -107,14 +107,14 @@ export function Navbar() {
             {/* Cart */}
             <button
               onClick={openCart}
-              className="relative p-2 text-[#E8E4D9]/70 hover:text-[#E8E4D9] transition-colors"
+              className="relative p-2 text-[#6B7280] hover:text-[#111827] transition-colors"
               aria-label="Carrito"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               {mounted && itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#E8E4D9] text-[#0A0A0A] text-[10px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#111827] text-white text-[10px] font-bold flex items-center justify-center rounded-full">
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>
               )}
@@ -124,7 +124,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-[#E8E4D9]/10 bg-[#0A0A0A]">
+          <div className="lg:hidden border-t border-[#E5E7EB] bg-white">
             <div className="container mx-auto px-4 py-6 space-y-4">
               {NAV_LINKS.map(({ href, label, highlight }) => (
                 <Link
@@ -132,7 +132,7 @@ export function Navbar() {
                   href={href}
                   className={cn(
                     'block text-sm font-bold tracking-[0.15em] uppercase',
-                    highlight ? 'text-[#E8E4D9]' : 'text-[#E8E4D9]/70'
+                    highlight ? 'text-[#111827]' : 'text-[#6B7280]'
                   )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -141,17 +141,17 @@ export function Navbar() {
               ))}
 
               {/* Account & Wishlist links in mobile */}
-              <div className="pt-4 border-t border-[#E8E4D9]/10 space-y-4">
+              <div className="pt-4 border-t border-[#E5E7EB] space-y-4">
                 <Link
                   href="/wishlist"
-                  className="block text-sm font-bold tracking-[0.15em] uppercase text-[#E8E4D9]/70"
+                  className="block text-sm font-bold tracking-[0.15em] uppercase text-[#6B7280]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   LISTA DE DESEOS
                 </Link>
                 <Link
                   href={session ? '/cuenta' : '/login'}
-                  className="block text-sm font-bold tracking-[0.15em] uppercase text-[#E8E4D9]/70"
+                  className="block text-sm font-bold tracking-[0.15em] uppercase text-[#6B7280]"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {session ? 'MI CUENTA' : 'INICIAR SESIÓN'}

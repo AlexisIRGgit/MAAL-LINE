@@ -27,7 +27,7 @@ interface ProductCardProps {
   variant?: 'dark' | 'light'
 }
 
-export function ProductCard({ product, priority = false, variant = 'dark' }: ProductCardProps) {
+export function ProductCard({ product, priority = false, variant = 'light' }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
 

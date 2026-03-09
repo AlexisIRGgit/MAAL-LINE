@@ -29,35 +29,34 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       uppercase tracking-[0.15em]
       transition-all duration-300 ease-out
       rounded-xl
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8E4D9] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111827] focus-visible:ring-offset-2 focus-visible:ring-offset-white
       disabled:opacity-50 disabled:pointer-events-none
       active:scale-[0.98]
     `
 
     const variants = {
-      // Primary - Cream button
+      // Primary - Dark button
       primary: `
-        bg-[#E8E4D9] text-[#0A0A0A]
-        hover:bg-[#D4D0C5]
-        border-2 border-[#E8E4D9]
-        hover:border-[#D4D0C5]
+        bg-[#111827] text-white
+        hover:bg-[#1F2937]
+        border-2 border-[#111827]
+        hover:border-[#1F2937]
         shadow-lg hover:shadow-xl
       `,
-      // Secondary - Dark with cream border
+      // Secondary - White with dark border
       secondary: `
-        bg-transparent border-2 border-[#E8E4D9] text-[#E8E4D9]
-        hover:bg-[#E8E4D9] hover:text-[#0A0A0A]
+        bg-white border-2 border-[#E5E7EB] text-[#111827]
+        hover:bg-[#F9FAFB] hover:border-[#D1D5DB]
       `,
       // Ghost - Transparent
       ghost: `
-        bg-transparent text-[#E8E4D9]/70
-        hover:bg-[#E8E4D9]/10 hover:text-[#E8E4D9]
+        bg-transparent text-[#6B7280]
+        hover:bg-[#F3F4F6] hover:text-[#111827]
       `,
-      // Outline - Cream outline with gold hover
+      // Outline - Dark outline
       outline: `
-        bg-transparent text-[#E8E4D9] border-2 border-[#E8E4D9]/50
-        hover:border-[#C9A962] hover:text-[#C9A962]
-        hover:bg-[#C9A962]/10
+        bg-transparent text-[#111827] border-2 border-[#E5E7EB]
+        hover:border-[#111827] hover:bg-[#F9FAFB]
       `,
     }
 

@@ -23,14 +23,14 @@ export function PromoBar() {
   if (!isVisible) return null
 
   return (
-    <div className="bg-[#E8E4D9] text-[#0A0A0A] relative">
+    <div className="bg-[#111827] text-white relative">
       <div className="container mx-auto px-4 py-2 flex items-center justify-center relative">
         <p className="text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase text-center">
           ✦ {PROMO_MESSAGES[currentIndex]} ✦
         </p>
         <button
           onClick={() => setIsVisible(false)}
-          className="absolute right-4 p-1 hover:opacity-50 transition-opacity"
+          className="absolute right-4 p-1 hover:opacity-50 transition-opacity text-white"
           aria-label="Cerrar"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -34,13 +34,13 @@ const FOOTER_LINKS = {
 
 export function Footer() {
   return (
-    <footer className="bg-[#0A0A0A] border-t border-[#E8E4D9]/10">
+    <footer className="bg-white border-t border-[#E5E7EB]">
       <div className="container mx-auto px-4 py-16 md:py-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <Logo size="lg" className="mb-6" />
-            <p className="text-[#E8E4D9]/50 text-sm mb-8 max-w-xs leading-relaxed">
+            <p className="text-[#6B7280] text-sm mb-8 max-w-xs leading-relaxed">
               Streetwear oversize con actitud. Para los que no piden permiso.
             </p>
             {/* Social Links */}
@@ -49,7 +49,7 @@ export function Footer() {
                 href="https://instagram.com/maalline"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 border border-[#E8E4D9]/20 flex items-center justify-center text-[#E8E4D9]/50 hover:border-[#E8E4D9] hover:text-[#E8E4D9] transition-all"
+                className="w-10 h-10 border border-[#E5E7EB] rounded-xl flex items-center justify-center text-[#6B7280] hover:border-[#111827] hover:text-[#111827] transition-all"
                 aria-label="Instagram"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -60,7 +60,7 @@ export function Footer() {
                 href="https://tiktok.com/@maalline"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 border border-[#E8E4D9]/20 flex items-center justify-center text-[#E8E4D9]/50 hover:border-[#E8E4D9] hover:text-[#E8E4D9] transition-all"
+                className="w-10 h-10 border border-[#E5E7EB] rounded-xl flex items-center justify-center text-[#6B7280] hover:border-[#111827] hover:text-[#111827] transition-all"
                 aria-label="TikTok"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -71,7 +71,7 @@ export function Footer() {
                 href="https://twitter.com/maalline"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 border border-[#E8E4D9]/20 flex items-center justify-center text-[#E8E4D9]/50 hover:border-[#E8E4D9] hover:text-[#E8E4D9] transition-all"
+                className="w-10 h-10 border border-[#E5E7EB] rounded-xl flex items-center justify-center text-[#6B7280] hover:border-[#111827] hover:text-[#111827] transition-all"
                 aria-label="Twitter"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -84,7 +84,7 @@ export function Footer() {
           {/* Link Columns */}
           {Object.values(FOOTER_LINKS).map(({ title, links }) => (
             <div key={title}>
-              <h3 className="text-[#E8E4D9] font-bold text-xs tracking-[0.2em] mb-6">
+              <h3 className="text-[#111827] font-bold text-xs tracking-[0.2em] mb-6">
                 {title}
               </h3>
               <ul className="space-y-3">
@@ -92,7 +92,7 @@ export function Footer() {
                   <li key={href}>
                     <Link
                       href={href}
-                      className="text-[#E8E4D9]/50 text-sm hover:text-[#E8E4D9] transition-colors"
+                      className="text-[#6B7280] text-sm hover:text-[#111827] transition-colors"
                     >
                       {label}
                     </Link>
@@ -105,12 +105,12 @@ export function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-[#E8E4D9]/10">
+      <div className="border-t border-[#E5E7EB]">
         <div className="container mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-[#E8E4D9]/30 text-xs tracking-wider">
+          <p className="text-[#9CA3AF] text-xs tracking-wider">
             © {new Date().getFullYear()} MAAL LINE. TODOS LOS DERECHOS RESERVADOS.
           </p>
-          <div className="flex items-center gap-6 text-[#E8E4D9]/30 text-xs tracking-wider">
+          <div className="flex items-center gap-6 text-[#9CA3AF] text-xs tracking-wider">
             <span>VISA</span>
             <span>MASTERCARD</span>
             <span>AMEX</span>

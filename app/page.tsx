@@ -112,28 +112,28 @@ export default async function HomePage() {
       <PromoBar />
       <Navbar />
 
-      <main className="overflow-hidden bg-[#0A0A0A]">
+      <main className="overflow-hidden bg-[#F9FAFB]">
         {/* HERO SECTION - Modern Rounded */}
         <section className="relative min-h-[100svh] flex items-center">
           <div className="container mx-auto px-4 py-20 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left - Content */}
               <div className="text-center lg:text-left">
-                <span className="inline-block px-4 py-2 bg-[#1A1A1A] border border-[#2A2A2A] text-[#C9A962] text-xs font-bold tracking-wider rounded-full mb-8">
+                <span className="inline-block px-4 py-2 bg-white border border-[#E5E7EB] text-[#111827] text-xs font-bold tracking-wider rounded-full mb-8 shadow-sm">
                   NEW DROP 2026
                 </span>
 
                 {/* Title */}
                 <h1 className="mb-8">
-                  <span className="block text-6xl md:text-8xl lg:text-9xl font-gothic text-[#E8E4D9] leading-none tracking-wide">
+                  <span className="block text-6xl md:text-8xl lg:text-9xl font-gothic text-[#111827] leading-none tracking-wide">
                     MAAL
                   </span>
-                  <span className="block text-2xl md:text-3xl font-bold text-[#E8E4D9]/50 tracking-[0.3em] mt-2">
+                  <span className="block text-2xl md:text-3xl font-bold text-[#6B7280] tracking-[0.3em] mt-2">
                     STREETWEAR
                   </span>
                 </h1>
 
-                <p className="text-lg md:text-xl text-[#E8E4D9]/60 mb-10 max-w-md mx-auto lg:mx-0 leading-relaxed">
+                <p className="text-lg md:text-xl text-[#6B7280] mb-10 max-w-md mx-auto lg:mx-0 leading-relaxed">
                   Oversized con actitud. Piezas statement para los que no piden permiso.
                 </p>
 
@@ -157,9 +157,9 @@ export default async function HomePage() {
                     { value: '10K+', label: 'Clientes' },
                     { value: '24h', label: 'Express' },
                   ].map((stat) => (
-                    <div key={stat.label} className="text-center lg:text-left px-4 py-3 bg-[#1A1A1A]/50 rounded-2xl border border-[#2A2A2A]">
-                      <p className="text-2xl font-black text-[#E8E4D9]">{stat.value}</p>
-                      <p className="text-[10px] text-[#E8E4D9]/40 tracking-wider uppercase">{stat.label}</p>
+                    <div key={stat.label} className="text-center lg:text-left px-4 py-3 bg-white rounded-2xl border border-[#E5E7EB] shadow-sm">
+                      <p className="text-2xl font-black text-[#111827]">{stat.value}</p>
+                      <p className="text-[10px] text-[#9CA3AF] tracking-wider uppercase">{stat.label}</p>
                     </div>
                   ))}
                 </div>
@@ -169,8 +169,8 @@ export default async function HomePage() {
               <div className="relative">
                 <div className="relative aspect-[3/4] max-w-md mx-auto">
                   {/* Rounded frame */}
-                  <div className="absolute -inset-3 bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] rounded-3xl" />
-                  <div className="absolute -inset-2 bg-[#0A0A0A] rounded-2xl" />
+                  <div className="absolute -inset-3 bg-gradient-to-br from-[#E5E7EB] to-[#D1D5DB] rounded-3xl" />
+                  <div className="absolute -inset-2 bg-white rounded-2xl shadow-lg" />
 
                   <div className="relative h-full overflow-hidden rounded-2xl">
                     <Image
@@ -178,19 +178,19 @@ export default async function HomePage() {
                       alt="MAAL Line Streetwear"
                       fill
                       priority
-                      className="object-contain bg-[#111]"
+                      className="object-contain bg-[#F3F4F6]"
                     />
-                    {/* Dark overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent opacity-60" />
+                    {/* Light overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-40" />
                   </div>
                 </div>
 
                 {/* Floating badges */}
-                <div className="absolute -left-4 top-1/4 px-4 py-3 bg-[#1A1A1A]/90 backdrop-blur-sm rounded-2xl border border-[#2A2A2A]">
-                  <p className="text-sm font-bold text-[#E8E4D9] tracking-wider">✦ TRENDING</p>
+                <div className="absolute -left-4 top-1/4 px-4 py-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-[#E5E7EB] shadow-md">
+                  <p className="text-sm font-bold text-[#111827] tracking-wider">✦ TRENDING</p>
                 </div>
-                <div className="absolute -right-4 bottom-1/4 px-4 py-3 bg-[#1A1A1A]/90 backdrop-blur-sm rounded-2xl border border-[#2A2A2A]">
-                  <p className="text-sm font-bold text-[#C9A962] tracking-wider">NEW DROP</p>
+                <div className="absolute -right-4 bottom-1/4 px-4 py-3 bg-[#111827] backdrop-blur-sm rounded-2xl shadow-md">
+                  <p className="text-sm font-bold text-white tracking-wider">NEW DROP</p>
                 </div>
               </div>
             </div>
@@ -198,26 +198,26 @@ export default async function HomePage() {
 
           {/* Scroll indicator */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block">
-            <div className="w-8 h-12 border-2 border-[#E8E4D9]/30 rounded-full flex justify-center">
-              <div className="w-1.5 h-3 bg-[#E8E4D9] mt-2 rounded-full animate-bounce" />
+            <div className="w-8 h-12 border-2 border-[#D1D5DB] rounded-full flex justify-center">
+              <div className="w-1.5 h-3 bg-[#111827] mt-2 rounded-full animate-bounce" />
             </div>
           </div>
         </section>
 
         {/* MARQUEE */}
-        <section className="py-4 bg-[#E8E4D9] overflow-hidden rounded-t-3xl">
+        <section className="py-4 bg-[#111827] overflow-hidden">
           <div className="marquee-container">
             <div className="marquee-content whitespace-nowrap">
               {[...Array(10)].map((_, i) => (
                 <span key={i} className="inline-flex items-center gap-8 mx-8">
-                  <span className="text-[#0A0A0A] font-black text-sm tracking-[0.2em]">STREETWEAR</span>
-                  <span className="text-[#0A0A0A]/30">✦</span>
-                  <span className="text-[#0A0A0A] font-black text-sm tracking-[0.2em]">OVERSIZED</span>
-                  <span className="text-[#0A0A0A]/30">✦</span>
-                  <span className="text-[#0A0A0A] font-black text-sm tracking-[0.2em]">PREMIUM</span>
-                  <span className="text-[#0A0A0A]/30">✦</span>
-                  <span className="text-[#0A0A0A] font-black text-sm tracking-[0.2em]">MAAL LINE</span>
-                  <span className="text-[#0A0A0A]/30">✦</span>
+                  <span className="text-white font-black text-sm tracking-[0.2em]">STREETWEAR</span>
+                  <span className="text-white/30">✦</span>
+                  <span className="text-white font-black text-sm tracking-[0.2em]">OVERSIZED</span>
+                  <span className="text-white/30">✦</span>
+                  <span className="text-white font-black text-sm tracking-[0.2em]">PREMIUM</span>
+                  <span className="text-white/30">✦</span>
+                  <span className="text-white font-black text-sm tracking-[0.2em]">MAAL LINE</span>
+                  <span className="text-white/30">✦</span>
                 </span>
               ))}
             </div>
@@ -225,15 +225,15 @@ export default async function HomePage() {
         </section>
 
         {/* NEW DROPS SECTION */}
-        <section className="py-20 md:py-28 bg-[#0A0A0A] relative">
+        <section className="py-20 md:py-28 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <span className="inline-block px-4 py-2 bg-[#E8E4D9] text-[#0A0A0A] text-[10px] font-bold tracking-[0.2em] rounded-full mb-4">
+                <span className="inline-block px-4 py-2 bg-[#111827] text-white text-[10px] font-bold tracking-[0.2em] rounded-full mb-4">
                   JUST DROPPED
                 </span>
-                <h2 className="text-4xl md:text-5xl font-black text-[#E8E4D9]">
-                  NEW <span className="text-[#C9A962]">ARRIVALS</span>
+                <h2 className="text-4xl md:text-5xl font-black text-[#111827]">
+                  NEW <span className="text-[#6B7280]">ARRIVALS</span>
                 </h2>
               </div>
               <Link href="/drops" className="hidden md:block">
@@ -264,13 +264,13 @@ export default async function HomePage() {
         </section>
 
         {/* CATEGORIES GRID - Rounded Cards */}
-        <section className="py-20 md:py-28 bg-[#111111]">
+        <section className="py-20 md:py-28 bg-[#F9FAFB]">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-black text-[#E8E4D9]">
-                SHOP BY <span className="text-[#C9A962]">CATEGORY</span>
+              <h2 className="text-4xl md:text-5xl font-black text-[#111827]">
+                SHOP BY <span className="text-[#6B7280]">CATEGORY</span>
               </h2>
-              <p className="text-[#E8E4D9]/40 mt-3 tracking-wider text-sm">Encuentra tu estilo</p>
+              <p className="text-[#9CA3AF] mt-3 tracking-wider text-sm">Encuentra tu estilo</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -278,7 +278,7 @@ export default async function HomePage() {
                 <Link
                   key={slug}
                   href={`/coleccion/${slug}`}
-                  className={`group relative overflow-hidden rounded-2xl border border-[#2A2A2A] hover:border-[#3A3A3A] transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 ${
+                  className={`group relative overflow-hidden rounded-2xl border border-[#E5E7EB] hover:border-[#D1D5DB] transition-all duration-500 hover:shadow-xl hover:-translate-y-1 ${
                     large ? 'md:col-span-2 md:row-span-2 aspect-square' :
                     wide ? 'md:col-span-2 aspect-[2/1]' : 'aspect-square'
                   }`}
@@ -291,15 +291,15 @@ export default async function HomePage() {
                     className="object-cover transition-all duration-700 group-hover:scale-110"
                   />
 
-                  {/* Dark overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent group-hover:via-[#0A0A0A]/20 transition-all duration-500" />
+                  {/* Dark overlay for readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/40 to-transparent group-hover:via-[#111827]/20 transition-all duration-500" />
 
                   {/* Content */}
                   <div className="absolute inset-0 flex flex-col items-center justify-end p-6">
-                    <span className="text-[#E8E4D9] font-black text-lg md:text-xl tracking-wider text-center mb-2">
+                    <span className="text-white font-black text-lg md:text-xl tracking-wider text-center mb-2">
                       {name}
                     </span>
-                    <span className="px-4 py-1.5 bg-[#E8E4D9]/10 backdrop-blur-sm rounded-full text-[#E8E4D9]/70 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                    <span className="px-4 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
                       EXPLORAR →
                     </span>
                   </div>
@@ -310,15 +310,15 @@ export default async function HomePage() {
         </section>
 
         {/* BEST SELLERS SECTION */}
-        <section className="py-20 md:py-28 bg-[#0A0A0A] relative">
+        <section className="py-20 md:py-28 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-12">
               <div>
-                <span className="inline-block px-4 py-2 border border-[#E8E4D9]/50 text-[#E8E4D9] text-[10px] font-bold tracking-[0.2em] rounded-full mb-4">
+                <span className="inline-block px-4 py-2 border border-[#E5E7EB] text-[#111827] text-[10px] font-bold tracking-[0.2em] rounded-full mb-4">
                   TOP PICKS
                 </span>
-                <h2 className="text-4xl md:text-5xl font-black text-[#E8E4D9]">
-                  BEST <span className="text-[#C9A962]">SELLERS</span>
+                <h2 className="text-4xl md:text-5xl font-black text-[#111827]">
+                  BEST <span className="text-[#6B7280]">SELLERS</span>
                 </h2>
               </div>
               <Link href="/best-sellers" className="hidden md:block">
@@ -352,19 +352,19 @@ export default async function HomePage() {
               src="/images/IMG_3010.PNG"
               alt="Lookbook"
               fill
-              className="object-contain bg-[#0A0A0A]"
+              className="object-contain bg-[#111827]"
             />
-            <div className="absolute inset-0 bg-[#0A0A0A]/80" />
+            <div className="absolute inset-0 bg-[#111827]/85" />
           </div>
 
           <div className="relative container mx-auto px-4 text-center">
-            <span className="inline-block px-5 py-2 bg-[#1A1A1A]/80 backdrop-blur-sm border border-[#2A2A2A] text-[#E8E4D9]/60 text-xs font-bold tracking-[0.2em] rounded-full mb-6">
+            <span className="inline-block px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 text-xs font-bold tracking-[0.2em] rounded-full mb-6">
               FALL/WINTER 2026
             </span>
-            <h2 className="text-5xl md:text-7xl font-gothic text-[#E8E4D9] mb-6">
+            <h2 className="text-5xl md:text-7xl font-gothic text-white mb-6">
               LOOKBOOK
             </h2>
-            <p className="text-[#E8E4D9]/50 max-w-md mx-auto mb-10 text-lg">
+            <p className="text-white/60 max-w-md mx-auto mb-10 text-lg">
               Descubre las piezas de la temporada. Editorial street con actitud.
             </p>
             <Link href="/lookbook">
@@ -376,13 +376,13 @@ export default async function HomePage() {
         </section>
 
         {/* NEWSLETTER SECTION */}
-        <section className="py-20 md:py-28 bg-[#111111] relative overflow-hidden">
+        <section className="py-20 md:py-28 bg-[#F9FAFB] relative overflow-hidden">
           <div className="container mx-auto px-4 text-center relative z-10">
-            <div className="max-w-2xl mx-auto bg-[#1A1A1A] border border-[#2A2A2A] rounded-3xl p-8 md:p-12">
-              <h2 className="text-3xl md:text-4xl font-black text-[#E8E4D9] mb-4">
-                ÚNETE AL <span className="text-[#C9A962]">CREW</span>
+            <div className="max-w-2xl mx-auto bg-white border border-[#E5E7EB] rounded-3xl p-8 md:p-12 shadow-sm">
+              <h2 className="text-3xl md:text-4xl font-black text-[#111827] mb-4">
+                ÚNETE AL <span className="text-[#6B7280]">CREW</span>
               </h2>
-              <p className="text-[#E8E4D9]/50 mb-8 max-w-md mx-auto">
+              <p className="text-[#6B7280] mb-8 max-w-md mx-auto">
                 Acceso anticipado a drops, restocks y contenido exclusivo. Sin spam.
               </p>
 
@@ -392,7 +392,7 @@ export default async function HomePage() {
                     type="email"
                     placeholder="tu@email.com"
                     required
-                    className="flex-1 h-14 px-6 bg-[#0A0A0A] border-2 border-[#2A2A2A] rounded-xl text-[#E8E4D9] placeholder:text-[#E8E4D9]/30 focus:outline-none focus:border-[#E8E4D9] transition-colors tracking-wider"
+                    className="flex-1 h-14 px-6 bg-[#F9FAFB] border-2 border-[#E5E7EB] rounded-xl text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#111827] transition-colors tracking-wider"
                   />
                   <Button type="submit" size="lg">
                     SUSCRIBIR
@@ -400,7 +400,7 @@ export default async function HomePage() {
                 </div>
               </form>
 
-              <p className="text-[#E8E4D9]/30 text-xs mt-8 tracking-wider">
+              <p className="text-[#9CA3AF] text-xs mt-8 tracking-wider">
                 +10,000 PERSONAS YA SON PARTE DEL CREW
               </p>
             </div>
