@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { ShoppingBag, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { useQuickViewStore } from '@/lib/store/quick-view-store'
 
 interface Product {
   id: string
@@ -30,8 +31,10 @@ interface ProductCardProps {
 export function ProductCard({ product, priority = false, variant = 'light' }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
+  const openQuickView = useQuickViewStore((state) => state.openQuickView)
 
   const {
+    id,
     slug,
     name,
     price,
@@ -60,10 +63,29 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
 
   const isDark = variant === 'dark'
 
+  const handleOpenQuickView = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    openQuickView({
+      id,
+      slug,
+      name,
+      price,
+      compareAtPrice,
+      images,
+      sizes,
+      category,
+      isNew,
+      isBestSeller,
+      isRestock,
+      isSoldOut,
+    })
+  }
+
   return (
     <article
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-2xl transition-all duration-300',
+        'group relative flex flex-col overflow-hidden rounded-2xl transition-all duration-300 cursor-pointer',
         isDark
           ? 'bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#3A3A3A]'
           : 'bg-white border border-[#E5E7EB] hover:border-[#D1D5DB]',
@@ -71,10 +93,10 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleOpenQuickView}
     >
       {/* Image Container */}
-      <Link
-        href={`/producto/${slug}`}
+      <div
         className={cn(
           'relative aspect-[3/4] overflow-hidden',
           isDark ? 'bg-[#111111]' : 'bg-[#F3F4F6]'
@@ -136,6 +158,7 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
         <button
           onClick={(e) => {
             e.preventDefault()
+            e.stopPropagation()
             setIsLiked(!isLiked)
           }}
           className={cn(
@@ -178,18 +201,21 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
               'hidden md:block'
             )}
           >
-            <button className={cn(
-              'w-full py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2',
-              isDark
-                ? 'bg-white text-[#111827] hover:bg-[#F3F4F6]'
-                : 'bg-[#111827] text-white hover:bg-[#1F2937]'
-            )}>
+            <button
+              onClick={handleOpenQuickView}
+              className={cn(
+                'w-full py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2',
+                isDark
+                  ? 'bg-white text-[#111827] hover:bg-[#F3F4F6]'
+                  : 'bg-[#111827] text-white hover:bg-[#1F2937]'
+              )}
+            >
               <ShoppingBag className="w-4 h-4" />
               Agregar
             </button>
           </div>
         )}
-      </Link>
+      </div>
 
       {/* Product Info */}
       <div className="p-4 flex flex-col flex-1">
@@ -204,16 +230,14 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
         )}
 
         {/* Name */}
-        <Link href={`/producto/${slug}`}>
-          <h3 className={cn(
-            'font-semibold text-sm line-clamp-2 transition-colors',
-            isDark
-              ? 'text-[#E8E4D9] hover:text-[#C9A962]'
-              : 'text-[#111827] hover:text-[#374151]'
-          )}>
-            {name}
-          </h3>
-        </Link>
+        <h3 className={cn(
+          'font-semibold text-sm line-clamp-2 transition-colors',
+          isDark
+            ? 'text-[#E8E4D9] hover:text-[#C9A962]'
+            : 'text-[#111827] hover:text-[#374151]'
+        )}>
+          {name}
+        </h3>
 
         {/* Price */}
         <div className="flex items-center gap-2 mt-2">
