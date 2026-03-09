@@ -1,6 +1,6 @@
 # MAAL LINE - Contexto del Proyecto
 
-**Última actualización:** 2026-02-25
+**Última actualización:** 2026-03-09
 
 ## Descripción General
 
@@ -964,11 +964,40 @@ openssl rand -base64 32
   - Reset automático a página 1 al cambiar filtros
   - API con parámetros `page` y `limit`
 
+### Fase 15: Cambio de Tema Landing (Oscuro → Claro)
+- [x] **Landing page actualizada a tema claro:**
+  - Fondo principal: `#F9FAFB` (gris muy claro)
+  - Cards y surfaces: `white`
+  - Bordes: `#E5E7EB`
+  - Texto principal: `#111827`
+  - Texto secundario: `#6B7280`
+
+- [x] **Componentes actualizados:**
+  - `app/page.tsx` - Todas las secciones con colores claros
+  - `components/navigation/navbar.tsx` - Fondo blanco con blur, texto oscuro
+  - `components/navigation/footer.tsx` - Fondo blanco, bordes grises
+  - `components/navigation/promo-bar.tsx` - Fondo `#111827` para contraste
+  - `components/product/product-card.tsx` - Variante por defecto `light`
+  - `components/ui/button.tsx` - Variants actualizados para tema claro
+
+- [x] **Paleta de colores consistente con wishlist:**
+  ```css
+  --background: #F9FAFB
+  --surface: #FFFFFF
+  --border: #E5E7EB
+  --text-primary: #111827
+  --text-secondary: #6B7280
+  --text-muted: #9CA3AF
+  --button-primary: #111827
+  ```
+
 ---
 
 ## Commits Recientes
 
 ```
+02d0666 refactor: Change landing page from dark theme to light theme
+5e46431 docs: Update PROJECT_CONTEXT.md with pagination and current status
 c058a0a feat: Add pagination to admin tables (10 items per page)
 4ce99e6 docs: Update PROJECT_CONTEXT.md with payment, toasts, domain, wishlist
 a542837 fix: Update Sileo toast position to top-center and add default description
@@ -977,8 +1006,6 @@ fb18d86 fix: Sileo toast with dark fill color
 6126fa1 feat: Connect inventory page to real database
 bbc41eb fix: Dropdown menu now escapes table container
 950b294 fix: Protect /cuenta routes - require authentication
-d5821c3 fix: Check auth status before navigating to account
-20b990a fix: Add dropdown menu to avatar for logout option
 ```
 
 ---
