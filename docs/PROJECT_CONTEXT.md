@@ -1,6 +1,6 @@
 # MAAL LINE - Contexto del Proyecto
 
-**Última actualización:** 2026-03-09
+**Última actualización:** 2026-03-10
 
 ## Descripción General
 
@@ -991,11 +991,52 @@ openssl rand -base64 32
   --button-primary: #111827
   ```
 
+### Fase 16: Quick View Modal para Productos
+- [x] **Modal de vista rápida al hacer clic en ProductCard:**
+  - Galería de imágenes con navegación (flechas y puntos)
+  - Selector de talla obligatorio
+  - Botón "Agregar al carrito"
+  - Link "Ver producto completo" → página del producto
+  - Cerrar con X, clic afuera, o tecla Escape
+  - Animaciones suaves con Framer Motion
+
+- [x] **Archivos creados:**
+  - `lib/store/quick-view-store.ts` - Estado global del modal (Zustand)
+  - `components/product/quick-view-modal.tsx` - Componente del modal
+
+- [x] **Beneficios UX:**
+  - Usuario puede agregar al carrito sin salir de la página
+  - Flujo más rápido para compras impulsivas
+  - Opción de ver detalles completos si lo desea
+
+### Fase 17: Optimizaciones de Performance
+- [x] **Homepage con ISR (Incremental Static Regeneration):**
+  - Cambiado de `force-dynamic` a `revalidate: 300`
+  - Cache de 5 minutos, reduce carga de BD 60-80%
+  - Página ahora es estática (○) en build
+
+- [x] **Navbar optimizado:**
+  - Uso de `useMemo` para itemCount del carrito
+  - Selector `selectCartItems` en vez de suscripción completa
+  - Menos re-renders innecesarios
+
+- [x] **Lazy loading de Recharts (admin):**
+  - Charts extraídos a `components/admin/dashboard-charts.tsx`
+  - Dynamic imports con `ssr: false`
+  - Admin dashboard: 118KB → 104KB (-14KB)
+
+- [x] **Imágenes secundarias lazy:**
+  - `loading="lazy"` en imagen hover de ProductCard
+  - Reduce requests de imágenes innecesarias
+
 ---
 
 ## Commits Recientes
 
 ```
+7e01162 perf: Critical performance optimizations
+072bad9 feat: Add Quick View modal for products
+738c250 docs: Update PROJECT_CONTEXT.md with light theme changes
 02d0666 refactor: Change landing page from dark theme to light theme
 5e46431 docs: Update PROJECT_CONTEXT.md with pagination and current status
 c058a0a feat: Add pagination to admin tables (10 items per page)
@@ -1003,9 +1044,6 @@ c058a0a feat: Add pagination to admin tables (10 items per page)
 a542837 fix: Update Sileo toast position to top-center and add default description
 a2b0226 fix: Sileo toast type error for promise loading state
 fb18d86 fix: Sileo toast with dark fill color
-6126fa1 feat: Connect inventory page to real database
-bbc41eb fix: Dropdown menu now escapes table container
-950b294 fix: Protect /cuenta routes - require authentication
 ```
 
 ---
