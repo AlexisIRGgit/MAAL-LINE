@@ -88,14 +88,15 @@ export function CartDrawer() {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg md:max-h-[85vh] bg-white rounded-2xl z-50 flex flex-col shadow-2xl overflow-hidden"
-          >
+          {/* Modal Container - Centered with Flexbox */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="w-full max-w-lg max-h-[85vh] bg-white rounded-2xl flex flex-col shadow-2xl overflow-hidden pointer-events-auto"
+            >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-[#E5E7EB]">
               <div className="flex items-center gap-3">
@@ -237,7 +238,8 @@ export function CartDrawer() {
                 </button>
               </div>
             )}
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
