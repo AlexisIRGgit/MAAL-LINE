@@ -1,5 +1,5 @@
-// Force dynamic rendering - database queries require runtime connection
-export const dynamic = 'force-dynamic'
+// ISR - Revalidate every 5 minutes for fresh product data while caching
+export const revalidate = 300
 
 import Image from 'next/image'
 import Link from 'next/link'

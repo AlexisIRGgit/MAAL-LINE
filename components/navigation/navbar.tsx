@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { Logo } from '@/components/common/logo'
-import { useCartStore } from '@/lib/store/cart-store'
+import { useCartStore, selectCartItems } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
 
 const NAV_LINKS = [
@@ -19,10 +19,14 @@ export function Navbar() {
   const { data: session } = useSession()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const { openCart, items } = useCartStore()
+  const openCart = useCartStore((state) => state.openCart)
+  const items = useCartStore(selectCartItems)
 
-  // Calculate itemCount directly from items for proper reactivity
-  const itemCount = items.reduce((total, item) => total + item.quantity, 0)
+  // Memoize itemCount to avoid recalculating on unrelated re-renders
+  const itemCount = useMemo(
+    () => items.reduce((total, item) => total + item.quantity, 0),
+    [items]
+  )
 
   // Prevent hydration mismatch
   useEffect(() => {

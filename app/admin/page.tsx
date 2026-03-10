@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import {
   DollarSign,
   ShoppingBag,
@@ -17,18 +18,31 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react'
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts'
+
+// Lazy load charts to reduce initial bundle size (Recharts is ~45KB)
+const SalesChart = dynamic(
+  () => import('@/components/admin/dashboard-charts').then((mod) => mod.SalesChart),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-6 h-6 animate-spin text-[#9CA3AF]" />
+      </div>
+    ),
+    ssr: false,
+  }
+)
+
+const CategoryChart = dynamic(
+  () => import('@/components/admin/dashboard-charts').then((mod) => mod.CategoryChart),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-6 h-6 animate-spin text-[#9CA3AF]" />
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 interface DashboardData {
   stats: {
@@ -226,45 +240,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="h-[200px] sm:h-[280px]">
-            {data?.salesChart && data.salesChart.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.salesChart}>
-                  <defs>
-                    <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#111827" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#111827" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                  <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} />
-                  <YAxis stroke="#9CA3AF" fontSize={12} tickFormatter={(v) => `$${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
-                  <Tooltip
-                    formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Ventas']}
-                    contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '12px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="ventas"
-                    stroke="#111827"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#salesGradient)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-[#9CA3AF]">
-                <div className="text-center">
-                  <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Sin datos de ventas</p>
-                </div>
-              </div>
-            )}
+            <SalesChart data={data?.salesChart || []} />
           </div>
         </div>
 
@@ -274,32 +250,7 @@ export default function AdminDashboard() {
             <h2 className="text-base sm:text-lg font-semibold text-[#111827]">Top Categorías</h2>
           </div>
           <div className="h-[150px] sm:h-[180px]">
-            {data?.categoryData && data.categoryData.length > 0 && data.categoryData[0].name !== 'Sin datos' ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data.categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={70}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {data.categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-[#9CA3AF]">
-                <div className="text-center">
-                  <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Sin datos</p>
-                </div>
-              </div>
-            )}
+            <CategoryChart data={data?.categoryData || []} />
           </div>
           <div className="flex justify-center">
             <div className="text-center">

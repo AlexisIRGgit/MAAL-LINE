@@ -116,13 +116,14 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
           priority={priority}
         />
 
-        {/* Secondary Image (hover) */}
+        {/* Secondary Image (hover) - lazy loaded */}
         {images[1] && (
           <Image
             src={images[1]}
             alt={`${name} - Vista alternativa`}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            loading="lazy"
             className={cn(
               'object-cover transition-all duration-500',
               isHovered ? 'opacity-100 scale-105' : 'opacity-0'
