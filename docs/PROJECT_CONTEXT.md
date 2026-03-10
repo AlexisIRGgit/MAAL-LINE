@@ -1029,11 +1029,38 @@ openssl rand -base64 32
   - `loading="lazy"` en imagen hover de ProductCard
   - Reduce requests de imágenes innecesarias
 
+### Fase 18: Carrito como Modal Centrado
+- [x] **Cambio de drawer lateral a modal centrado:**
+  - Antes: drawer que deslizaba desde la derecha
+  - Ahora: modal centrado igual que Quick View
+  - Animación spring suave (scale + fade)
+
+- [x] **Tema claro aplicado:**
+  - Fondo: `white` con bordes `#E5E7EB`
+  - Texto: `#111827` (principal), `#6B7280` (secundario)
+  - Botones: `#111827` (primario), borde gris (secundario)
+  - Footer con fondo `#F9FAFB`
+
+- [x] **Estilo redondeado consistente:**
+  - Modal: `rounded-2xl`
+  - Imágenes de productos: `rounded-xl`
+  - Botones: `rounded-xl`
+  - Controles de cantidad: `rounded-lg`
+  - Badge de cantidad: `rounded-full`
+
+- [x] **Beneficios UX:**
+  - Experiencia consistente con Quick View
+  - Cierre con X, clic afuera, o Escape
+  - Full-screen en móvil (`inset-4`)
+  - No requiere recarga de página
+
 ---
 
 ## Commits Recientes
 
 ```
+f2e3141 refactor: Change cart from drawer to centered modal with light theme
+82275be docs: Update PROJECT_CONTEXT.md with Quick View and optimizations
 7e01162 perf: Critical performance optimizations
 072bad9 feat: Add Quick View modal for products
 738c250 docs: Update PROJECT_CONTEXT.md with light theme changes
@@ -1042,8 +1069,6 @@ openssl rand -base64 32
 c058a0a feat: Add pagination to admin tables (10 items per page)
 4ce99e6 docs: Update PROJECT_CONTEXT.md with payment, toasts, domain, wishlist
 a542837 fix: Update Sileo toast position to top-center and add default description
-a2b0226 fix: Sileo toast type error for promise loading state
-fb18d86 fix: Sileo toast with dark fill color
 ```
 
 ---
