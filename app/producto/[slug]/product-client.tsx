@@ -147,7 +147,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
     setIsAdding(true)
     addItem(product, selectedSize, quantity)
-    toast.success('Producto agregado al carrito', `${name} - Talla ${selectedSize}`)
+    toast.success('Agregado al carrito')
 
     // Show confirmation
     setJustAdded(true)

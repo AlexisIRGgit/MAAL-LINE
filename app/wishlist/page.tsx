@@ -96,7 +96,7 @@ export default function WishlistPage() {
       })
       if (response.ok) {
         setItems((prev) => prev.filter((item) => item.product.id !== productId))
-        toast.success('Eliminado de favoritos', itemToRemove?.product.name)
+        toast.success('Eliminado de favoritos')
       }
     } catch (error) {
       console.error('Error removing from wishlist:', error)
@@ -126,7 +126,7 @@ export default function WishlistPage() {
       }
 
       addItem(productForCart as any, availableVariant.name, 1)
-      toast.success('Agregado al carrito', `${item.product.name} - Talla ${availableVariant.name}`)
+      toast.success('Agregado al carrito')
 
       // Optionally remove from wishlist after adding to cart
       await fetch(`/api/wishlist/${item.product.id}`, { method: 'DELETE' })

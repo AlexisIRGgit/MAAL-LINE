@@ -41,8 +41,7 @@ export function CartDrawer() {
           isSoldOut: false,
         }, size, item.quantity)
         toast.success('Producto restaurado')
-      },
-      item.product.name
+      }
     )
   }
 

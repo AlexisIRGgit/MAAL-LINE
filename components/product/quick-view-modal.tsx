@@ -86,7 +86,7 @@ export function QuickViewModal() {
       1
     )
 
-    toast.success('Agregado al carrito', `${product.name} - Talla ${selectedSize}`)
+    toast.success('Agregado al carrito')
     setIsAdding(false)
     closeQuickView()
   }
