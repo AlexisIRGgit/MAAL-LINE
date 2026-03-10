@@ -29,7 +29,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, priority = false, variant = 'light' }: ProductCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const openQuickView = useQuickViewStore((state) => state.openQuickView)
 
@@ -91,8 +90,6 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
           : 'bg-white border border-[#E5E7EB] hover:border-[#D1D5DB]',
         'hover:shadow-xl hover:-translate-y-1'
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={handleOpenQuickView}
     >
       {/* Image Container */}
@@ -110,13 +107,13 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className={cn(
             'object-cover transition-all duration-500',
-            isHovered && images[1] ? 'opacity-0' : 'opacity-100',
-            'group-hover:scale-105'
+            images[1] ? 'md:group-hover:opacity-0' : '',
+            'md:group-hover:scale-105'
           )}
           priority={priority}
         />
 
-        {/* Secondary Image (hover) - lazy loaded */}
+        {/* Secondary Image (hover) - only on desktop */}
         {images[1] && (
           <Image
             src={images[1]}
@@ -124,10 +121,7 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             loading="lazy"
-            className={cn(
-              'object-cover transition-all duration-500',
-              isHovered ? 'opacity-100 scale-105' : 'opacity-0'
-            )}
+            className="object-cover transition-all duration-500 opacity-0 md:group-hover:opacity-100 md:group-hover:scale-105"
           />
         )}
 
@@ -155,7 +149,7 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
           )}
         </div>
 
-        {/* Wishlist Button - Top Right */}
+        {/* Wishlist Button - Top Right (always visible on mobile, hover on desktop) */}
         <button
           onClick={(e) => {
             e.preventDefault()
@@ -164,7 +158,7 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
           }}
           className={cn(
             'absolute top-3 right-3 p-2 rounded-full transition-all duration-200 z-10',
-            'opacity-0 group-hover:opacity-100',
+            'md:opacity-0 md:group-hover:opacity-100',
             isDark
               ? 'bg-black/50 backdrop-blur-sm hover:bg-black/70'
               : 'bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white',
