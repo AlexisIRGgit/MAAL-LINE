@@ -35,7 +35,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:www.mercadopago.com.br)",
       "WebFetch(domain:sileo.aaryan.design)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(find:*)"
     ]
   }
 }

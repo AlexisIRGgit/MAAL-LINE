@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart-store'
-import { cn } from '@/lib/utils/cn'
 import { toast } from '@/lib/toast'
 
 export function CartDrawer() {
@@ -86,33 +85,33 @@ export function CartDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeCart}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
 
-          {/* Drawer */}
+          {/* Modal */}
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-[#0A0A0A] z-50 flex flex-col border-l border-[#E8E4D9]/10"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg md:max-h-[85vh] bg-white rounded-2xl z-50 flex flex-col shadow-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[#E8E4D9]/10">
+            <div className="flex items-center justify-between p-4 border-b border-[#E5E7EB]">
               <div className="flex items-center gap-3">
-                <ShoppingBag className="w-5 h-5 text-[#E8E4D9]" />
-                <h2 className="text-lg font-bold text-[#E8E4D9] tracking-wide">
+                <ShoppingBag className="w-5 h-5 text-[#111827]" />
+                <h2 className="text-lg font-bold text-[#111827] tracking-wide">
                   CARRITO
                 </h2>
                 {itemCount > 0 && (
-                  <span className="px-2 py-0.5 bg-[#E8E4D9] text-[#0A0A0A] text-xs font-bold">
+                  <span className="px-2.5 py-0.5 bg-[#111827] text-white text-xs font-bold rounded-full">
                     {itemCount}
                   </span>
                 )}
               </div>
               <button
                 onClick={closeCart}
-                className="p-2 text-[#E8E4D9]/70 hover:text-[#E8E4D9] transition-colors"
+                className="p-2 text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -122,22 +121,22 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto">
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                  <ShoppingBag className="w-16 h-16 text-[#E8E4D9]/20 mb-4" />
-                  <p className="text-[#E8E4D9]/50 font-medium mb-2">
+                  <ShoppingBag className="w-16 h-16 text-[#E5E7EB] mb-4" />
+                  <p className="text-[#374151] font-medium mb-2">
                     Tu carrito está vacío
                   </p>
-                  <p className="text-[#E8E4D9]/30 text-sm mb-6">
+                  <p className="text-[#9CA3AF] text-sm mb-6">
                     Agrega productos para comenzar
                   </p>
                   <button
                     onClick={closeCart}
-                    className="px-6 py-2 border border-[#E8E4D9]/30 text-[#E8E4D9] text-sm font-bold tracking-wider hover:bg-[#E8E4D9]/10 transition-colors"
+                    className="px-6 py-2.5 border border-[#E5E7EB] text-[#374151] text-sm font-bold tracking-wider rounded-xl hover:bg-[#F3F4F6] transition-colors"
                   >
                     SEGUIR COMPRANDO
                   </button>
                 </div>
               ) : (
-                <div className="divide-y divide-[#E8E4D9]/10">
+                <div className="divide-y divide-[#E5E7EB]">
                   {items.map((item) => (
                     <div
                       key={`${item.productId}-${item.size}`}
@@ -147,7 +146,7 @@ export function CartDrawer() {
                       <Link
                         href={`/producto/${item.product.slug}`}
                         onClick={closeCart}
-                        className="relative w-20 h-24 bg-[#111111] flex-shrink-0 overflow-hidden"
+                        className="relative w-20 h-24 bg-[#F3F4F6] flex-shrink-0 overflow-hidden rounded-xl"
                       >
                         <Image
                           src={item.product.image}
@@ -162,39 +161,39 @@ export function CartDrawer() {
                         <Link
                           href={`/producto/${item.product.slug}`}
                           onClick={closeCart}
-                          className="text-sm font-bold text-[#E8E4D9] hover:text-[#C9A962] transition-colors line-clamp-2"
+                          className="text-sm font-bold text-[#111827] hover:text-[#374151] transition-colors line-clamp-2"
                         >
                           {item.product.name}
                         </Link>
-                        <p className="text-xs text-[#E8E4D9]/50 mt-1">
+                        <p className="text-xs text-[#6B7280] mt-1">
                           Talla: {item.size}
                         </p>
-                        <p className="text-sm font-bold text-[#E8E4D9] mt-2">
+                        <p className="text-sm font-bold text-[#111827] mt-2">
                           {formatPrice(item.product.price)}
                         </p>
 
                         {/* Quantity Controls */}
                         <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center border border-[#E8E4D9]/20">
+                          <div className="flex items-center border border-[#E5E7EB] rounded-lg overflow-hidden">
                             <button
                               onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                              className="w-8 h-8 flex items-center justify-center text-[#E8E4D9]/70 hover:text-[#E8E4D9] hover:bg-[#E8E4D9]/10 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] transition-colors"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <span className="w-8 text-center text-[#E8E4D9] text-sm font-medium">
+                            <span className="w-8 text-center text-[#111827] text-sm font-medium">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                              className="w-8 h-8 flex items-center justify-center text-[#E8E4D9]/70 hover:text-[#E8E4D9] hover:bg-[#E8E4D9]/10 transition-colors"
+                              className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] transition-colors"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
                           <button
                             onClick={() => handleRemoveItem(item.productId, item.size)}
-                            className="p-2 text-[#E8E4D9]/40 hover:text-red-500 transition-colors"
+                            className="p-2 text-[#9CA3AF] hover:text-red-500 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -208,15 +207,15 @@ export function CartDrawer() {
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="border-t border-[#E8E4D9]/10 p-4 space-y-4">
+              <div className="border-t border-[#E5E7EB] p-4 space-y-4 bg-[#F9FAFB]">
                 {/* Subtotal */}
                 <div className="flex items-center justify-between">
-                  <span className="text-[#E8E4D9]/70">Subtotal</span>
-                  <span className="text-lg font-bold text-[#E8E4D9]">
+                  <span className="text-[#6B7280]">Subtotal</span>
+                  <span className="text-lg font-bold text-[#111827]">
                     {formatPrice(subtotal)}
                   </span>
                 </div>
-                <p className="text-xs text-[#E8E4D9]/40">
+                <p className="text-xs text-[#9CA3AF]">
                   Envío calculado en el checkout
                 </p>
 
@@ -224,7 +223,7 @@ export function CartDrawer() {
                 <Link
                   href="/checkout"
                   onClick={closeCart}
-                  className="block w-full py-4 bg-[#E8E4D9] text-[#0A0A0A] text-center font-bold tracking-wider hover:bg-[#C9A962] transition-colors"
+                  className="block w-full py-3.5 bg-[#111827] text-white text-center font-bold tracking-wider rounded-xl hover:bg-[#374151] transition-colors"
                 >
                   FINALIZAR COMPRA
                 </Link>
@@ -232,7 +231,7 @@ export function CartDrawer() {
                 {/* Continue Shopping */}
                 <button
                   onClick={closeCart}
-                  className="w-full py-3 border border-[#E8E4D9]/30 text-[#E8E4D9] text-sm font-bold tracking-wider hover:bg-[#E8E4D9]/10 transition-colors"
+                  className="w-full py-3 border border-[#E5E7EB] text-[#374151] text-sm font-bold tracking-wider rounded-xl hover:bg-white transition-colors"
                 >
                   SEGUIR COMPRANDO
                 </button>
