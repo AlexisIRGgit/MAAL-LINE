@@ -35,13 +35,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     `
 
     const variants = {
-      // Primary - Dark button
+      // Primary - Dark/black, flat and clean
       primary: `
         bg-[#111827] text-white
         hover:bg-[#1F2937]
         border-2 border-[#111827]
         hover:border-[#1F2937]
-        shadow-lg hover:shadow-xl
+        shadow-sm hover:shadow-sm
       `,
       // Secondary - White with dark border
       secondary: `

@@ -394,6 +394,66 @@
   }
 }
 
+@layer components {
+  /* ============================================
+     BLACK FABRIC TEXTURE BACKGROUND
+     ============================================ */
+  .bg-fabric {
+    background-color: #0A0A0A;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(255,255,255,0.015) 1px,
+        rgba(255,255,255,0.015) 2px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 1px,
+        rgba(255,255,255,0.015) 1px,
+        rgba(255,255,255,0.015) 2px
+      ),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        rgba(255,255,255,0.008) 3px,
+        rgba(255,255,255,0.008) 4px
+      );
+  }
+
+  /* ============================================
+     WHITE FABRIC TEXTURE BACKGROUND
+     ============================================ */
+  .bg-fabric-white {
+    background-color: #FAFAFA;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(0,0,0,0.015) 1px,
+        rgba(0,0,0,0.015) 2px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 1px,
+        rgba(0,0,0,0.015) 1px,
+        rgba(0,0,0,0.015) 2px
+      ),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.008) 3px,
+        rgba(0,0,0,0.008) 4px
+      );
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

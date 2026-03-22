@@ -27,13 +27,17 @@ export async function PUT(
       type,
       fullName,
       phone,
+      // Support both old format (street, zipCode) and new format (streetLine1, postalCode)
       street,
+      streetLine1: streetLine1Input,
       number,
       interior,
+      streetLine2: streetLine2Input,
       neighborhood,
       city,
       state,
       zipCode,
+      postalCode: postalCodeInput,
       country,
       isDefault,
     } = body
@@ -46,22 +50,29 @@ export async function PUT(
       })
     }
 
-    const streetLine1 = number ? `${street} ${number}` : street
+    // Handle both field naming conventions
+    const streetLine1 = streetLine1Input || (number ? `${street} ${number}` : street)
+    const streetLine2 = streetLine2Input !== undefined ? (streetLine2Input || null) : (interior || null)
+    const postalCode = postalCodeInput || zipCode
+
+    const addressType = type
+      ? (type === 'work' ? AddressType.billing : AddressType.shipping)
+      : existingAddress.type
 
     const updatedAddress = await prisma.address.update({
       where: { id },
       data: {
-        type: type === 'work' ? AddressType.billing : AddressType.shipping,
+        type: addressType,
         fullName,
-        phone,
+        phone: phone || null,
         streetLine1,
-        streetLine2: interior || null,
-        neighborhood,
+        streetLine2,
+        neighborhood: neighborhood || null,
         city,
         state,
-        postalCode: zipCode,
+        postalCode,
         country: 'MX',
-        isDefault,
+        isDefault: isDefault ?? existingAddress.isDefault,
       },
     })
 
@@ -69,18 +80,24 @@ export async function PUT(
       success: true,
       address: {
         id: updatedAddress.id,
-        type: type,
+        type: type || 'home',
         label: type === 'work' ? 'Oficina' : 'Casa',
         fullName: updatedAddress.fullName,
         phone: updatedAddress.phone,
-        street: streetLine1,
+        // New format
+        streetLine1: updatedAddress.streetLine1,
+        streetLine2: updatedAddress.streetLine2,
+        postalCode: updatedAddress.postalCode,
+        // Old format (backward compat)
+        street: updatedAddress.streetLine1,
         number: '',
         interior: updatedAddress.streetLine2,
+        zipCode: updatedAddress.postalCode,
+        // Common fields
         neighborhood: updatedAddress.neighborhood,
         city: updatedAddress.city,
         state: updatedAddress.state,
-        zipCode: updatedAddress.postalCode,
-        country: updatedAddress.country === 'MX' ? 'México' : updatedAddress.country,
+        country: updatedAddress.country,
         isDefault: updatedAddress.isDefault,
       },
     })

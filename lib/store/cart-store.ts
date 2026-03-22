@@ -2,6 +2,37 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { ProductCardData, ProductDetailData } from '@/lib/transformers/product'
 
+// Safe localStorage wrapper that handles QuotaExceededError gracefully
+const safeLocalStorage = {
+  getItem: (name: string): string | null => {
+    try {
+      return localStorage.getItem(name)
+    } catch {
+      return null
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    try {
+      localStorage.setItem(name, value)
+    } catch {
+      console.warn('Cart storage full, clearing old data and retrying')
+      try {
+        localStorage.removeItem(name)
+        localStorage.setItem(name, value)
+      } catch {
+        // Storage completely full — give up silently
+      }
+    }
+  },
+  removeItem: (name: string): void => {
+    try {
+      localStorage.removeItem(name)
+    } catch {
+      // ignore
+    }
+  },
+}
+
 // Cart item stored in state
 export interface CartItem {
   productId: string
@@ -150,8 +181,25 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'maal-cart',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ items: state.items }), // Only persist items
+      storage: createJSONStorage(() => safeLocalStorage),
+      partialize: (state) => ({
+        items: state.items.map((item) => ({
+          productId: item.productId,
+          product: {
+            id: item.product.id,
+            slug: item.product.slug,
+            name: item.product.name,
+            price: item.product.price,
+            ...(item.product.compareAtPrice != null && {
+              compareAtPrice: item.product.compareAtPrice,
+            }),
+            image: item.product.image,
+          },
+          size: item.size,
+          quantity: item.quantity,
+          addedAt: item.addedAt,
+        })),
+      }) as unknown as (state: CartStore) => CartStore,
     }
   )
 )

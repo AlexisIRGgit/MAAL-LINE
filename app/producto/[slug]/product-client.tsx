@@ -162,21 +162,21 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
       <PromoBar />
       <Navbar />
 
-      <main className="bg-[#0A0A0A] min-h-screen">
+      <main className="bg-fabric-white min-h-screen">
         {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-4">
-          <nav className="text-xs text-[#E8E4D9]/50">
-            <Link href="/" className="hover:text-[#E8E4D9]">Inicio</Link>
+          <nav className="text-xs text-gray-400">
+            <Link href="/" className="hover:text-gray-900">Inicio</Link>
             <span className="mx-2">/</span>
             {category && (
               <>
-                <Link href={`/categoria/${category.slug}`} className="hover:text-[#E8E4D9]">
+                <Link href={`/categoria/${category.slug}`} className="hover:text-gray-900">
                   {category.name}
                 </Link>
                 <span className="mx-2">/</span>
               </>
             )}
-            <span className="text-[#E8E4D9]">{name}</span>
+            <span className="text-gray-900">{name}</span>
           </nav>
         </div>
 
@@ -186,7 +186,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
             {/* Image Gallery */}
             <div className="space-y-4">
               {/* Main Image */}
-              <div className="relative aspect-[3/4] bg-[#111111] overflow-hidden group">
+              <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden group rounded-2xl border border-gray-200">
                 <Image
                   src={images[selectedImageIndex] || '/images/placeholder.png'}
                   alt={name}
@@ -208,13 +208,13 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                   <>
                     <button
                       onClick={prevImage}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#0A0A0A]/80 text-[#E8E4D9] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 text-gray-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-sm"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                       onClick={nextImage}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#0A0A0A]/80 text-[#E8E4D9] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 text-gray-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full shadow-sm"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </button>
@@ -223,8 +223,8 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
                 {/* Sold Out Overlay */}
                 {isSoldOut && (
-                  <div className="absolute inset-0 bg-[#0A0A0A]/80 backdrop-blur-sm flex items-center justify-center">
-                    <span className="text-[#E8E4D9]/50 font-bold text-xl tracking-[0.2em]">
+                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+                    <span className="text-gray-400 font-bold text-xl tracking-[0.2em]">
                       AGOTADO
                     </span>
                   </div>
@@ -239,10 +239,10 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
                       className={cn(
-                        'relative w-20 h-24 flex-shrink-0 bg-[#111111] overflow-hidden border-2 transition-colors',
+                        'relative w-20 h-24 flex-shrink-0 bg-gray-100 overflow-hidden border-2 transition-colors rounded-xl',
                         selectedImageIndex === index
-                          ? 'border-[#E8E4D9]'
-                          : 'border-transparent hover:border-[#E8E4D9]/50'
+                          ? 'border-gray-900'
+                          : 'border-transparent hover:border-gray-400'
                       )}
                     >
                       <Image
@@ -258,18 +258,18 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
             </div>
 
             {/* Product Info */}
-            <div className="space-y-6">
+            <div className="space-y-6 bg-white rounded-2xl p-6 lg:p-8 border border-gray-200">
               {/* Title & Price */}
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-[#E8E4D9] uppercase tracking-wide">
+                <h1 className="text-2xl md:text-3xl font-black text-[#111827] uppercase tracking-wide">
                   {name}
                 </h1>
                 <div className="flex items-center gap-4 mt-3">
-                  <span className="text-2xl font-bold text-[#E8E4D9]">
+                  <span className="text-2xl font-bold text-[#111827]">
                     {formatPrice(price)}
                   </span>
                   {hasDiscount && (
-                    <span className="text-lg text-[#6B6860] line-through">
+                    <span className="text-lg text-gray-400 line-through">
                       {formatPrice(compareAtPrice)}
                     </span>
                   )}
@@ -278,7 +278,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
               {/* Short Description */}
               {shortDescription && (
-                <p className="text-[#E8E4D9]/60 text-sm leading-relaxed">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   {shortDescription}
                 </p>
               )}
@@ -287,7 +287,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
               {sizesWithStock.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-bold text-[#E8E4D9] tracking-wider">TALLA</span>
+                    <span className="text-sm font-bold text-[#111827] tracking-wider">TALLA</span>
                     <Link href="/guia-tallas" className="text-xs text-[#C9A962] hover:underline">
                       Guía de tallas
                     </Link>
@@ -299,12 +299,12 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                         onClick={() => setSelectedSize(size)}
                         disabled={stock === 0}
                         className={cn(
-                          'px-4 py-2 text-sm font-bold tracking-wider border transition-all',
+                          'px-4 py-2 text-sm font-bold tracking-wider border transition-all rounded-xl',
                           selectedSize === size
-                            ? 'bg-[#E8E4D9] text-[#0A0A0A] border-[#E8E4D9]'
+                            ? 'bg-[#111827] text-white border-[#111827]'
                             : stock > 0
-                              ? 'bg-transparent text-[#E8E4D9] border-[#E8E4D9]/30 hover:border-[#E8E4D9]'
-                              : 'bg-transparent text-[#E8E4D9]/30 border-[#E8E4D9]/10 cursor-not-allowed line-through'
+                              ? 'bg-transparent text-[#111827] border-gray-300 hover:border-[#111827]'
+                              : 'bg-transparent text-gray-300 border-gray-200 cursor-not-allowed line-through'
                         )}
                       >
                         {size}
@@ -316,19 +316,19 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
               {/* Quantity Selector */}
               <div>
-                <span className="text-sm font-bold text-[#E8E4D9] tracking-wider block mb-3">CANTIDAD</span>
+                <span className="text-sm font-bold text-[#111827] tracking-wider block mb-3">CANTIDAD</span>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center border border-[#E8E4D9]/30">
+                  <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-10 flex items-center justify-center text-[#E8E4D9] hover:bg-[#E8E4D9]/10 transition-colors"
+                      className="w-10 h-10 flex items-center justify-center text-[#111827] hover:bg-gray-100 transition-colors"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="w-12 text-center text-[#E8E4D9] font-bold">{quantity}</span>
+                    <span className="w-12 text-center text-[#111827] font-bold">{quantity}</span>
                     <button
                       onClick={() => setQuantity(Math.min(selectedVariantStock || 10, quantity + 1))}
-                      className="w-10 h-10 flex items-center justify-center text-[#E8E4D9] hover:bg-[#E8E4D9]/10 transition-colors"
+                      className="w-10 h-10 flex items-center justify-center text-[#111827] hover:bg-gray-100 transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -350,7 +350,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                   disabled={!canAddToCart || isAdding}
                   onClick={handleAddToCart}
                   className={cn(
-                    "flex-1 transition-all",
+                    "flex-1 transition-all rounded-xl",
                     justAdded && "bg-green-600 hover:bg-green-600"
                   )}
                 >
@@ -371,10 +371,10 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                   onClick={handleWishlistToggle}
                   disabled={wishlistLoading}
                   className={cn(
-                    "w-12 h-12 border flex items-center justify-center transition-colors disabled:opacity-50",
+                    "w-12 h-12 border flex items-center justify-center transition-colors disabled:opacity-50 rounded-xl",
                     inWishlist
                       ? "bg-red-500/20 border-red-500 text-red-500 hover:bg-red-500/30"
-                      : "border-[#E8E4D9]/30 text-[#E8E4D9] hover:bg-[#E8E4D9]/10"
+                      : "border-gray-300 text-gray-600 hover:bg-gray-100"
                   )}
                   title={inWishlist ? "Quitar de favoritos" : "Agregar a favoritos"}
                 >
@@ -384,35 +384,35 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                     <Heart className={cn("w-5 h-5", inWishlist && "fill-current")} />
                   )}
                 </button>
-                <button className="w-12 h-12 border border-[#E8E4D9]/30 flex items-center justify-center text-[#E8E4D9] hover:bg-[#E8E4D9]/10 transition-colors">
+                <button className="w-12 h-12 border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors rounded-xl">
                   <Share2 className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Features */}
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-[#E8E4D9]/10">
+              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
                 <div className="text-center">
                   <Truck className="w-5 h-5 mx-auto text-[#C9A962] mb-2" />
-                  <span className="text-[10px] text-[#E8E4D9]/60 tracking-wider block">ENVÍO EXPRESS</span>
-                  <span className="text-xs text-[#E8E4D9]">24-48h</span>
+                  <span className="text-[10px] text-gray-500 tracking-wider block">ENVÍO EXPRESS</span>
+                  <span className="text-xs text-[#111827]">24-48h</span>
                 </div>
                 <div className="text-center">
                   <RotateCcw className="w-5 h-5 mx-auto text-[#C9A962] mb-2" />
-                  <span className="text-[10px] text-[#E8E4D9]/60 tracking-wider block">DEVOLUCIONES</span>
-                  <span className="text-xs text-[#E8E4D9]">30 días</span>
+                  <span className="text-[10px] text-gray-500 tracking-wider block">DEVOLUCIONES</span>
+                  <span className="text-xs text-[#111827]">30 días</span>
                 </div>
                 <div className="text-center">
                   <Shield className="w-5 h-5 mx-auto text-[#C9A962] mb-2" />
-                  <span className="text-[10px] text-[#E8E4D9]/60 tracking-wider block">PAGO SEGURO</span>
-                  <span className="text-xs text-[#E8E4D9]">100%</span>
+                  <span className="text-[10px] text-gray-500 tracking-wider block">PAGO SEGURO</span>
+                  <span className="text-xs text-[#111827]">100%</span>
                 </div>
               </div>
 
               {/* Description */}
               {description && (
-                <div className="pt-6 border-t border-[#E8E4D9]/10">
-                  <h3 className="text-sm font-bold text-[#E8E4D9] tracking-wider mb-3">DESCRIPCIÓN</h3>
-                  <div className="text-[#E8E4D9]/60 text-sm leading-relaxed whitespace-pre-line">
+                <div className="pt-6 border-t border-gray-200">
+                  <h3 className="text-sm font-bold text-[#111827] tracking-wider mb-3">DESCRIPCIÓN</h3>
+                  <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
                     {description}
                   </div>
                 </div>
@@ -423,9 +423,9 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section className="py-16 border-t border-[#E8E4D9]/10">
+          <section className="py-16 border-t border-gray-200">
             <div className="container mx-auto px-4">
-              <h2 className="text-2xl font-black text-[#E8E4D9] mb-8">
+              <h2 className="text-2xl font-black text-[#111827] mb-8">
                 TAMBIÉN TE PUEDE <span className="text-[#C9A962]">GUSTAR</span>
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

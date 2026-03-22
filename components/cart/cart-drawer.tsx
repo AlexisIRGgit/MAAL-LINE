@@ -6,10 +6,12 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart-store'
+import { useCheckoutModalStore } from '@/lib/store/checkout-modal-store'
 import { toast } from '@/lib/toast'
 
 export function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, addItem } = useCartStore()
+  const { openCheckoutModal } = useCheckoutModalStore()
 
   // Calculate values directly from items for proper reactivity
   const itemCount = items.reduce((total, item) => total + item.quantity, 0)
@@ -220,13 +222,15 @@ export function CartDrawer() {
                 </p>
 
                 {/* Checkout Button */}
-                <Link
-                  href="/checkout"
-                  onClick={closeCart}
+                <button
+                  onClick={() => {
+                    closeCart()
+                    openCheckoutModal()
+                  }}
                   className="block w-full py-3.5 bg-[#111827] text-white text-center font-bold tracking-wider rounded-xl hover:bg-[#374151] transition-colors"
                 >
                   FINALIZAR COMPRA
-                </Link>
+                </button>
 
                 {/* Continue Shopping */}
                 <button

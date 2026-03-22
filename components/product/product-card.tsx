@@ -128,22 +128,22 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
         {/* Badges - Top Left */}
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
           {isNew && (
-            <span className="px-2.5 py-1 bg-[#111827] text-white text-[10px] font-bold tracking-wider rounded-lg">
+            <span className="px-2.5 py-1 bg-[#111827] text-white text-[10px] font-bold tracking-wider rounded-full">
               NUEVO
             </span>
           )}
           {isRestock && (
-            <span className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-bold tracking-wider rounded-lg">
+            <span className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-bold tracking-wider rounded-full">
               RESTOCK
             </span>
           )}
           {isBestSeller && (
-            <span className="px-2.5 py-1 bg-amber-500 text-white text-[10px] font-bold tracking-wider rounded-lg">
+            <span className="px-2.5 py-1 bg-amber-500 text-white text-[10px] font-bold tracking-wider rounded-full">
               TOP
             </span>
           )}
           {hasDiscount && (
-            <span className="px-2.5 py-1 bg-red-500 text-white text-[10px] font-bold rounded-lg">
+            <span className="px-2.5 py-1 bg-red-500 text-white text-[10px] font-bold rounded-full">
               -{discountPercent}%
             </span>
           )}
@@ -178,7 +178,7 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
         {isSoldOut && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-10">
             <span className={cn(
-              'px-4 py-2 rounded-lg text-sm font-bold tracking-wider',
+              'px-4 py-2 rounded-full text-sm font-bold tracking-wider',
               isDark ? 'bg-[#1A1A1A] text-white/70' : 'bg-white text-[#6B7280]'
             )}>
               AGOTADO
@@ -259,7 +259,7 @@ export function ProductCard({ product, priority = false, variant = 'light' }: Pr
               <span
                 key={size}
                 className={cn(
-                  'text-[10px] px-2 py-0.5 rounded-md',
+                  'text-[10px] px-2 py-0.5 rounded-full',
                   isDark
                     ? 'bg-[#2A2A2A] text-[#E8E4D9]/70'
                     : 'bg-[#F3F4F6] text-[#374151]'

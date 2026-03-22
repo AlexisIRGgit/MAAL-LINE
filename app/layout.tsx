@@ -4,6 +4,8 @@ import { SessionProvider } from '@/components/providers/session-provider'
 import { ToastProvider } from '@/components/providers/toast-provider'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import { QuickViewModal } from '@/components/product/quick-view-modal'
+import { AuthModal } from '@/components/auth/auth-modal'
+import { CheckoutModal } from '@/components/checkout/checkout-modal'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -36,6 +38,8 @@ export default function RootLayout({
           {children}
           <CartDrawer />
           <QuickViewModal />
+          <AuthModal />
+          <CheckoutModal />
           <ToastProvider />
         </SessionProvider>
       </body>
