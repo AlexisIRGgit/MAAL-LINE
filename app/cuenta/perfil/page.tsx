@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import Cropper, { Area } from 'react-easy-crop'
 import {
   User,
   Mail,
@@ -19,6 +20,9 @@ import {
   Check,
   Loader2,
   AlertCircle,
+  ZoomIn,
+  ZoomOut,
+  X,
 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 
@@ -32,26 +36,31 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 }
 
-function resizeImage(file: File, maxSize: number): Promise<string> {
+function getCroppedImg(imageSrc: string, crop: Area, size: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(
+        img,
+        crop.x, crop.y, crop.width, crop.height,
+        0, 0, size, size
+      )
+      resolve(canvas.toDataURL('image/webp', 0.8))
+    }
+    img.onerror = reject
+    img.crossOrigin = 'anonymous'
+    img.src = imageSrc
+  })
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = maxSize
-        canvas.height = maxSize
-        const ctx = canvas.getContext('2d')!
-        // Crop to square from center
-        const min = Math.min(img.width, img.height)
-        const sx = (img.width - min) / 2
-        const sy = (img.height - min) / 2
-        ctx.drawImage(img, sx, sy, min, min, 0, 0, maxSize, maxSize)
-        resolve(canvas.toDataURL('image/webp', 0.8))
-      }
-      img.onerror = reject
-      img.src = reader.result as string
-    }
+    reader.onload = () => resolve(reader.result as string)
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
@@ -91,7 +100,17 @@ export default function ProfilePage() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Crop state
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+
+  const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
+    setCroppedAreaPixels(croppedPixels)
+  }, [])
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -100,20 +119,29 @@ export default function ProfilePage() {
       return
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('La imagen es muy grande', 'Máximo 2MB')
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen es muy grande', 'Máximo 5MB')
       return
     }
 
+    const dataUrl = await readFileAsDataUrl(file)
+    setCropImageSrc(dataUrl)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleCropConfirm = async () => {
+    if (!cropImageSrc || !croppedAreaPixels) return
+
     setIsUploadingAvatar(true)
     try {
-      // Compress and resize to 256x256
-      const dataUrl = await resizeImage(file, 256)
+      const croppedDataUrl = await getCroppedImg(cropImageSrc, croppedAreaPixels, 256)
 
       const response = await fetch('/api/account/avatar', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatarUrl: dataUrl }),
+        body: JSON.stringify({ avatarUrl: croppedDataUrl }),
       })
 
       if (!response.ok) {
@@ -121,14 +149,14 @@ export default function ProfilePage() {
         throw new Error(data.error || 'Error al subir imagen')
       }
 
-      setAvatarUrl(dataUrl)
+      setAvatarUrl(croppedDataUrl)
+      setCropImageSrc(null)
       toast.success('Foto actualizada')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error al subir imagen'
       toast.error(message)
     } finally {
       setIsUploadingAvatar(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -362,7 +390,7 @@ export default function ProfilePage() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleAvatarUpload}
+              onChange={handleFileSelect}
               className="hidden"
             />
             <button
@@ -694,6 +722,80 @@ export default function ProfilePage() {
                 ) : (
                   'Eliminar cuenta'
                 )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Crop Modal */}
+      {cropImageSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E7EB]">
+              <h3 className="text-base font-semibold text-[#111827]">Ajustar foto</h3>
+              <button
+                onClick={() => setCropImageSrc(null)}
+                className="p-1 text-[#6B7280] hover:text-[#111827] transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Crop area */}
+            <div className="relative w-full h-72 sm:h-80 bg-[#111827]">
+              <Cropper
+                image={cropImageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+
+            {/* Zoom control */}
+            <div className="px-5 py-3 flex items-center gap-3">
+              <ZoomOut className="w-4 h-4 text-[#9CA3AF] flex-shrink-0" />
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.05}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="flex-1 accent-[#111827] h-1.5"
+              />
+              <ZoomIn className="w-4 h-4 text-[#9CA3AF] flex-shrink-0" />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 px-5 py-4 border-t border-[#E5E7EB]">
+              <button
+                onClick={() => setCropImageSrc(null)}
+                className="flex-1 px-4 py-2.5 border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-xl hover:bg-[#F9FAFB] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCropConfirm}
+                disabled={isUploadingAvatar}
+                className="flex-1 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                Guardar
               </button>
             </div>
           </motion.div>

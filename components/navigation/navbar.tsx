@@ -39,18 +39,29 @@ function UserAvatar({ firstName, lastName, avatarUrl, size = 32 }: {
   const initials = `${(firstName ?? '')[0] ?? ''}${(lastName ?? '')[0] ?? ''}`.toUpperCase() || '?'
 
   if (avatarUrl && !imgError) {
+    // Use <img> for data URIs, next/image for external URLs
+    const isDataUri = avatarUrl.startsWith('data:')
     return (
       <div
         className="relative rounded-full overflow-hidden flex-shrink-0"
         style={{ width: size, height: size }}
       >
-        <Image
-          src={avatarUrl}
-          alt={`${firstName ?? ''} ${lastName ?? ''}`}
-          fill
-          className="object-cover"
-          onError={() => setImgError(true)}
-        />
+        {isDataUri ? (
+          <img
+            src={avatarUrl}
+            alt={`${firstName ?? ''} ${lastName ?? ''}`}
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <Image
+            src={avatarUrl}
+            alt={`${firstName ?? ''} ${lastName ?? ''}`}
+            fill
+            className="object-cover"
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
     )
   }
@@ -80,6 +91,7 @@ interface WishlistDropdownItem {
 
 export function Navbar() {
   const { data: session } = useSession()
+  const [freshAvatarUrl, setFreshAvatarUrl] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const openCart = useCartStore((state) => state.openCart)
@@ -111,6 +123,20 @@ export function Navbar() {
     setSearchResults([])
     setSearchQueried(false)
   }, [])
+
+  // Fetch fresh avatar from DB (prioritizes custom over Google OAuth)
+  useEffect(() => {
+    if (!session?.user) return
+    fetch('/api/account/profile')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.avatarUrl) setFreshAvatarUrl(data.avatarUrl)
+      })
+      .catch(() => {})
+  }, [session?.user])
+
+  // Resolved avatar: fresh DB avatar > session avatar
+  const resolvedAvatarUrl = freshAvatarUrl || session?.user?.avatarUrl || null
 
   // Auto-focus input when search opens (small delay so element is visible)
   useEffect(() => {
@@ -608,7 +634,7 @@ export function Navbar() {
                   <UserAvatar
                     firstName={session.user.firstName}
                     lastName={session.user.lastName}
-                    avatarUrl={session.user.avatarUrl}
+                    avatarUrl={resolvedAvatarUrl}
                     size={32}
                   />
                 </Link>
@@ -717,7 +743,7 @@ export function Navbar() {
                     <UserAvatar
                       firstName={session.user.firstName}
                       lastName={session.user.lastName}
-                      avatarUrl={session.user.avatarUrl}
+                      avatarUrl={resolvedAvatarUrl}
                       size={36}
                     />
                     <div className="flex flex-col">
