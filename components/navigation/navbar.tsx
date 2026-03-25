@@ -35,9 +35,10 @@ function UserAvatar({ firstName, lastName, avatarUrl, size = 32 }: {
   avatarUrl: string | null
   size?: number
 }) {
+  const [imgError, setImgError] = useState(false)
   const initials = `${(firstName ?? '')[0] ?? ''}${(lastName ?? '')[0] ?? ''}`.toUpperCase() || '?'
 
-  if (avatarUrl) {
+  if (avatarUrl && !imgError) {
     return (
       <div
         className="relative rounded-full overflow-hidden flex-shrink-0"
@@ -48,6 +49,7 @@ function UserAvatar({ firstName, lastName, avatarUrl, size = 32 }: {
           alt={`${firstName ?? ''} ${lastName ?? ''}`}
           fill
           className="object-cover"
+          onError={() => setImgError(true)}
         />
       </div>
     )
