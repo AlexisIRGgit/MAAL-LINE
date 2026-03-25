@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -10,6 +10,7 @@ import {
   Phone,
   Calendar,
   Camera,
+  Trash2,
   Save,
   Shield,
   Bell,
@@ -29,6 +30,31 @@ const containerVariants = {
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
+}
+
+function resizeImage(file: File, maxSize: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = maxSize
+        canvas.height = maxSize
+        const ctx = canvas.getContext('2d')!
+        // Crop to square from center
+        const min = Math.min(img.width, img.height)
+        const sx = (img.width - min) / 2
+        const sy = (img.height - min) / 2
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, maxSize, maxSize)
+        resolve(canvas.toDataURL('image/webp', 0.8))
+      }
+      img.onerror = reject
+      img.src = reader.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 export default function ProfilePage() {
@@ -60,6 +86,66 @@ export default function ProfilePage() {
     confirmPassword: '',
   })
 
+  // Avatar state
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten imágenes')
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('La imagen es muy grande', 'Máximo 2MB')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    try {
+      // Compress and resize to 256x256
+      const dataUrl = await resizeImage(file, 256)
+
+      const response = await fetch('/api/account/avatar', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl: dataUrl }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Error al subir imagen')
+      }
+
+      setAvatarUrl(dataUrl)
+      toast.success('Foto actualizada')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al subir imagen'
+      toast.error(message)
+    } finally {
+      setIsUploadingAvatar(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleRemoveAvatar = async () => {
+    setIsUploadingAvatar(true)
+    try {
+      const response = await fetch('/api/account/avatar', { method: 'DELETE' })
+      if (!response.ok) throw new Error('Error al eliminar foto')
+      setAvatarUrl(null)
+      toast.success('Foto eliminada')
+    } catch {
+      toast.error('Error al eliminar foto')
+    } finally {
+      setIsUploadingAvatar(false)
+    }
+  }
+
   // Delete account state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -87,6 +173,7 @@ export default function ProfilePage() {
             phone: data.phone || '',
             birthDate: data.birthDate || '',
           })
+          if (data.avatarUrl) setAvatarUrl(data.avatarUrl)
           setPreferences((prev) => ({
             ...prev,
             promotions: data.acceptsMarketing || false,
@@ -258,11 +345,36 @@ export default function ProfilePage() {
       <motion.div variants={itemVariants} className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <div className="relative">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#111827] to-[#374151] rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
-              {userInitial}
-            </div>
-            <button className="absolute bottom-0 right-0 p-2 bg-[#111827] text-white rounded-full hover:bg-[#1F2937] transition-colors">
-              <Camera className="w-4 h-4" />
+            {avatarUrl ? (
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden relative">
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#111827] to-[#374151] rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
+                {userInitial}
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute bottom-0 right-0 p-2 bg-[#111827] text-white rounded-full hover:bg-[#1F2937] transition-colors disabled:opacity-50"
+            >
+              {isUploadingAvatar ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Camera className="w-4 h-4" />
+              )}
             </button>
           </div>
           <div className="text-center sm:text-left">
@@ -272,6 +384,16 @@ export default function ProfilePage() {
             <p className="text-sm text-[#6B7280]">{formData.email}</p>
             {memberSince && (
               <p className="text-xs text-[#9CA3AF] mt-1">Miembro desde {memberSince}</p>
+            )}
+            {avatarUrl && (
+              <button
+                onClick={handleRemoveAvatar}
+                disabled={isUploadingAvatar}
+                className="mt-2 inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="w-3 h-3" />
+                Eliminar foto
+              </button>
             )}
           </div>
         </div>

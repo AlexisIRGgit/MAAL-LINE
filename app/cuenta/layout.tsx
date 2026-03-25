@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
@@ -46,6 +46,22 @@ export default function AccountLayout({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  const fetchAvatar = useCallback(async () => {
+    try {
+      const res = await fetch('/api/account/profile')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.avatarUrl) setAvatarUrl(data.avatarUrl)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (session?.user) fetchAvatar()
+  }, [session, fetchAvatar])
+
   const userName = session?.user?.firstName || session?.user?.name?.split(' ')[0] || 'Usuario'
   const userEmail = session?.user?.email || ''
   const userInitial = userName.charAt(0).toUpperCase()
@@ -69,9 +85,15 @@ export default function AccountLayout({
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="w-8 h-8 bg-gradient-to-br from-[#111827] to-[#374151] rounded-full flex items-center justify-center text-white text-sm font-bold"
+              className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
             >
-              {userInitial}
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white text-sm font-bold">
+                  {userInitial}
+                </div>
+              )}
             </button>
 
             {/* Dropdown */}
@@ -147,8 +169,14 @@ export default function AccountLayout({
                 {/* User Info */}
                 <div className="p-4 border-b border-[#E5E7EB]">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#111827] to-[#374151] rounded-full flex items-center justify-center text-white text-lg font-bold">
-                      {userInitial}
+                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white text-lg font-bold">
+                          {userInitial}
+                        </div>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-[#111827] truncate">{userName}</p>
@@ -216,8 +244,14 @@ export default function AccountLayout({
           {/* User Info */}
           <div className="p-4 border-b border-[#E5E7EB]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#111827] to-[#374151] rounded-full flex items-center justify-center text-white font-bold">
-                {userInitial}
+              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white font-bold">
+                    {userInitial}
+                  </div>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-[#111827] text-sm truncate">{userName}</p>

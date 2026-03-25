@@ -16,6 +16,7 @@ export async function GET() {
         firstName: true,
         lastName: true,
         phone: true,
+        avatarUrl: true,
         createdAt: true,
         customerProfile: {
           select: {
@@ -36,6 +37,7 @@ export async function GET() {
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,
+      avatarUrl: user.avatarUrl,
       birthDate: user.customerProfile?.birthday?.toISOString().split('T')[0] || null,
       acceptsMarketing: user.customerProfile?.acceptsMarketing || false,
       createdAt: user.createdAt,
