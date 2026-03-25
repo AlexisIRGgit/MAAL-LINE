@@ -577,7 +577,7 @@ export function Navbar() {
                 <Link
                   href="/cuenta"
                   className={cn(
-                    'flex items-center gap-2 py-1.5 px-2 transition-colors',
+                    'flex items-center gap-2 py-1.5 px-4 transition-colors',
                     profileDropdownOpen
                       ? 'bg-white hover:bg-[#F3F4F6] rounded-t-2xl rounded-b-none shadow-xl'
                       : 'rounded-xl hover:bg-[#F3F4F6]'
@@ -631,7 +631,7 @@ export function Navbar() {
                       <button
                         onClick={() => signOut()}
                         className={cn(
-                          'flex items-center justify-center gap-2 w-full px-3 py-2 text-xs font-medium text-red-500',
+                          'flex items-center justify-center gap-2 w-full px-5 py-2 text-xs font-medium text-red-500',
                           'hover:bg-red-50 rounded-b-2xl transition-colors cursor-pointer whitespace-nowrap'
                         )}
                       >
