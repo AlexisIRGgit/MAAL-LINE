@@ -751,3 +751,31 @@ html[data-theme-vt='circle']::view-transition-new(root) {
   from { clip-path: circle(0px at var(--theme-vt-x, 50%) var(--theme-vt-y, 100%)); }
   to { clip-path: circle(var(--theme-vt-r, 150%) at var(--theme-vt-x, 50%) var(--theme-vt-y, 100%)); }
 }
+
+/* Floating home button halo: a soft radial glow that expands and fades.
+   A CSS loop (instead of a JS keyframe restart) avoids a solid flash between cycles. */
+.maal-halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  /* Solid under the button, then a soft falloff out to the halo's own edge */
+  background: radial-gradient(circle closest-side, rgba(255, 61, 0, 0.5) 60%, rgba(255, 61, 0, 0.26) 82%, rgba(255, 61, 0, 0) 100%);
+  opacity: 0;
+  transform: scale(1);
+  will-change: transform, opacity;
+  animation: maal-halo-pulse 2s cubic-bezier(0.33, 0, 0.2, 1) infinite;
+}
+.maal-halo--offset {
+  /* Negative delay starts it mid-cycle, so it never pops in at full strength */
+  animation-delay: -1s;
+}
+@keyframes maal-halo-pulse {
+  0% { transform: scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  55% { opacity: 0.7; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .maal-halo { animation: none; display: none; }
+}
