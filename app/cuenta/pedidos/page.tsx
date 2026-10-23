@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -108,6 +108,19 @@ export default function OrdersPage() {
     fetchOrders()
   }, [fetchOrders])
 
+  // Deep link from the summary page: /cuenta/pedidos?pedido=<orderNumber> opens that order
+  const deepLinkHandled = useRef(false)
+  useEffect(() => {
+    if (deepLinkHandled.current || loading || orders.length === 0) return
+    deepLinkHandled.current = true
+    const target = new URLSearchParams(window.location.search).get('pedido')
+    if (!target || !orders.some((order) => order.id === target)) return
+    setExpandedOrder(target)
+    requestAnimationFrame(() => {
+      document.getElementById(`pedido-${target}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+  }, [loading, orders])
+
   const filteredOrders = orders.filter((order) => {
     if (searchQuery && statusFilter === 'all') {
       return (
@@ -203,7 +216,8 @@ export default function OrdersPage() {
             return (
               <div
                 key={order.id}
-                className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden"
+                id={`pedido-${order.id}`}
+                className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden scroll-mt-24"
               >
                 {/* Order Header */}
                 <div

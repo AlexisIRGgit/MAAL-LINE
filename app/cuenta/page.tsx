@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   Package,
@@ -11,9 +12,17 @@ import {
   ChevronRight,
   ShoppingBag,
   Loader2,
+  ArrowUpRight,
+  MoveHorizontal,
+  Copy,
+  Eye,
+  Truck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-import { OrderStatusIndicator, toneStyles } from '@/components/account/order-status'
+import { toast } from '@/lib/toast'
+import { OrderStatusIndicator, toneStyles, type StatusTone } from '@/components/account/order-status'
+import { walletSurface, walletToneTile, WalletDecor, trackSpotlight } from '@/components/account/wallet-surface'
+import { SwipeableRow, type SwipeAction, type SwipeSide } from '@/components/account/swipeable-list'
 
 interface RecentOrder {
   id: string
@@ -59,6 +68,8 @@ export default function AccountPage() {
   const { data: session } = useSession()
   const [data, setData] = useState<SummaryData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [openRow, setOpenRow] = useState<{ id: string; side: SwipeSide } | null>(null)
+  const router = useRouter()
   const userName = session?.user?.firstName || session?.user?.name?.split(' ')[0] || 'Usuario'
 
   useEffect(() => {
@@ -79,16 +90,25 @@ export default function AccountPage() {
     fetchSummary()
   }, [])
 
-  const getActionConfig = (type: string) => {
+  const getActionConfig = (type: string): { href: string; label: string; icon: typeof Package; tone: StatusTone } => {
     switch (type) {
       case 'orders':
-        return { href: '/cuenta/pedidos', label: 'Mis Pedidos', icon: Package, color: toneStyles.blue.tile }
+        return { href: '/cuenta/pedidos', label: 'Mis Pedidos', icon: Package, tone: 'blue' }
       case 'addresses':
-        return { href: '/cuenta/direcciones', label: 'Direcciones', icon: MapPin, color: toneStyles.green.tile }
+        return { href: '/cuenta/direcciones', label: 'Direcciones', icon: MapPin, tone: 'green' }
       case 'wishlist':
-        return { href: '/wishlist', label: 'Lista de Deseos', icon: Heart, color: toneStyles.red.tile }
+        return { href: '/wishlist', label: 'Lista de Deseos', icon: Heart, tone: 'red' }
       default:
-        return { href: '/', label: type, icon: Package, color: toneStyles.neutral.tile }
+        return { href: '/', label: type, icon: Package, tone: 'neutral' }
+    }
+  }
+
+  const copyOrderId = async (orderId: string) => {
+    try {
+      await navigator.clipboard.writeText(orderId)
+      toast.success('Número de pedido copiado')
+    } catch {
+      toast.error('No se pudo copiar')
     }
   }
 
@@ -129,32 +149,47 @@ export default function AccountPage() {
             <Link
               key={action.type}
               href={config.href}
-              className="group bg-white border border-[#E5E7EB] rounded-2xl p-4 hover:shadow-lg dark:hover:shadow-none dark:hover:border-white/15 transition-all"
+              onMouseMove={trackSpotlight}
+              className={cn(
+                walletSurface,
+                'group block rounded-[20px] p-4 transition-transform duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3D00]/60'
+              )}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className={cn('p-2.5 rounded-xl', config.color)}>
+              <WalletDecor />
+              <div className="relative flex items-start justify-between mb-3">
+                <div className={cn('h-10 w-10 flex items-center justify-center rounded-xl border', walletToneTile[config.tone])}>
                   <config.icon className="w-5 h-5" />
                 </div>
                 {action.count > 0 && (
-                  <span className="min-w-[22px] px-1.5 py-0.5 text-center bg-[#111827] text-white dark:bg-white/10 dark:text-white dark:ring-1 dark:ring-white/10 text-xs font-bold tabular-nums rounded-full">
+                  <span className="min-w-[24px] px-1.5 py-0.5 text-center rounded-full bg-white/10 ring-1 ring-white/10 text-xs font-mono font-semibold tabular-nums">
                     {action.count}
                   </span>
                 )}
               </div>
-              <p className="font-semibold text-[#111827] text-sm group-hover:text-[#374151] transition-colors">
-                {config.label}
-              </p>
+              <div className="relative flex items-center justify-between gap-2">
+                <p className="font-display font-semibold text-sm truncate">{config.label}</p>
+                <ArrowUpRight className="w-4 h-4 flex-shrink-0 text-white/30 transition-all duration-300 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </div>
             </Link>
           )
         })}
       </motion.div>
 
       {/* Recent Orders */}
-      <motion.div variants={itemVariants} className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-[#E5E7EB] flex items-center justify-between">
+      <motion.div variants={itemVariants} className="space-y-3">
+        <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="text-base sm:text-lg font-semibold text-[#111827]">Pedidos Recientes</h2>
-            <p className="text-xs sm:text-sm text-[#6B7280]">Tus últimos pedidos</p>
+            <p className="text-xs sm:text-sm text-[#6B7280] flex items-center gap-1.5">
+              {recentOrders.length > 0 ? (
+                <>
+                  <MoveHorizontal className="w-3.5 h-3.5" />
+                  Desliza un pedido para ver acciones
+                </>
+              ) : (
+                'Tus últimos pedidos'
+              )}
+            </p>
           </div>
           <Link
             href="/cuenta/pedidos"
@@ -166,51 +201,61 @@ export default function AccountPage() {
         </div>
 
         {recentOrders.length > 0 ? (
-          <div className="divide-y divide-[#E5E7EB]">
+          <div className="flex flex-col gap-2">
             {recentOrders.map((order) => {
+              const orderHref = `/cuenta/pedidos?pedido=${encodeURIComponent(order.id)}`
+              const rightActions: SwipeAction[] = [
+                { id: 'copy', label: 'Copiar', icon: Copy, tone: 'neutral', onAction: () => copyOrderId(order.id) },
+                { id: 'view', label: 'Ver', icon: Eye, tone: 'primary', onAction: () => router.push(orderHref) },
+              ]
+              const leftActions: SwipeAction[] =
+                order.status === 'shipped'
+                  ? [{ id: 'track', label: 'Rastrear', icon: Truck, tone: 'success', onAction: () => router.push(orderHref) }]
+                  : []
+
               return (
-                <Link
+                <SwipeableRow
                   key={order.id}
-                  href={`/cuenta/pedidos/${order.id}`}
-                  className="flex items-center gap-4 p-4 sm:p-5 hover:bg-[#F9FAFB] transition-colors"
+                  label={`Pedido ${order.id}`}
+                  openSide={openRow?.id === order.id ? openRow.side : null}
+                  onOpenChange={(side) => setOpenRow(side ? { id: order.id, side } : null)}
+                  leftActions={leftActions}
+                  rightActions={rightActions}
+                  onSelect={() => router.push(orderHref)}
                 >
-                  {/* Order Image */}
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#F3F4F6] dark:ring-1 dark:ring-white/10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {order.image ? (
-                      <img
-                        src={order.image}
-                        alt={`Pedido ${order.id}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ShoppingBag className="w-6 h-6 text-[#9CA3AF]" />
-                    )}
-                  </div>
-
-                  {/* Order Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-[#111827] text-sm">{order.id}</span>
-                      <OrderStatusIndicator status={order.status} />
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-xl overflow-hidden bg-white/5 ring-1 ring-white/10 flex items-center justify-center flex-shrink-0">
+                      {order.image ? (
+                        <img
+                          src={order.image}
+                          alt={`Pedido ${order.id}`}
+                          draggable={false}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ShoppingBag className="w-5 h-5 text-white/40" />
+                      )}
                     </div>
-                    <p className="text-xs sm:text-sm text-[#6B7280] mt-0.5">
-                      {order.items} {order.items === 1 ? 'artículo' : 'artículos'} • {order.date}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-x-2.5 gap-y-0.5 flex-wrap">
+                        <span className="font-display font-semibold text-sm truncate">{order.id}</span>
+                        <OrderStatusIndicator status={order.status} />
+                      </div>
+                      <p className="text-xs text-white/50 mt-0.5">
+                        {order.items} {order.items === 1 ? 'artículo' : 'artículos'} • {order.date}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-display font-semibold tabular-nums">${order.total.toLocaleString()}</p>
+                      <p className="text-[8px] uppercase tracking-[0.2em] text-white/40">Total</p>
+                    </div>
                   </div>
-
-                  {/* Total */}
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-bold text-[#111827] text-sm sm:text-base">
-                      ${order.total.toLocaleString()}
-                    </p>
-                    <ChevronRight className="w-4 h-4 text-[#9CA3AF] ml-auto mt-1" />
-                  </div>
-                </Link>
+                </SwipeableRow>
               )
             })}
           </div>
         ) : (
-          <div className="p-8 text-center">
+          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 text-center">
             <Package className="w-12 h-12 text-[#D1D5DB] mx-auto mb-3" />
             <p className="text-[#6B7280] font-medium">No tienes pedidos aún</p>
             <p className="text-sm text-[#9CA3AF] mt-1">Cuando hagas tu primer pedido, aparecerá aquí</p>
