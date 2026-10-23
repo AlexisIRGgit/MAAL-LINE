@@ -2,20 +2,19 @@ import { cn } from '@/lib/utils/cn'
 import type { StatusTone } from '@/components/account/order-status'
 
 /**
- * Shared look of the wallet-style account cards (see address-card.tsx):
- * a cool-black gradient that stays dark in both themes. The `dark` class
- * scopes Tailwind dark: variants inside, so shared tone styles render their dark tuning.
+ * Wallet-style card surface (same family as address-card.tsx): a soft light gradient
+ * in light mode and the help banner's slate gradient (#111827 -> #374151) in dark mode.
  */
-export const walletSurface =
-  'dark relative overflow-hidden bg-gradient-to-br from-[#16181D] via-[#0E0F13] to-[#0A0A0A] text-white shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)] ring-1 ring-white/[0.06]'
+export const walletSurfaceAdaptive =
+  'relative overflow-hidden bg-gradient-to-br from-white via-[#FAFAFB] to-[#F1F2F5] text-[#111827] shadow-[0_8px_24px_-16px_rgba(17,24,39,0.25)] ring-1 ring-black/[0.06] dark:bg-gradient-to-r dark:from-[#111827] dark:via-[#242C3C] dark:to-[#374151] dark:text-white dark:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)] dark:ring-white/[0.06]'
 
 // Icon tiles with a soft glow in the tone color
-export const walletToneTile: Record<StatusTone, string> = {
-  amber: 'bg-amber-400/10 border-amber-400/25 text-amber-300 shadow-[0_0_16px_-4px_rgba(251,191,36,0.45)]',
-  blue: 'bg-sky-400/10 border-sky-400/25 text-sky-300 shadow-[0_0_16px_-4px_rgba(56,189,248,0.45)]',
-  green: 'bg-emerald-400/10 border-emerald-400/25 text-emerald-300 shadow-[0_0_16px_-4px_rgba(52,211,153,0.45)]',
-  red: 'bg-rose-400/10 border-rose-400/25 text-rose-300 shadow-[0_0_16px_-4px_rgba(251,113,133,0.45)]',
-  neutral: 'bg-white/5 border-white/10 text-white/70',
+export const walletToneTileAdaptive: Record<StatusTone, string> = {
+  amber: 'bg-amber-50 border-amber-200 text-amber-600 shadow-[0_0_16px_-6px_rgba(245,158,11,0.45)] dark:bg-amber-400/10 dark:border-amber-400/25 dark:text-amber-300',
+  blue: 'bg-sky-50 border-sky-200 text-sky-600 shadow-[0_0_16px_-6px_rgba(14,165,233,0.45)] dark:bg-sky-400/10 dark:border-sky-400/25 dark:text-sky-300',
+  green: 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-[0_0_16px_-6px_rgba(16,185,129,0.45)] dark:bg-emerald-400/10 dark:border-emerald-400/25 dark:text-emerald-300',
+  red: 'bg-rose-50 border-rose-200 text-rose-600 shadow-[0_0_16px_-6px_rgba(244,63,94,0.45)] dark:bg-rose-400/10 dark:border-rose-400/25 dark:text-rose-300',
+  neutral: 'bg-black/[0.03] border-black/10 text-[#6B7280] dark:bg-white/5 dark:border-white/10 dark:text-white/70',
 }
 
 /** Inner dashed frame and cursor spotlight; place inside a `group` wallet surface. */
@@ -29,7 +28,10 @@ export function WalletDecor({ radius = 'rounded-[15px]', spotlight = true }: { r
           style={{ background: 'radial-gradient(200px circle at var(--x, 50%) var(--y, 50%), rgba(255,61,0,0.12), transparent 65%)' }}
         />
       )}
-      <div aria-hidden className={cn('pointer-events-none absolute inset-1.5 border border-dashed border-white/[0.08]', radius)} />
+      <div
+        aria-hidden
+        className={cn('pointer-events-none absolute inset-1.5 border border-dashed border-black/[0.08] dark:border-white/[0.08]', radius)}
+      />
     </>
   )
 }

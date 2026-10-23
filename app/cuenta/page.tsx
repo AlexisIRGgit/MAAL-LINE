@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils/cn'
 import { toast } from '@/lib/toast'
 import { getOrderStatus, toneStyles, type StatusTone } from '@/components/account/order-status'
-import { walletSurface, walletToneTile, WalletDecor, trackSpotlight } from '@/components/account/wallet-surface'
+import { walletSurfaceAdaptive, walletToneTileAdaptive, WalletDecor, trackSpotlight } from '@/components/account/wallet-surface'
 import { SwipeableRow, type SwipeAction, type SwipeSide } from '@/components/account/swipeable-list'
 
 interface RecentOrder {
@@ -152,24 +152,24 @@ export default function AccountPage() {
               href={config.href}
               onMouseMove={trackSpotlight}
               className={cn(
-                walletSurface,
+                walletSurfaceAdaptive,
                 'group block rounded-[20px] p-4 transition-transform duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3D00]/60'
               )}
             >
               <WalletDecor />
               <div className="relative flex items-start justify-between mb-3">
-                <div className={cn('h-10 w-10 flex items-center justify-center rounded-xl border', walletToneTile[config.tone])}>
+                <div className={cn('h-10 w-10 flex items-center justify-center rounded-xl border', walletToneTileAdaptive[config.tone])}>
                   <config.icon className="w-5 h-5" />
                 </div>
                 {action.count > 0 && (
-                  <span className="min-w-[24px] px-1.5 py-0.5 text-center rounded-full bg-white/10 ring-1 ring-white/10 text-xs font-mono font-semibold tabular-nums">
+                  <span className="min-w-[24px] px-1.5 py-0.5 text-center rounded-full bg-black/[0.05] ring-1 ring-black/[0.06] dark:bg-white/10 dark:ring-white/10 text-xs font-mono font-semibold tabular-nums">
                     {action.count}
                   </span>
                 )}
               </div>
               <div className="relative flex items-center justify-between gap-2">
                 <p className="font-display font-semibold text-sm truncate">{config.label}</p>
-                <ArrowUpRight className="w-4 h-4 flex-shrink-0 text-white/30 transition-all duration-300 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                <ArrowUpRight className="w-4 h-4 flex-shrink-0 text-black/30 dark:text-white/30 transition-all duration-300 group-hover:text-[#111827] dark:group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </div>
             </Link>
           )
@@ -310,7 +310,7 @@ export default function AccountPage() {
       {/* Help Banner */}
       <motion.div
         variants={itemVariants}
-        className="bg-gradient-to-r from-[#111827] to-[#374151] dark:from-[#1C1F26] dark:via-[#13151A] dark:to-[#0E0F13] dark:ring-1 dark:ring-white/10 rounded-2xl p-5 sm:p-6 text-white"
+        className="bg-gradient-to-r from-[#111827] to-[#374151] dark:ring-1 dark:ring-white/10 rounded-2xl p-5 sm:p-6 text-white"
       >
         <h3 className="font-semibold text-lg mb-1">¿Necesitas ayuda?</h3>
         <p className="text-white/70 text-sm mb-4">
