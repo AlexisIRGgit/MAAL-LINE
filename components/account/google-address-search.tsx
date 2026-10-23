@@ -29,8 +29,14 @@ export function GoogleAddressSearch({ onSelect }: { onSelect: (place: ParsedPlac
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null)
   const placesRef = useRef<google.maps.PlacesLibrary | null>(null)
   const requestId = useRef(0)
+  // Filling the input with the chosen address must not trigger a new search
+  const skipNextQuery = useRef(false)
 
   useEffect(() => {
+    if (skipNextQuery.current) {
+      skipNextQuery.current = false
+      return
+    }
     const trimmed = query.trim()
     if (trimmed.length < 3) {
       setSuggestions([])
@@ -84,6 +90,7 @@ export function GoogleAddressSearch({ onSelect }: { onSelect: (place: ParsedPlac
       const parsed = parsePlace(place)
       if (parsed) {
         onSelect(parsed)
+        skipNextQuery.current = true
         setQuery(parsed.formattedAddress || suggestion.main)
         setSuggestions([])
       }

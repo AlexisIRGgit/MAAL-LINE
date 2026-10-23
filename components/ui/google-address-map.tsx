@@ -79,7 +79,8 @@ export function GoogleAddressMap({
             const point = position instanceof google.maps.LatLng ? position : new google.maps.LatLng(position)
             onPositionChangeRef.current?.({ latitude: point.lat(), longitude: point.lng() })
           }
-          listeners.push(marker.addListener('dragend', report))
+          // Advanced markers emit DOM events ('gmp-dragend') instead of Maps listeners
+          marker.addEventListener('gmp-dragend', report)
           listeners.push(
             map.addListener('click', (event: google.maps.MapMouseEvent) => {
               if (!event.latLng) return
