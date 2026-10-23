@@ -8,6 +8,7 @@ import { LogOut, Heart, X, Loader2, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Logo } from '@/components/common/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { MobileMenuSheet } from '@/components/navigation/mobile-menu-sheet'
 import { useCartStore, selectCartItems } from '@/lib/store/cart-store'
 import { useAuthModalStore } from '@/lib/store/auth-modal-store'
 import { cn } from '@/lib/utils/cn'
@@ -94,6 +95,8 @@ export function Navbar() {
   const { data: session } = useSession()
   const [freshAvatarUrl, setFreshAvatarUrl] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null)
+  const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), [])
   const [mounted, setMounted] = useState(false)
   const openCart = useCartStore((state) => state.openCart)
   const items = useCartStore(selectCartItems)
@@ -288,8 +291,10 @@ export function Navbar() {
             {/* Mobile Menu Toggle */}
             <button
               className="lg:hidden p-2 -ml-2 text-[#111827] hover:text-[#6B7280] transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Abrir menu"
+              ref={mobileMenuTriggerRef}
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Abrir menú"
+              aria-expanded={isMobileMenuOpen}
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
@@ -711,71 +716,30 @@ export function Navbar() {
           </div>
         </nav>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-[#E5E7EB] bg-white">
-            <div className="container mx-auto px-4 py-6 space-y-4">
-              {NAV_LINKS.map(({ href, label, highlight }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    'block text-sm font-bold tracking-[0.15em] uppercase',
-                    highlight ? 'text-[#111827]' : 'text-[#6B7280]'
-                  )}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {label}
-                </Link>
-              ))}
-
-              {/* Account & Wishlist links in mobile */}
-              <div className="pt-4 border-t border-[#E5E7EB] space-y-4">
-                <Link
-                  href="/wishlist"
-                  className="block text-sm font-bold tracking-[0.15em] uppercase text-[#6B7280]"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  LISTA DE DESEOS
-                </Link>
-                {session ? (
-                  <Link
-                    href="/cuenta"
-                    className="flex items-center gap-3"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <UserAvatar
-                      firstName={session.user.firstName}
-                      lastName={session.user.lastName}
-                      avatarUrl={resolvedAvatarUrl}
-                      size={36}
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold tracking-[0.05em] text-[#111827]">
-                        {session.user.firstName ?? 'Mi cuenta'}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                        <span className="text-xs text-[#9CA3AF]">Cuenta</span>
-                      </span>
-                    </div>
-                  </Link>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false)
-                      openAuthModal()
-                    }}
-                    className="block text-sm font-bold tracking-[0.15em] uppercase text-[#6B7280]"
-                  >
-                    INICIAR SESION
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
       </header>
+
+      {/* Mobile Menu: same side sheet as the account panel */}
+      <MobileMenuSheet
+        open={isMobileMenuOpen}
+        onClose={closeMobileMenu}
+        triggerRef={mobileMenuTriggerRef}
+        user={session ? { name: session.user.firstName ?? 'Mi cuenta', email: session.user.email } : null}
+        avatar={
+          session ? (
+            <UserAvatar
+              firstName={session.user.firstName}
+              lastName={session.user.lastName}
+              avatarUrl={resolvedAvatarUrl}
+              size={48}
+            />
+          ) : null
+        }
+        onSignIn={() => {
+          setIsMobileMenuOpen(false)
+          openAuthModal()
+        }}
+        onSignOut={() => signOut()}
+      />
     </>
   )
 }

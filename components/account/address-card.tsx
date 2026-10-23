@@ -98,6 +98,21 @@ export function AddressCard({
     cardRef.current?.style.setProperty('--y', `${event.clientY - rect.top}px`)
   }
 
+  // Tapping anywhere on the card edits it; its own buttons (principal, edit, delete) keep their action
+  const handleCardClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (isDeleteConfirmOpen) return
+    if ((event.target as HTMLElement).closest('button, a')) return
+    onEdit()
+  }
+
+  const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget || isDeleteConfirmOpen) return
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onEdit()
+    }
+  }
+
   return (
     <motion.div
       ref={cardRef}
@@ -110,8 +125,12 @@ export function AddressCard({
       onMouseMove={handleMouseMove}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      tabIndex={0}
+      aria-label={`Editar dirección ${address.label}: ${address.street} ${address.number}`.trim()}
       className={cn(
-        'group relative flex flex-col min-w-0 overflow-hidden rounded-[20px] bg-gradient-to-br from-[#16181D] via-[#0E0F13] to-[#0A0A0A] p-4 text-white',
+        'group relative flex flex-col min-w-0 overflow-hidden rounded-[20px] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#FF3D00]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F5F7] dark:focus-visible:ring-offset-[#0E0F13] bg-gradient-to-br from-[#16181D] via-[#0E0F13] to-[#0A0A0A] p-4 text-white',
         'min-h-[180px] sm:min-h-0 sm:aspect-[1.75/1] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)]',
         address.isDefault ? 'ring-1 ring-[#FF3D00]/40' : 'dark:ring-1 dark:ring-white/10'
       )}
