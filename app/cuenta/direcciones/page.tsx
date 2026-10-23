@@ -2,17 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  MapPin,
-  Plus,
-  Home,
-  Building2,
-  Check,
-  X,
-  Loader2,
-} from 'lucide-react'
+import { Plus, Loader2 } from 'lucide-react'
 import { toast } from '@/lib/toast'
 import { AddressCard, AddAddressCard, type Address } from '@/components/account/address-card'
+import { AddressWizard } from '@/components/account/address-wizard'
+import { CenterMorphModal } from '@/components/ui/center-morph-modal'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -31,6 +25,8 @@ export default function AddressesPage() {
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  // New key per opening so the wizard always starts at step 1
+  const [wizardKey, setWizardKey] = useState(0)
 
   const [formData, setFormData] = useState<Partial<Address>>({
     type: 'home',
@@ -89,6 +85,7 @@ export default function AddressesPage() {
         isDefault: addresses.length === 0,
       })
     }
+    setWizardKey((key) => key + 1)
     setShowModal(true)
   }
 
@@ -244,205 +241,22 @@ export default function AddressesPage() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center sm:p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowModal(false)}
-              className="fixed inset-0 bg-black/50"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg bg-white sm:rounded-2xl shadow-xl overflow-y-auto"
-            >
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b border-[#E5E7EB] px-4 sm:px-6 py-4 flex items-center justify-between z-10">
-                <h2 className="text-lg font-bold text-[#111827]">
-                  {editingAddress ? 'Editar dirección' : 'Nueva dirección'}
-                </h2>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="p-2 text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              <div className="p-4 sm:p-6 space-y-4">
-                {/* Type Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-[#374151] mb-2">Tipo de dirección</label>
-                  <div className="flex gap-2">
-                    {[
-                      { value: 'home', label: 'Casa', icon: Home },
-                      { value: 'work', label: 'Oficina', icon: Building2 },
-                      { value: 'other', label: 'Otro', icon: MapPin },
-                    ].map((type) => (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, type: type.value as Address['type'], label: type.label })}
-                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                          formData.type === type.value
-                            ? 'border-[#111827] bg-[#111827] text-white'
-                            : 'border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB]'
-                        }`}
-                      >
-                        <type.icon className="w-4 h-4" />
-                        {type.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Contact Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Nombre completo</label>
-                    <input
-                      type="text"
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="Tu nombre completo"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Teléfono</label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="+52 55 1234 5678"
-                    />
-                  </div>
-                </div>
-
-                {/* Address */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Calle</label>
-                    <input
-                      type="text"
-                      value={formData.street}
-                      onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="Av. Reforma"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Número</label>
-                    <input
-                      type="text"
-                      value={formData.number}
-                      onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="123"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Interior (opcional)</label>
-                    <input
-                      type="text"
-                      value={formData.interior}
-                      onChange={(e) => setFormData({ ...formData, interior: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="Depto 4B"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Colonia</label>
-                    <input
-                      type="text"
-                      value={formData.neighborhood}
-                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="Col. Centro"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Ciudad</label>
-                    <input
-                      type="text"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="CDMX"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Estado</label>
-                    <input
-                      type="text"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="CDMX"
-                    />
-                  </div>
-                  <div className="col-span-2 sm:col-span-1">
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Código Postal</label>
-                    <input
-                      type="text"
-                      value={formData.zipCode}
-                      onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-                      placeholder="06600"
-                    />
-                  </div>
-                </div>
-
-                {/* Default Checkbox */}
-                <label className="flex items-center gap-3 p-3 bg-[#F9FAFB] rounded-xl cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isDefault}
-                    onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
-                    className="w-4 h-4 rounded border-[#D1D5DB] text-[#111827] focus:ring-[#111827] focus:ring-offset-0"
-                  />
-                  <span className="text-sm text-[#374151]">Usar como dirección principal</span>
-                </label>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-white border-t border-[#E5E7EB] px-4 sm:px-6 py-4 flex gap-3">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-xl hover:bg-[#F9FAFB] transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isLoading || !formData.fullName || !formData.street || !formData.city}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors disabled:opacity-50"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Check className="w-4 h-4" />
-                  )}
-                  {editingAddress ? 'Guardar cambios' : 'Agregar dirección'}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Add / edit address: center morph modal with a step-by-step wizard */}
+      <CenterMorphModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        labelledBy="address-wizard-title"
+        className="max-w-[30rem]"
+      >
+        <AddressWizard
+          key={wizardKey}
+          formData={formData}
+          onChange={(patch) => setFormData((prev) => ({ ...prev, ...patch }))}
+          onSubmit={handleSave}
+          isSaving={isLoading}
+          isEditing={!!editingAddress}
+        />
+      </CenterMorphModal>
     </motion.div>
   )
 }

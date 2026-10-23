@@ -779,3 +779,78 @@ html[data-theme-vt='circle']::view-transition-new(root) {
 @media (prefers-reduced-motion: reduce) {
   .maal-halo { animation: none; display: none; }
 }
+
+/* Address map pin (components/ui/address-map.tsx): brand dot with a soft pulse and a label */
+.maal-map-pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+.maal-map-pin__dot {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #FF3D00;
+  border: 3px solid #FFFFFF;
+  box-shadow: 0 4px 12px rgba(255, 61, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.maal-map-pin__pulse {
+  position: absolute;
+  inset: -10px;
+  border-radius: 9999px;
+  background: radial-gradient(circle closest-side, rgba(255, 61, 0, 0.35) 55%, rgba(255, 61, 0, 0) 100%);
+  animation: maal-pin-pulse 2s cubic-bezier(0.33, 0, 0.2, 1) infinite;
+}
+.maal-map-pin__label {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: #111827;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.maal-map-pin__label:empty {
+  display: none;
+}
+@keyframes maal-pin-pulse {
+  0% { transform: scale(0.6); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .maal-map-pin__pulse { animation: none; opacity: 0.6; }
+}
+
+/* MapLibre controls in dark mode, matching the lifted modal panel.
+   html.dark (not :where) because maplibre-gl.css loads after this file with equal specificity. */
+html.dark .maplibregl-ctrl-group {
+  background: #2A2E37;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+html.dark .maplibregl-ctrl-group button + button {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+html.dark .maplibregl-ctrl button .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+html.dark .maplibregl-ctrl-attrib,
+html.dark .maplibregl-ctrl-attrib.maplibregl-compact {
+  background: rgba(34, 37, 45, 0.85);
+  color: #9CA3AF;
+}
+html.dark .maplibregl-ctrl-attrib a {
+  color: #D1D5DB;
+}
+html.dark .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+  background-color: transparent;
+}

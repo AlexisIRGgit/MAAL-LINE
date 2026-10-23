@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { useModalA11y } from '@/hooks/use-modal-a11y'
 
 // The panel unfolds from the center by animating its clip-path. A tween (not a spring)
 // keeps the rounded clip string from snapping at the end of the animation.
@@ -12,9 +13,6 @@ const FOLDED_CLIP = 'inset(48% 48% 48% 48% round 30px)'
 const OPEN_CLIP = 'inset(0% 0% 0% 0% round 30px)'
 const UNFOLD_TRANSITION = { duration: 0.43, ease: [0.2, 0, 0.2, 1] } as const
 const EASE_OUT = [0.16, 1, 0.3, 1] as const
-
-const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
 
 export function CenterMorphModal({
   open,
@@ -35,56 +33,10 @@ export function CenterMorphModal({
 }) {
   const reduceMotion = useReducedMotion()
   const panelRef = useRef<HTMLDivElement>(null)
-  const restoreFocusTo = useRef<HTMLElement | null>(null)
   const [mounted, setMounted] = useState(false)
-  // Callers usually pass an inline onClose; keep the latest without re-running the open effect
-  const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
 
   useEffect(() => setMounted(true), [])
-
-  // Focus the first focusable element, trap Tab, close on Escape, lock scroll,
-  // and return focus to whatever opened the modal
-  useEffect(() => {
-    if (!open) return
-    restoreFocusTo.current = returnFocusRef?.current ?? (document.activeElement as HTMLElement | null)
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    const frame = requestAnimationFrame(() => {
-      const panel = panelRef.current
-      const first = panel?.querySelector<HTMLElement>(FOCUSABLE)
-      ;(first ?? panel)?.focus()
-    })
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        onCloseRef.current()
-        return
-      }
-      if (event.key !== 'Tab' || !panelRef.current) return
-      const focusables = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE))
-      if (focusables.length === 0) return
-      const first = focusables[0]
-      const last = focusables[focusables.length - 1]
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = previousOverflow
-      restoreFocusTo.current?.focus()
-    }
-  }, [open, returnFocusRef])
+  useModalA11y({ open, panelRef, onClose, returnFocusRef })
 
   if (!mounted) return null
 

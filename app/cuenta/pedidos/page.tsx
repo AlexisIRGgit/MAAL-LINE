@@ -29,6 +29,8 @@ import {
   IndicatorDivider,
 } from '@/components/account/order-status'
 import { CenterMorphModal } from '@/components/ui/center-morph-modal'
+import { BottomSheet } from '@/components/ui/bottom-sheet'
+import { useMediaQuery } from '@/hooks/use-media-query'
 
 interface OrderItem {
   name: string
@@ -87,6 +89,9 @@ export default function OrdersPage() {
   if (selectedOrder) lastSelectedOrder.current = selectedOrder
   const modalOrder = selectedOrder ?? lastSelectedOrder.current
   const detailsTriggerRef = useRef<HTMLButtonElement | null>(null)
+  // Phones get a bottom sheet; larger screens keep the center morph modal
+  const isMobile = useMediaQuery('(max-width: 767px)')
+  const DetailsDialog = isMobile ? BottomSheet : CenterMorphModal
   const [copied, setCopied] = useState(false)
 
   const fetchOrders = useCallback(async () => {
@@ -371,14 +376,14 @@ export default function OrdersPage() {
       </motion.div>
 
       {/* Order Details Modal */}
-      <CenterMorphModal
+      <DetailsDialog
         open={!!selectedOrder}
         onClose={() => setSelectedOrder(null)}
         labelledBy="order-details-title"
         returnFocusRef={detailsTriggerRef}
       >
         {modalOrder && (
-          <div className="p-6 space-y-6">
+          <div className={cn('p-6 space-y-6', isMobile && 'pt-1')}>
             {/* Header */}
             <div className="pr-10">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#9CA3AF]">Detalles del pedido</p>
@@ -514,7 +519,7 @@ export default function OrdersPage() {
             </div>
           </div>
         )}
-      </CenterMorphModal>
+      </DetailsDialog>
     </motion.div>
   )
 }
