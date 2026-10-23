@@ -137,7 +137,9 @@ function SidebarNav({
               aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'relative flex items-center gap-3 h-11 px-3 rounded-xl text-sm transition-colors duration-200 outline-none',
-                isActive ? 'text-white dark:text-[#0A0A0A] font-semibold' : 'text-[#6B7280] hover:text-[#111827] focus-visible:text-[#111827]'
+                isActive
+                  ? 'text-white dark:text-[#0A0A0A] font-semibold'
+                  : 'text-[#6B7280] hover:text-[#111827] focus-visible:text-[#111827] dark:text-[#9CA3AF] dark:hover:text-white dark:focus-visible:text-white'
               )}
             >
               {isActive && (
@@ -155,7 +157,7 @@ function SidebarNav({
                     animate={{ opacity: 1, filter: 'blur(0px)' }}
                     exit={{ opacity: 0, transition: { duration: 0.12 } }}
                     transition={transition}
-                    className="absolute inset-0 rounded-xl bg-[#F3F4F6]"
+                    className="absolute inset-0 rounded-xl bg-[#F3F4F6] dark:bg-white/[0.06] dark:ring-1 dark:ring-white/[0.06]"
                   />
                 )}
               </AnimatePresence>

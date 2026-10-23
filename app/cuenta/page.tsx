@@ -9,12 +9,11 @@ import {
   MapPin,
   Heart,
   ChevronRight,
-  Clock,
-  Truck,
-  CheckCircle,
   ShoppingBag,
   Loader2,
 } from 'lucide-react'
+import { cn } from '@/lib/utils/cn'
+import { OrderStatusIndicator, toneStyles } from '@/components/account/order-status'
 
 interface RecentOrder {
   id: string
@@ -80,29 +79,16 @@ export default function AccountPage() {
     fetchSummary()
   }, [])
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'processing':
-        return { label: 'En proceso', icon: Clock, color: 'text-amber-600 bg-amber-50' }
-      case 'shipped':
-        return { label: 'En camino', icon: Truck, color: 'text-blue-600 bg-blue-50' }
-      case 'delivered':
-        return { label: 'Entregado', icon: CheckCircle, color: 'text-green-600 bg-green-50' }
-      default:
-        return { label: status, icon: Package, color: 'text-gray-600 bg-gray-50' }
-    }
-  }
-
   const getActionConfig = (type: string) => {
     switch (type) {
       case 'orders':
-        return { href: '/cuenta/pedidos', label: 'Mis Pedidos', icon: Package, color: 'bg-blue-50 text-blue-600' }
+        return { href: '/cuenta/pedidos', label: 'Mis Pedidos', icon: Package, color: toneStyles.blue.tile }
       case 'addresses':
-        return { href: '/cuenta/direcciones', label: 'Direcciones', icon: MapPin, color: 'bg-green-50 text-green-600' }
+        return { href: '/cuenta/direcciones', label: 'Direcciones', icon: MapPin, color: toneStyles.green.tile }
       case 'wishlist':
-        return { href: '/wishlist', label: 'Lista de Deseos', icon: Heart, color: 'bg-red-50 text-red-600' }
+        return { href: '/wishlist', label: 'Lista de Deseos', icon: Heart, color: toneStyles.red.tile }
       default:
-        return { href: '/', label: type, icon: Package, color: 'bg-gray-50 text-gray-600' }
+        return { href: '/', label: type, icon: Package, color: toneStyles.neutral.tile }
     }
   }
 
@@ -143,14 +129,14 @@ export default function AccountPage() {
             <Link
               key={action.type}
               href={config.href}
-              className="group bg-white border border-[#E5E7EB] rounded-2xl p-4 hover:shadow-lg transition-all"
+              className="group bg-white border border-[#E5E7EB] rounded-2xl p-4 hover:shadow-lg dark:hover:shadow-none dark:hover:border-white/15 transition-all"
             >
               <div className="flex items-start justify-between mb-3">
-                <div className={`p-2.5 rounded-xl ${config.color}`}>
+                <div className={cn('p-2.5 rounded-xl', config.color)}>
                   <config.icon className="w-5 h-5" />
                 </div>
                 {action.count > 0 && (
-                  <span className="px-2 py-0.5 bg-[#111827] text-white text-xs font-bold rounded-full">
+                  <span className="min-w-[22px] px-1.5 py-0.5 text-center bg-[#111827] text-white dark:bg-white/10 dark:text-white dark:ring-1 dark:ring-white/10 text-xs font-bold tabular-nums rounded-full">
                     {action.count}
                   </span>
                 )}
@@ -182,7 +168,6 @@ export default function AccountPage() {
         {recentOrders.length > 0 ? (
           <div className="divide-y divide-[#E5E7EB]">
             {recentOrders.map((order) => {
-              const statusInfo = getStatusInfo(order.status)
               return (
                 <Link
                   key={order.id}
@@ -190,7 +175,7 @@ export default function AccountPage() {
                   className="flex items-center gap-4 p-4 sm:p-5 hover:bg-[#F9FAFB] transition-colors"
                 >
                   {/* Order Image */}
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#F3F4F6] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#F3F4F6] dark:ring-1 dark:ring-white/10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
                     {order.image ? (
                       <img
                         src={order.image}
@@ -206,10 +191,7 @@ export default function AccountPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-[#111827] text-sm">{order.id}</span>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                        <statusInfo.icon className="w-3 h-3" />
-                        <span className="hidden sm:inline">{statusInfo.label}</span>
-                      </span>
+                      <OrderStatusIndicator status={order.status} />
                     </div>
                     <p className="text-xs sm:text-sm text-[#6B7280] mt-0.5">
                       {order.items} {order.items === 1 ? 'artículo' : 'artículos'} • {order.date}
@@ -254,8 +236,8 @@ export default function AccountPage() {
           </div>
           {defaultAddress ? (
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <MapPin className="w-4 h-4 text-green-600" />
+              <div className={cn('p-2 rounded-lg', toneStyles.green.tile)}>
+                <MapPin className="w-4 h-4" />
               </div>
               <div className="text-sm">
                 <p className="text-[#111827] font-medium">{defaultAddress.label}</p>
@@ -267,8 +249,8 @@ export default function AccountPage() {
             </div>
           ) : (
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <MapPin className="w-4 h-4 text-gray-400" />
+              <div className={cn('p-2 rounded-lg', toneStyles.neutral.tile)}>
+                <MapPin className="w-4 h-4" />
               </div>
               <div className="text-sm">
                 <p className="text-[#6B7280]">No tienes una dirección principal</p>
@@ -287,7 +269,7 @@ export default function AccountPage() {
       {/* Help Banner */}
       <motion.div
         variants={itemVariants}
-        className="bg-gradient-to-r from-[#111827] to-[#374151] rounded-2xl p-5 sm:p-6 text-white"
+        className="bg-gradient-to-r from-[#111827] to-[#374151] dark:from-[#1C1F26] dark:via-[#13151A] dark:to-[#0E0F13] dark:ring-1 dark:ring-white/10 rounded-2xl p-5 sm:p-6 text-white"
       >
         <h3 className="font-semibold text-lg mb-1">¿Necesitas ayuda?</h3>
         <p className="text-white/70 text-sm mb-4">
@@ -296,7 +278,7 @@ export default function AccountPage() {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/contacto"
-            className="px-4 py-2 bg-white text-[#111827] text-sm font-semibold rounded-xl hover:bg-[#F3F4F6] transition-colors"
+            className="px-4 py-2 bg-white text-[#111827] dark:bg-[#F5F5F5] dark:text-[#0A0A0A] dark:hover:bg-white text-sm font-semibold rounded-xl hover:bg-[#F3F4F6] transition-colors"
           >
             Contactar soporte
           </Link>

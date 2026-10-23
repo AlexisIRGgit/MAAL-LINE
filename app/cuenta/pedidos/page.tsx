@@ -7,10 +7,7 @@ import {
   Package,
   Search,
   ChevronRight,
-  Clock,
   Truck,
-  CheckCircle,
-  XCircle,
   ShoppingBag,
   ChevronDown,
   Eye,
@@ -24,6 +21,14 @@ import {
   Copy,
   Check,
 } from 'lucide-react'
+import { cn } from '@/lib/utils/cn'
+import {
+  getOrderStatus,
+  toneStyles,
+  OrderStatusIndicator,
+  PaidIndicator,
+  IndicatorDivider,
+} from '@/components/account/order-status'
 
 interface OrderItem {
   name: string
@@ -113,21 +118,6 @@ export default function OrdersPage() {
     return true
   })
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'processing':
-        return { label: 'En proceso', icon: Clock, color: 'text-amber-600 bg-amber-50', dot: 'bg-amber-500' }
-      case 'shipped':
-        return { label: 'En camino', icon: Truck, color: 'text-blue-600 bg-blue-50', dot: 'bg-blue-500' }
-      case 'delivered':
-        return { label: 'Entregado', icon: CheckCircle, color: 'text-green-600 bg-green-50', dot: 'bg-green-500' }
-      case 'cancelled':
-        return { label: 'Cancelado', icon: XCircle, color: 'text-red-600 bg-red-50', dot: 'bg-red-500' }
-      default:
-        return { label: status, icon: Package, color: 'text-gray-600 bg-gray-50', dot: 'bg-gray-500' }
-    }
-  }
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     setCopied(true)
@@ -158,19 +148,19 @@ export default function OrdersPage() {
       {/* Stats */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4">
-          <p className="text-xl sm:text-2xl font-bold text-[#111827]">{stats.total}</p>
+          <p className="text-xl sm:text-2xl font-bold tabular-nums text-[#111827]">{stats.total}</p>
           <p className="text-xs sm:text-sm text-[#6B7280]">Total pedidos</p>
         </div>
         <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4">
-          <p className="text-xl sm:text-2xl font-bold text-amber-600">{stats.processing}</p>
+          <p className={cn('text-xl sm:text-2xl font-bold tabular-nums', toneStyles.amber.text)}>{stats.processing}</p>
           <p className="text-xs sm:text-sm text-[#6B7280]">En proceso</p>
         </div>
         <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4">
-          <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats.shipped}</p>
+          <p className={cn('text-xl sm:text-2xl font-bold tabular-nums', toneStyles.blue.text)}>{stats.shipped}</p>
           <p className="text-xs sm:text-sm text-[#6B7280]">En camino</p>
         </div>
         <div className="bg-white border border-[#E5E7EB] rounded-xl p-3 sm:p-4">
-          <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.delivered}</p>
+          <p className={cn('text-xl sm:text-2xl font-bold tabular-nums', toneStyles.green.text)}>{stats.delivered}</p>
           <p className="text-xs sm:text-sm text-[#6B7280]">Entregados</p>
         </div>
       </motion.div>
@@ -207,7 +197,7 @@ export default function OrdersPage() {
       <motion.div variants={itemVariants} className="space-y-4">
         {filteredOrders.length > 0 ? (
           filteredOrders.map((order) => {
-            const statusInfo = getStatusInfo(order.status)
+            const statusInfo = getOrderStatus(order.status)
             const isExpanded = expandedOrder === order.id
 
             return (
@@ -222,23 +212,22 @@ export default function OrdersPage() {
                 >
                   <div className="flex items-center gap-4">
                     {/* Icon */}
-                    <div className={`p-3 rounded-xl ${statusInfo.color} flex-shrink-0`}>
+                    <div className={cn('p-3 rounded-xl flex-shrink-0', toneStyles[statusInfo.tone].tile)}>
                       <statusInfo.icon className="w-5 h-5" />
                     </div>
 
                     {/* Order Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
                         <span className="font-bold text-[#111827]">{order.id}</span>
-                        {order.paymentStatus === 'paid' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                            <CheckCircle className="w-3 h-3" />
-                            Pagado
-                          </span>
-                        )}
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
-                          {statusInfo.label}
+                        <span className="inline-flex items-center gap-2.5">
+                          {order.paymentStatus === 'paid' && (
+                            <>
+                              <PaidIndicator />
+                              <IndicatorDivider />
+                            </>
+                          )}
+                          <OrderStatusIndicator status={order.status} />
                         </span>
                       </div>
                       <p className="text-sm text-[#6B7280] mt-0.5">
@@ -396,20 +385,9 @@ export default function OrdersPage() {
                 {/* Status & Date */}
                 <div className="flex flex-wrap items-center gap-3">
                   {selectedOrder.paymentStatus === 'paid' && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-700">
-                      <CheckCircle className="w-4 h-4" />
-                      Pagado
-                    </span>
+                    <PaidIndicator size="md" />
                   )}
-                  {(() => {
-                    const statusInfo = getStatusInfo(selectedOrder.status)
-                    return (
-                      <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${statusInfo.color}`}>
-                        <statusInfo.icon className="w-4 h-4" />
-                        {statusInfo.label}
-                      </span>
-                    )
-                  })()}
+                  <OrderStatusIndicator status={selectedOrder.status} size="md" />
                   <span className="inline-flex items-center gap-2 text-sm text-[#6B7280]">
                     <Calendar className="w-4 h-4" />
                     {selectedOrder.date}
@@ -479,8 +457,8 @@ export default function OrdersPage() {
                       >
                         {copied ? (
                           <>
-                            <Check className="w-4 h-4 text-green-600" />
-                            <span className="text-green-600">Copiado</span>
+                            <Check className={cn('w-4 h-4', toneStyles.green.text)} />
+                            <span className={toneStyles.green.text}>Copiado</span>
                           </>
                         ) : (
                           <>
