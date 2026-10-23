@@ -112,5 +112,5 @@ export function PaidIndicator({ size, className }: { size?: 'sm' | 'md'; classNa
 
 /** Small separator between inline indicators. */
 export function IndicatorDivider() {
-  return <span aria-hidden className="h-3 w-px bg-[#E5E7EB]" />
+  return <span aria-hidden className="h-3 w-px bg-[#E5E7EB] dark:bg-white/15" />
 }

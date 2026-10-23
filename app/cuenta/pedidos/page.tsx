@@ -409,8 +409,8 @@ export default function OrdersPage() {
               </h3>
               <div className="space-y-2">
                 {modalOrder.items.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-[#F9FAFB] rounded-2xl">
-                    <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-[#E5E7EB]">
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-[#F9FAFB] dark:bg-white/[0.05] dark:ring-1 dark:ring-white/[0.06] rounded-2xl">
+                    <div className="w-14 h-14 bg-white dark:bg-white/[0.06] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-[#E5E7EB]">
                       {item.image ? (
                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                       ) : (
@@ -435,7 +435,7 @@ export default function OrdersPage() {
                 <MapPin className="w-4 h-4 text-[#6B7280]" />
                 Dirección de envío
               </h3>
-              <div className="p-4 bg-[#F9FAFB] rounded-2xl">
+              <div className="p-4 bg-[#F9FAFB] dark:bg-white/[0.05] dark:ring-1 dark:ring-white/[0.06] rounded-2xl">
                 <p className="text-sm text-[#374151]">{modalOrder.shippingAddress}</p>
               </div>
             </div>
@@ -447,11 +447,11 @@ export default function OrdersPage() {
                   <Truck className="w-4 h-4 text-[#6B7280]" />
                   Número de rastreo
                 </h3>
-                <div className="p-4 bg-[#F9FAFB] rounded-2xl flex items-center justify-between gap-3">
+                <div className="p-4 bg-[#F9FAFB] dark:bg-white/[0.05] dark:ring-1 dark:ring-white/[0.06] rounded-2xl flex items-center justify-between gap-3">
                   <code className="text-sm font-mono text-[#374151] break-all">{modalOrder.trackingNumber}</code>
                   <button
                     onClick={() => copyToClipboard(modalOrder.trackingNumber!)}
-                    className="p-2 hover:bg-white rounded-lg transition-colors flex items-center gap-2 text-sm text-[#6B7280]"
+                    className="p-2 hover:bg-white dark:hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2 text-sm text-[#6B7280]"
                   >
                     {copied ? (
                       <>
@@ -475,7 +475,7 @@ export default function OrdersPage() {
                 <CreditCard className="w-4 h-4 text-[#6B7280]" />
                 Resumen
               </h3>
-              <div className="p-4 bg-[#F9FAFB] rounded-2xl space-y-2">
+              <div className="p-4 bg-[#F9FAFB] dark:bg-white/[0.05] dark:ring-1 dark:ring-white/[0.06] rounded-2xl space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-[#6B7280]">Subtotal</span>
                   <span className="text-[#374151] tabular-nums">${modalOrder.total.toLocaleString()}</span>
@@ -484,7 +484,7 @@ export default function OrdersPage() {
                   <span className="text-[#6B7280]">Envío</span>
                   <span className="text-[#374151]">Gratis</span>
                 </div>
-                <div className="pt-2 border-t border-[#E5E7EB] flex justify-between">
+                <div className="pt-2 border-t border-[#E5E7EB] dark:border-white/10 flex justify-between">
                   <span className="font-semibold text-[#111827]">Total</span>
                   <span className="font-bold text-[#111827] tabular-nums">${modalOrder.total.toLocaleString()}</span>
                 </div>
@@ -500,14 +500,14 @@ export default function OrdersPage() {
                 </button>
               )}
               {modalOrder.trackingNumber && (
-                <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-full hover:bg-[#F9FAFB] transition-colors">
+                <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-full hover:bg-[#F9FAFB] dark:bg-white/[0.06] dark:border-white/10 dark:hover:bg-white/10 transition-colors">
                   <Truck className="w-4 h-4" />
                   Rastrear envío
                 </button>
               )}
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-full hover:bg-[#F9FAFB] transition-colors"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-full hover:bg-[#F9FAFB] dark:bg-white/[0.06] dark:border-white/10 dark:hover:bg-white/10 transition-colors"
               >
                 Cerrar
               </button>
