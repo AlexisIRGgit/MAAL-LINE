@@ -19,7 +19,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-import { useThemeToggle, ThemeToggleIcon } from '@/components/ui/theme-toggle'
+import { ThemeToggle, useThemeToggle, ThemeToggleIcon } from '@/components/ui/theme-toggle'
+import { FloatingHomeButton } from '@/components/account/floating-home-button'
 
 interface MenuItem {
   href: string
@@ -177,13 +178,30 @@ function SidebarFooter({
   collapsed,
   reduceMotion,
   onNavigate,
+  variant = 'desktop',
 }: {
   collapsed: boolean
   reduceMotion: boolean
   onNavigate?: () => void
+  /** Mobile keeps only a red sign-out button; theme and store live in the header and the floating home button */
+  variant?: 'desktop' | 'mobile'
 }) {
   const { isDark, toggleTheme } = useThemeToggle()
   const themeLabel = isDark ? 'Modo claro' : 'Modo oscuro'
+
+  if (variant === 'mobile') {
+    return (
+      <div className="p-4 border-t border-[#E5E7EB]">
+        <button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 active:scale-[0.98] transition-[background-color,transform]"
+        >
+          <LogOut className="w-5 h-5" />
+          Cerrar sesión
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="px-3 py-4 border-t border-[#E5E7EB] space-y-1">
@@ -327,7 +345,7 @@ export default function AccountLayout({
     <div className="min-h-screen bg-[#F5F5F7]">
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-[#E5E7EB] px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="relative flex items-center justify-between">
           <button
             ref={mobileTriggerRef}
             onClick={() => setIsMobileMenuOpen(true)}
@@ -337,12 +355,16 @@ export default function AccountLayout({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <Link href="/" className="text-lg font-bold text-[#111827]">
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-[#111827]">
             MAAL LINE
           </Link>
 
-          {/* User Menu */}
-          <div className="relative" ref={userMenuRef}>
+          {/* Theme toggle + User Menu */}
+          <div className="relative flex items-center gap-1.5" ref={userMenuRef}>
+            <ThemeToggle
+              className="w-9 h-9 rounded-full text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] transition-colors"
+              iconClassName="w-5 h-5"
+            />
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
@@ -443,7 +465,7 @@ export default function AccountLayout({
                   reduceMotion={reduceMotion}
                   onNavigate={closeMobileMenu}
                 />
-                <SidebarFooter collapsed={false} reduceMotion={reduceMotion} onNavigate={closeMobileMenu} />
+                <SidebarFooter collapsed={false} reduceMotion={reduceMotion} onNavigate={closeMobileMenu} variant="mobile" />
               </div>
             </motion.aside>
           </>
@@ -513,11 +535,14 @@ export default function AccountLayout({
 
         {/* Main Content */}
         <main className="flex-1 min-w-0 min-h-screen">
-          <div className="p-4 sm:p-6 lg:p-8">
+          {/* Extra bottom padding on mobile so the floating home button never covers content */}
+          <div className="p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8">
             {children}
           </div>
         </main>
       </div>
+
+      <FloatingHomeButton />
     </div>
   )
 }
