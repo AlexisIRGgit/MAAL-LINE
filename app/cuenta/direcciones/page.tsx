@@ -219,7 +219,7 @@ export default function AddressesPage() {
       </motion.div>
 
       {/* Addresses Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(290px,330px))] gap-4">
         <AnimatePresence initial={false}>
           {[...addresses]
             .sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
