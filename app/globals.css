@@ -467,3 +467,164 @@
     background-clip: text;
   }
 }
+
+/* ============================================
+   DARK MODE (store + customer panel)
+   The store uses hardcoded light hex utilities; this layer remaps that neutral
+   palette when <html> has the .dark class. Selectors use :where() so their
+   specificity matches the utility they override, letting explicit dark: variants win.
+   Admin is forced light in ThemeProvider. Already-dark pages (#0A0A0A / cream) are untouched.
+   ============================================ */
+
+:where(html.dark) body { background-color: #0A0A0A; color: #F5F5F5; }
+:where(html.dark) .bg-white,
+:where(html.dark) .hover\:bg-white:hover,
+:where(html.dark) .focus\:bg-white:focus,
+:where(html.dark) .group:hover .group-hover\:bg-white { background-color: #141414; }
+:where(html.dark) .bg-white\/95,
+:where(html.dark) .hover\:bg-white\/95:hover,
+:where(html.dark) .focus\:bg-white\/95:focus,
+:where(html.dark) .group:hover .group-hover\:bg-white\/95 { background-color: rgb(20 20 20 / 0.95); }
+:where(html.dark) .bg-white\/90,
+:where(html.dark) .hover\:bg-white\/90:hover,
+:where(html.dark) .focus\:bg-white\/90:focus,
+:where(html.dark) .group:hover .group-hover\:bg-white\/90 { background-color: rgb(20 20 20 / 0.9); }
+:where(html.dark) .bg-white\/80,
+:where(html.dark) .hover\:bg-white\/80:hover,
+:where(html.dark) .focus\:bg-white\/80:focus,
+:where(html.dark) .group:hover .group-hover\:bg-white\/80 { background-color: rgb(10 10 10 / 0.8); }
+:where(html.dark) .bg-white\/70,
+:where(html.dark) .hover\:bg-white\/70:hover,
+:where(html.dark) .focus\:bg-white\/70:focus,
+:where(html.dark) .group:hover .group-hover\:bg-white\/70 { background-color: rgb(20 20 20 / 0.7); }
+:where(html.dark) .bg-white\/60,
+:where(html.dark) .hover\:bg-white\/60:hover,
+:where(html.dark) .focus\:bg-white\/60:focus,
+:where(html.dark) .group:hover .group-hover\:bg-white\/60 { background-color: rgb(20 20 20 / 0.6); }
+:where(html.dark) .bg-\[\#F9FAFB\],
+:where(html.dark) .hover\:bg-\[\#F9FAFB\]:hover,
+:where(html.dark) .focus\:bg-\[\#F9FAFB\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#F9FAFB\] { background-color: #0F0F0F; }
+:where(html.dark) .bg-\[\#F5F5F7\],
+:where(html.dark) .hover\:bg-\[\#F5F5F7\]:hover,
+:where(html.dark) .focus\:bg-\[\#F5F5F7\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#F5F5F7\] { background-color: #0A0A0A; }
+:where(html.dark) .bg-\[\#F5F5F5\],
+:where(html.dark) .hover\:bg-\[\#F5F5F5\]:hover,
+:where(html.dark) .focus\:bg-\[\#F5F5F5\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#F5F5F5\] { background-color: #0A0A0A; }
+:where(html.dark) .bg-\[\#F3F4F6\],
+:where(html.dark) .hover\:bg-\[\#F3F4F6\]:hover,
+:where(html.dark) .focus\:bg-\[\#F3F4F6\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#F3F4F6\] { background-color: #1C1C1C; }
+:where(html.dark) .bg-\[\#E5E7EB\],
+:where(html.dark) .hover\:bg-\[\#E5E7EB\]:hover,
+:where(html.dark) .focus\:bg-\[\#E5E7EB\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#E5E7EB\] { background-color: #262626; }
+:where(html.dark) .bg-\[\#D1D5DB\],
+:where(html.dark) .hover\:bg-\[\#D1D5DB\]:hover,
+:where(html.dark) .focus\:bg-\[\#D1D5DB\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#D1D5DB\] { background-color: #333333; }
+:where(html.dark) .bg-\[\#111827\],
+:where(html.dark) .hover\:bg-\[\#111827\]:hover,
+:where(html.dark) .focus\:bg-\[\#111827\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#111827\] { background-color: #F5F5F5; }
+:where(html.dark) .bg-\[\#1F2937\],
+:where(html.dark) .hover\:bg-\[\#1F2937\]:hover,
+:where(html.dark) .focus\:bg-\[\#1F2937\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#1F2937\] { background-color: #E5E5E5; }
+:where(html.dark) .bg-\[\#374151\],
+:where(html.dark) .hover\:bg-\[\#374151\]:hover,
+:where(html.dark) .focus\:bg-\[\#374151\]:focus,
+:where(html.dark) .group:hover .group-hover\:bg-\[\#374151\] { background-color: #D4D4D4; }
+:where(html.dark) .text-\[\#111827\],
+:where(html.dark) .hover\:text-\[\#111827\]:hover,
+:where(html.dark) .focus\:text-\[\#111827\]:focus,
+:where(html.dark) .group:hover .group-hover\:text-\[\#111827\] { color: #F5F5F5; }
+:where(html.dark) .text-\[\#1F1F1F\],
+:where(html.dark) .hover\:text-\[\#1F1F1F\]:hover,
+:where(html.dark) .focus\:text-\[\#1F1F1F\]:focus,
+:where(html.dark) .group:hover .group-hover\:text-\[\#1F1F1F\] { color: #F5F5F5; }
+:where(html.dark) .text-\[\#1a1a1a\],
+:where(html.dark) .hover\:text-\[\#1a1a1a\]:hover,
+:where(html.dark) .focus\:text-\[\#1a1a1a\]:focus,
+:where(html.dark) .group:hover .group-hover\:text-\[\#1a1a1a\] { color: #F5F5F5; }
+:where(html.dark) .text-\[\#374151\],
+:where(html.dark) .hover\:text-\[\#374151\]:hover,
+:where(html.dark) .focus\:text-\[\#374151\]:focus,
+:where(html.dark) .group:hover .group-hover\:text-\[\#374151\] { color: #D4D4D4; }
+:where(html.dark) .text-\[\#6B7280\],
+:where(html.dark) .hover\:text-\[\#6B7280\]:hover,
+:where(html.dark) .focus\:text-\[\#6B7280\]:focus,
+:where(html.dark) .group:hover .group-hover\:text-\[\#6B7280\] { color: #A3A3A3; }
+:where(html.dark) .text-\[\#9CA3AF\],
+:where(html.dark) .hover\:text-\[\#9CA3AF\]:hover,
+:where(html.dark) .focus\:text-\[\#9CA3AF\]:focus,
+:where(html.dark) .group:hover .group-hover\:text-\[\#9CA3AF\] { color: #737373; }
+:where(html.dark) .text-\[\#D1D5DB\],
+:where(html.dark) .hover\:text-\[\#D1D5DB\]:hover,
+:where(html.dark) .focus\:text-\[\#D1D5DB\]:focus,
+:where(html.dark) .group:hover .group-hover\:text-\[\#D1D5DB\] { color: #525252; }
+:where(html.dark) .text-\[\#E5E7EB\],
+:where(html.dark) .hover\:text-\[\#E5E7EB\]:hover,
+:where(html.dark) .focus\:text-\[\#E5E7EB\]:focus,
+:where(html.dark) .group:hover .group-hover\:text-\[\#E5E7EB\] { color: #404040; }
+:where(html.dark) .border-\[\#E5E7EB\],
+:where(html.dark) .hover\:border-\[\#E5E7EB\]:hover,
+:where(html.dark) .focus\:border-\[\#E5E7EB\]:focus,
+:where(html.dark) .group:hover .group-hover\:border-\[\#E5E7EB\] { border-color: #262626; }
+:where(html.dark) .border-\[\#D1D5DB\],
+:where(html.dark) .hover\:border-\[\#D1D5DB\]:hover,
+:where(html.dark) .focus\:border-\[\#D1D5DB\]:focus,
+:where(html.dark) .group:hover .group-hover\:border-\[\#D1D5DB\] { border-color: #333333; }
+:where(html.dark) .border-\[\#9CA3AF\],
+:where(html.dark) .hover\:border-\[\#9CA3AF\]:hover,
+:where(html.dark) .focus\:border-\[\#9CA3AF\]:focus,
+:where(html.dark) .group:hover .group-hover\:border-\[\#9CA3AF\] { border-color: #525252; }
+:where(html.dark) .border-\[\#111827\],
+:where(html.dark) .hover\:border-\[\#111827\]:hover,
+:where(html.dark) .focus\:border-\[\#111827\]:focus,
+:where(html.dark) .group:hover .group-hover\:border-\[\#111827\] { border-color: #F5F5F5; }
+:where(html.dark) .border-\[\#1F2937\],
+:where(html.dark) .hover\:border-\[\#1F2937\]:hover,
+:where(html.dark) .focus\:border-\[\#1F2937\]:focus,
+:where(html.dark) .group:hover .group-hover\:border-\[\#1F2937\] { border-color: #E5E5E5; }
+:where(html.dark) .divide-\[\#E5E7EB\] > :not([hidden]) ~ :not([hidden]) { border-color: #262626; }
+:where(html.dark) .ring-\[\#111827\],
+:where(html.dark) .hover\:ring-\[\#111827\]:hover,
+:where(html.dark) .focus\:ring-\[\#111827\]:focus,
+:where(html.dark) .group:hover .group-hover\:ring-\[\#111827\] { --tw-ring-color: #F5F5F5; }
+:where(html.dark) .focus\:ring-\[\#111827\]:focus { --tw-ring-color: #F5F5F5; }
+:where(html.dark) .placeholder-\[\#9CA3AF\]::placeholder { color: #737373; }
+/* Primary surfaces invert, so their white text has to flip too */
+:where(html.dark) .bg-\[\#111827\].text-white,
+:where(html.dark) .bg-\[\#111827\] .text-white,
+:where(html.dark) .hover\:bg-\[\#111827\]:hover.text-white { color: #0A0A0A; }
+:where(html.dark) .bg-\[\#1F2937\].text-white,
+:where(html.dark) .bg-\[\#1F2937\] .text-white,
+:where(html.dark) .hover\:bg-\[\#1F2937\]:hover.text-white { color: #0A0A0A; }
+/* Product page fabric texture switches to its black variant */
+:where(html.dark) .bg-fabric-white {
+  background-color: #0A0A0A;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px),
+    repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.015) 1px, rgba(255,255,255,0.015) 2px),
+    repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.008) 3px, rgba(255,255,255,0.008) 4px);
+}
+:where(html.dark) .text-gray-900,
+:where(html.dark) .hover\:text-gray-900:hover { color: #F5F5F5; }
+/* Black logo becomes white */
+:where(html.dark) img[src*="logo-maal-negro"] { filter: invert(1); }
+
+/* Theme toggle: circle reveal from the toggle button (View Transitions API) */
+html[data-theme-vt='circle']::view-transition-old(root) {
+  animation: none;
+}
+html[data-theme-vt='circle']::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: maal-theme-circle-reveal 700ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes maal-theme-circle-reveal {
+  from { clip-path: circle(0px at var(--theme-vt-x, 50%) var(--theme-vt-y, 100%)); }
+  to { clip-path: circle(var(--theme-vt-r, 150%) at var(--theme-vt-x, 50%) var(--theme-vt-y, 100%)); }
+}

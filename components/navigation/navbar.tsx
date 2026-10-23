@@ -7,6 +7,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { LogOut, Heart, X, Loader2, Search } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Logo } from '@/components/common/logo'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { useCartStore, selectCartItems } from '@/lib/store/cart-store'
 import { useAuthModalStore } from '@/lib/store/auth-modal-store'
 import { cn } from '@/lib/utils/cn'
@@ -688,6 +689,9 @@ export function Navbar() {
                 </svg>
               </button>
             )}
+
+            {/* Theme */}
+            <ThemeToggle className="p-2 text-[#6B7280] hover:text-[#111827] transition-colors" />
 
             {/* Cart */}
             <button

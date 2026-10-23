@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Space_Grotesk, Inter } from 'next/font/google'
 import { SessionProvider } from '@/components/providers/session-provider'
 import { ToastProvider } from '@/components/providers/toast-provider'
+import { ThemeProvider } from '@/components/providers/theme-provider'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import { QuickViewModal } from '@/components/product/quick-view-modal'
 import { AuthModal } from '@/components/auth/auth-modal'
@@ -32,16 +33,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es-MX" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+    <html lang="es-MX" className={`${spaceGrotesk.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="bg-[#F9FAFB] text-[#111827] antialiased">
-        <SessionProvider>
-          {children}
-          <CartDrawer />
-          <QuickViewModal />
-          <AuthModal />
-          <CheckoutModal />
-          <ToastProvider />
-        </SessionProvider>
+        <ThemeProvider>
+          <SessionProvider>
+            {children}
+            <CartDrawer />
+            <QuickViewModal />
+            <AuthModal />
+            <CheckoutModal />
+            <ToastProvider />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { useThemeToggle, ThemeToggleIcon } from '@/components/ui/theme-toggle'
 
 interface MenuItem {
   href: string
@@ -136,14 +137,14 @@ function SidebarNav({
               aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'relative flex items-center gap-3 h-11 px-3 rounded-xl text-sm transition-colors duration-200 outline-none',
-                isActive ? 'text-white font-semibold' : 'text-[#6B7280] hover:text-[#111827] focus-visible:text-[#111827]'
+                isActive ? 'text-white dark:text-[#0A0A0A] font-semibold' : 'text-[#6B7280] hover:text-[#111827] focus-visible:text-[#111827]'
               )}
             >
               {isActive && (
                 <motion.span
                   layoutId={`${layoutPrefix}-active`}
                   transition={transition}
-                  className="absolute inset-0 rounded-xl bg-[#111827] shadow-sm"
+                  className="absolute inset-0 rounded-xl bg-[#111827] dark:bg-[#F5F5F5] shadow-sm"
                 />
               )}
               <AnimatePresence>
@@ -179,8 +180,23 @@ function SidebarFooter({
   reduceMotion: boolean
   onNavigate?: () => void
 }) {
+  const { isDark, toggleTheme } = useThemeToggle()
+  const themeLabel = isDark ? 'Modo claro' : 'Modo oscuro'
+
   return (
     <div className="px-3 py-4 border-t border-[#E5E7EB] space-y-1">
+      <button
+        type="button"
+        onClick={(event) => toggleTheme(event.currentTarget)}
+        title={collapsed ? themeLabel : undefined}
+        aria-label={themeLabel}
+        className="w-full flex items-center gap-3 h-11 px-3 text-sm text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827] rounded-xl transition-colors"
+      >
+        <ThemeToggleIcon isDark={isDark} className="w-5 h-5 flex-shrink-0" />
+        <SidebarLabel show={!collapsed} reduceMotion={reduceMotion}>
+          {themeLabel}
+        </SidebarLabel>
+      </button>
       <Link
         href="/"
         onClick={onNavigate}

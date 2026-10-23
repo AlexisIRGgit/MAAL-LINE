@@ -110,7 +110,7 @@ export function AddressCard({
       className={cn(
         'group relative flex flex-col min-w-0 overflow-hidden rounded-[20px] bg-gradient-to-br from-[#16181D] via-[#0E0F13] to-[#0A0A0A] p-4 text-white',
         'min-h-[180px] sm:min-h-0 sm:aspect-[1.75/1] shadow-[0_8px_24px_-12px_rgba(0,0,0,0.45)]',
-        address.isDefault && 'ring-1 ring-[#FF3D00]/40'
+        address.isDefault ? 'ring-1 ring-[#FF3D00]/40' : 'dark:ring-1 dark:ring-white/10'
       )}
     >
       {/* Cursor spotlight */}
