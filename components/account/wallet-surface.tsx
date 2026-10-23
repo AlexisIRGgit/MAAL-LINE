@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils/cn'
 import type { StatusTone } from '@/components/account/order-status'
 
 /**
@@ -17,22 +16,17 @@ export const walletToneTileAdaptive: Record<StatusTone, string> = {
   neutral: 'bg-black/[0.03] border-black/10 text-[#6B7280] dark:bg-white/5 dark:border-white/10 dark:text-white/70',
 }
 
-/** Inner dashed frame and cursor spotlight; place inside a `group` wallet surface. */
-export function WalletDecor({ radius = 'rounded-[15px]', spotlight = true }: { radius?: string; spotlight?: boolean }) {
+/** Orange hover glow (soft wash plus a cursor spotlight); place inside a `group` wallet surface. */
+export function WalletDecor() {
   return (
-    <>
-      {spotlight && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: 'radial-gradient(200px circle at var(--x, 50%) var(--y, 50%), rgba(255,61,0,0.12), transparent 65%)' }}
-        />
-      )}
-      <div
-        aria-hidden
-        className={cn('pointer-events-none absolute inset-1.5 border border-dashed border-black/[0.08] dark:border-white/[0.08]', radius)}
-      />
-    </>
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      style={{
+        background:
+          'radial-gradient(260px circle at var(--x, 50%) var(--y, 50%), rgba(255,61,0,0.24), transparent 70%), linear-gradient(135deg, rgba(255,61,0,0.10), rgba(255,61,0,0.03))',
+      }}
+    />
   )
 }
 
