@@ -854,3 +854,12 @@ html.dark .maplibregl-ctrl-attrib-button {
   filter: invert(1);
   background-color: transparent;
 }
+
+/* Google advanced marker: replace the default white focus box with a brand ring (keyboard only) */
+gmp-advanced-marker:focus,
+gmp-advanced-marker:focus-visible {
+  outline: none;
+}
+gmp-advanced-marker:focus-visible .maal-map-pin__dot {
+  box-shadow: 0 0 0 4px rgba(255, 61, 0, 0.45), 0 4px 12px rgba(255, 61, 0, 0.45);
+}
