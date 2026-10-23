@@ -5,33 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   MapPin,
   Plus,
-  Edit2,
-  Trash2,
   Home,
   Building2,
   Check,
   X,
   Loader2,
-  Star,
 } from 'lucide-react'
 import { toast } from '@/lib/toast'
-
-interface Address {
-  id: string
-  type: 'home' | 'work' | 'other'
-  label: string
-  fullName: string
-  phone: string
-  street: string
-  number: string
-  interior?: string
-  neighborhood: string
-  city: string
-  state: string
-  zipCode: string
-  country: string
-  isDefault: boolean
-}
+import { AddressCard, AddAddressCard, type Address } from '@/components/account/address-card'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -207,17 +188,6 @@ export default function AddressesPage() {
     }
   }
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'home':
-        return <Home className="w-4 h-4" />
-      case 'work':
-        return <Building2 className="w-4 h-4" />
-      default:
-        return <MapPin className="w-4 h-4" />
-    }
-  }
-
   if (isLoadingPage) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -249,116 +219,30 @@ export default function AddressesPage() {
       </motion.div>
 
       {/* Addresses Grid */}
-      {addresses.length > 0 ? (
-        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {addresses.map((address) => (
-            <div
-              key={address.id}
-              className={`bg-white border rounded-2xl p-4 sm:p-5 relative ${
-                address.isDefault ? 'border-[#111827] ring-1 ring-[#111827]' : 'border-[#E5E7EB]'
-              }`}
-            >
-              {/* Default Badge */}
-              {address.isDefault && (
-                <div className="absolute top-3 right-3 px-2 py-0.5 bg-[#111827] text-white text-xs font-bold rounded-full flex items-center gap-1">
-                  <Star className="w-3 h-3" />
-                  Principal
-                </div>
-              )}
-
-              {/* Type & Label */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-2 bg-[#F3F4F6] rounded-lg text-[#6B7280]">
-                  {getTypeIcon(address.type)}
-                </div>
-                <span className="font-semibold text-[#111827]">{address.label}</span>
-              </div>
-
-              {/* Address Details */}
-              <div className="space-y-1 text-sm text-[#6B7280]">
-                <p className="text-[#111827] font-medium">{address.fullName}</p>
-                <p>
-                  {address.street} {address.number}
-                  {address.interior && `, ${address.interior}`}
-                </p>
-                <p>{address.neighborhood}</p>
-                <p>
-                  {address.city}, {address.state} {address.zipCode}
-                </p>
-                <p>{address.phone}</p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#E5E7EB]">
-                <button
-                  onClick={() => handleOpenModal(address)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  Editar
-                </button>
-                {!address.isDefault && (
-                  <button
-                    onClick={() => handleSetDefault(address.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                  >
-                    <Star className="w-3.5 h-3.5" />
-                    Predeterminada
-                  </button>
-                )}
-                <button
-                  onClick={() => setDeleteConfirm(address.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Eliminar
-                </button>
-              </div>
-
-              {/* Delete Confirmation */}
-              {deleteConfirm === address.id && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <p className="text-sm text-red-700">
-                    {address.isDefault && addresses.length > 1
-                      ? '¿Eliminar? Otra dirección será la principal.'
-                      : '¿Eliminar esta dirección?'}
-                  </p>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setDeleteConfirm(null)}
-                      className="px-3 py-1 text-xs text-[#6B7280] hover:bg-white rounded transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(address.id)}
-                      className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </motion.div>
-      ) : (
-        <motion.div
-          variants={itemVariants}
-          className="bg-white border border-[#E5E7EB] rounded-2xl p-8 text-center"
-        >
-          <MapPin className="w-12 h-12 text-[#D1D5DB] mx-auto mb-3" />
-          <p className="text-[#6B7280] font-medium">No tienes direcciones guardadas</p>
-          <p className="text-sm text-[#9CA3AF] mt-1">Agrega una dirección para tus envíos</p>
-          <button
-            onClick={() => handleOpenModal()}
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Agregar dirección
-          </button>
-        </motion.div>
-      )}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
+        <AnimatePresence initial={false}>
+          {[...addresses]
+            .sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
+            .map((address) => (
+              <AddressCard
+                key={address.id}
+                address={address}
+                isDeleteConfirmOpen={deleteConfirm === address.id}
+                deleteMessage={
+                  address.isDefault && addresses.length > 1
+                    ? '¿Eliminar? Otra dirección será la principal.'
+                    : '¿Eliminar esta dirección?'
+                }
+                onEdit={() => handleOpenModal(address)}
+                onSetDefault={() => handleSetDefault(address.id)}
+                onRequestDelete={() => setDeleteConfirm(address.id)}
+                onCancelDelete={() => setDeleteConfirm(null)}
+                onConfirmDelete={() => handleDelete(address.id)}
+              />
+            ))}
+          <AddAddressCard key="add-address" onClick={() => handleOpenModal()} isFirst={addresses.length === 0} />
+        </AnimatePresence>
+      </motion.div>
 
       {/* Modal */}
       <AnimatePresence>

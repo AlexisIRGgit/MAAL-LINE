@@ -1,0 +1,298 @@
+'use client'
+
+import { useRef, useState } from 'react'
+import { motion, AnimatePresence, useReducedMotion, type Transition } from 'framer-motion'
+import { Home, Building2, MapPin, Edit2, Trash2, Star, Truck, Plus, type LucideIcon } from 'lucide-react'
+import { cn } from '@/lib/utils/cn'
+
+export interface Address {
+  id: string
+  type: 'home' | 'work' | 'other'
+  label: string
+  fullName: string
+  phone: string
+  street: string
+  number: string
+  interior?: string
+  neighborhood: string
+  city: string
+  state: string
+  zipCode: string
+  country: string
+  isDefault: boolean
+}
+
+const typeIcons: Record<Address['type'], LucideIcon> = {
+  home: Home,
+  work: Building2,
+  other: MapPin,
+}
+
+const pressSpring: Transition = { type: 'spring', stiffness: 500, damping: 30, mass: 0.6 }
+const easeOut = [0.16, 1, 0.3, 1] as const
+
+function CardAction({
+  icon: Icon,
+  label,
+  onClick,
+  tone = 'default',
+}: {
+  icon: LucideIcon
+  label: string
+  onClick: () => void
+  tone?: 'default' | 'danger'
+}) {
+  const reduceMotion = useReducedMotion()
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      whileTap={reduceMotion ? undefined : { scale: 0.94 }}
+      transition={pressSpring}
+      className={cn(
+        'h-9 w-9 flex items-center justify-center rounded-full border border-white/10 bg-white/5 transition-colors',
+        tone === 'danger'
+          ? 'text-white/60 hover:text-red-400 hover:bg-red-500/15 hover:border-red-500/30'
+          : 'text-white/60 hover:text-white hover:bg-white/10'
+      )}
+    >
+      <Icon className="w-4 h-4" />
+    </motion.button>
+  )
+}
+
+export function AddressCard({
+  address,
+  isDeleteConfirmOpen,
+  deleteMessage,
+  onEdit,
+  onSetDefault,
+  onRequestDelete,
+  onCancelDelete,
+  onConfirmDelete,
+}: {
+  address: Address
+  isDeleteConfirmOpen: boolean
+  deleteMessage: string
+  onEdit: () => void
+  onSetDefault: () => void
+  onRequestDelete: () => void
+  onCancelDelete: () => void
+  onConfirmDelete: () => void
+}) {
+  const reduceMotion = useReducedMotion()
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [isHovered, setIsHovered] = useState(false)
+  const TypeIcon = typeIcons[address.type] ?? MapPin
+
+  // Spotlight follows the cursor through CSS variables, no re-renders
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = cardRef.current?.getBoundingClientRect()
+    if (!rect) return
+    cardRef.current?.style.setProperty('--x', `${event.clientX - rect.left}px`)
+    cardRef.current?.style.setProperty('--y', `${event.clientY - rect.top}px`)
+  }
+
+  return (
+    <motion.div
+      ref={cardRef}
+      layout={!reduceMotion}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.2 } }}
+      whileHover={reduceMotion ? undefined : { y: -4 }}
+      transition={{ duration: 0.4, ease: easeOut }}
+      onMouseMove={handleMouseMove}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className={cn(
+        'group relative flex flex-col min-w-0 overflow-hidden rounded-[28px] bg-gradient-to-br from-[#16181D] via-[#0E0F13] to-[#0A0A0A] p-5 sm:p-6 text-white',
+        'min-h-[220px] sm:min-h-0 sm:aspect-[1.75/1] shadow-[0_10px_30px_-12px_rgba(0,0,0,0.45)]',
+        address.isDefault && 'ring-1 ring-[#FF3D00]/40'
+      )}
+    >
+      {/* Cursor spotlight */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: 'radial-gradient(320px circle at var(--x, 50%) var(--y, 50%), rgba(255,61,0,0.12), transparent 65%)' }}
+      />
+      {/* Inner dashed frame */}
+      <div aria-hidden className="pointer-events-none absolute inset-2 rounded-[22px] border border-dashed border-white/[0.08]" />
+
+      {/* Header */}
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={cn(
+              'h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-2xl border',
+              address.isDefault
+                ? 'bg-[#FF3D00]/15 border-[#FF3D00]/30 text-[#FF6B35] shadow-[0_0_24px_-4px_rgba(255,61,0,0.45)]'
+                : 'bg-white/5 border-white/10 text-white/70'
+            )}
+          >
+            <TypeIcon className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-display font-semibold truncate">{address.label}</p>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">Envío a</p>
+          </div>
+        </div>
+
+        {address.isDefault ? (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FF3D00] text-[11px] font-bold">
+            <Star className="w-3 h-3 fill-current" />
+            Principal
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={onSetDefault}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/10 text-[11px] font-semibold text-white/60 hover:text-white hover:border-white/25 transition-colors"
+          >
+            <Star className="w-3 h-3" />
+            Hacer principal
+          </button>
+        )}
+      </div>
+
+      {/* Street, displayed like the card number */}
+      <div className="relative flex-1 flex flex-col justify-center py-4">
+        <p className="font-display text-lg sm:text-xl font-semibold tracking-wide truncate">
+          {address.street} {address.number}
+          {address.interior && <span className="text-white/50">, {address.interior}</span>}
+        </p>
+        <p className="text-sm text-white/50 truncate">
+          {address.neighborhood && `${address.neighborhood} · `}
+          {address.city}, {address.state}
+        </p>
+      </div>
+
+      {/* Shipping route */}
+      <div aria-hidden className="relative flex items-center gap-2 mb-4">
+        <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
+        <div className="relative flex-1 h-4 flex items-center">
+          <span className="w-full border-t border-dashed border-white/15" />
+          <motion.span
+            className="absolute top-1/2 -translate-y-1/2 text-[#FF6B35]"
+            initial={false}
+            animate={{ left: isHovered && !reduceMotion ? 'calc(100% - 14px)' : '0%' }}
+            transition={{ duration: 0.9, ease: easeOut }}
+          >
+            <Truck className="w-3.5 h-3.5" />
+          </motion.span>
+        </div>
+        <MapPin className={cn('w-3.5 h-3.5', address.isDefault ? 'text-[#FF6B35]' : 'text-white/40')} />
+      </div>
+
+      {/* Footer */}
+      <div className="relative flex items-end justify-between gap-3">
+        <div className="flex gap-6 min-w-0">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">Destinatario</p>
+            <p className="text-sm font-medium truncate">{address.fullName}</p>
+            {address.phone && <p className="text-xs text-white/50 tabular-nums truncate">{address.phone}</p>}
+          </div>
+          <div className="flex-shrink-0">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">C.P.</p>
+            <p className="text-sm font-medium font-mono tabular-nums">{address.zipCode}</p>
+          </div>
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
+          <CardAction icon={Edit2} label="Editar" onClick={onEdit} />
+          <CardAction icon={Trash2} label="Eliminar" onClick={onRequestDelete} tone="danger" />
+        </div>
+      </div>
+
+      {/* Delete confirmation */}
+      <AnimatePresence>
+        {isDeleteConfirmOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: easeOut }}
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 p-6 bg-[#0A0A0A]/85 backdrop-blur-md text-center"
+          >
+            <motion.div
+              initial={reduceMotion ? false : { y: 8, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.25, delay: 0.05, ease: easeOut }}
+              className="flex flex-col items-center gap-4"
+            >
+              <div className="h-11 w-11 flex items-center justify-center rounded-2xl bg-red-500/15 border border-red-500/30 text-red-400">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <p className="text-sm text-white/80 max-w-[240px]">{deleteMessage}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onCancelDelete}
+                  className="px-4 py-2 text-sm text-white/70 hover:text-white rounded-full border border-white/10 hover:bg-white/5 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={onConfirmDelete}
+                  className="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 rounded-full transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
+
+export function AddAddressCard({ onClick, isFirst = false }: { onClick: () => void; isFirst?: boolean }) {
+  const reduceMotion = useReducedMotion()
+
+  return (
+    <motion.button
+      type="button"
+      layout={!reduceMotion}
+      onClick={onClick}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={reduceMotion ? undefined : { y: -4 }}
+      whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+      transition={{ duration: 0.4, ease: easeOut }}
+      className="group relative flex flex-col min-w-0 text-left rounded-[28px] border border-dashed border-[#D1D5DB] hover:border-[#9CA3AF] bg-white/60 hover:bg-white p-5 sm:p-6 min-h-[220px] sm:min-h-0 sm:aspect-[1.75/1] transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <div className="h-11 w-11 flex items-center justify-center rounded-2xl bg-[#FF3D00]/10 border border-[#FF3D00]/20 text-[#FF3D00] transition-shadow group-hover:shadow-[0_0_24px_-4px_rgba(255,61,0,0.45)]">
+          <Plus className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
+        </div>
+        <div>
+          <p className="font-display font-semibold text-[#111827]">
+            {isFirst ? 'Agrega tu primera dirección' : 'Nueva dirección'}
+          </p>
+          <p className="text-xs text-[#6B7280]">
+            {isFirst ? 'La usaremos para tus envíos' : 'Envía a otro lugar'}
+          </p>
+        </div>
+      </div>
+
+      {/* Skeleton placeholder, echoing a filled card */}
+      <div aria-hidden className="flex-1 flex flex-col justify-center gap-3 py-4">
+        <span className="h-3 w-2/5 rounded-full bg-[#E5E7EB] transition-colors group-hover:bg-[#D1D5DB]" />
+        <span className="text-[#D1D5DB] tracking-[0.35em] text-sm leading-none">••• •••</span>
+      </div>
+      <div aria-hidden className="flex gap-1.5">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span
+            key={i}
+            className="h-6 w-6 rounded-full bg-[#F3F4F6] transition-colors duration-300 group-hover:bg-[#E5E7EB]"
+            style={{ transitionDelay: `${i * 40}ms` }}
+          />
+        ))}
+      </div>
+    </motion.button>
+  )
+}
