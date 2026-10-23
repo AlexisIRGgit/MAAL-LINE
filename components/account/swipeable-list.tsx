@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react'
 import { motion, animate, useMotionValue, useReducedMotion, type PanInfo } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-import { walletSurface, WalletDecor, trackSpotlight } from '@/components/account/wallet-surface'
 
 export type SwipeSide = 'left' | 'right'
 export type SwipeActionTone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger'
@@ -17,20 +16,30 @@ export interface SwipeAction {
   onAction: () => void
 }
 
-const ACTION_WIDTH = 64
+const ACTION_WIDTH = 56
 const REVEAL_THRESHOLD = 34
 const FLICK_VELOCITY = 500
 const settleSpring = { type: 'spring' as const, stiffness: 560, damping: 48, mass: 0.82 }
 
 const actionToneStyles: Record<SwipeActionTone, string> = {
-  neutral: 'text-white/60 hover:text-white',
-  primary: 'text-white hover:text-white',
-  success: 'text-emerald-400',
-  warning: 'text-amber-400',
-  danger: 'text-rose-400',
+  neutral: 'text-[#6B7280] hover:text-[#111827]',
+  primary: 'text-[#111827]',
+  success: 'text-emerald-600 dark:text-emerald-400',
+  warning: 'text-amber-600 dark:text-amber-400',
+  danger: 'text-red-600 dark:text-rose-400',
 }
 
-function ActionRail({ actions, side, isOpen }: { actions: SwipeAction[]; side: SwipeSide; isOpen: boolean }) {
+function ActionRail({
+  actions,
+  side,
+  isOpen,
+  onClose,
+}: {
+  actions: SwipeAction[]
+  side: SwipeSide
+  isOpen: boolean
+  onClose: () => void
+}) {
   if (actions.length === 0) return null
 
   return (
@@ -43,18 +52,22 @@ function ActionRail({ actions, side, isOpen }: { actions: SwipeAction[]; side: S
           key={action.id}
           type="button"
           tabIndex={isOpen ? 0 : -1}
-          onClick={action.onAction}
+          onClick={() => {
+            action.onAction()
+            onClose()
+          }}
           aria-label={action.label}
+          title={action.label}
           className={cn(
-            'group/action flex flex-col items-center justify-center gap-1 transition-colors',
+            'group/action flex items-center justify-center transition-colors',
             actionToneStyles[action.tone ?? 'neutral']
           )}
           style={{ width: ACTION_WIDTH }}
         >
-          <span className="h-9 w-9 flex items-center justify-center rounded-full border border-white/10 bg-white/5 transition-transform duration-150 group-hover/action:bg-white/10 group-active/action:scale-90">
+          <span className="h-9 w-9 flex items-center justify-center rounded-full transition-[background-color,transform] duration-150 group-hover/action:bg-white dark:group-hover/action:bg-white/10 group-active/action:scale-90">
             <action.icon className="w-4 h-4" />
           </span>
-          <span className="text-[9px] font-medium uppercase tracking-[0.12em]">{action.label}</span>
+          <span className="sr-only">{action.label}</span>
         </button>
       ))}
     </div>
@@ -141,9 +154,9 @@ export function SwipeableRow({
   }
 
   return (
-    <div className="relative isolate overflow-hidden rounded-[20px] bg-[#0B0C10] ring-1 ring-white/[0.06] dark">
-      <ActionRail actions={leftActions} side="left" isOpen={openSide === 'left'} />
-      <ActionRail actions={rightActions} side="right" isOpen={openSide === 'right'} />
+    <div className="relative isolate overflow-hidden rounded-2xl bg-[#F3F4F6]">
+      <ActionRail actions={leftActions} side="left" isOpen={openSide === 'left'} onClose={() => onOpenChange(null)} />
+      <ActionRail actions={rightActions} side="right" isOpen={openSide === 'right'} onClose={() => onOpenChange(null)} />
 
       <motion.div
         role="button"
@@ -172,14 +185,9 @@ export function SwipeableRow({
           else onSelect?.()
         }}
         onKeyDown={handleKeyDown}
-        onMouseMove={trackSpotlight}
-        className={cn(
-          walletSurface,
-          'group rounded-[20px] min-h-[76px] px-4 py-3 touch-pan-y cursor-grab active:cursor-grabbing select-none outline-none focus-visible:ring-2 focus-visible:ring-[#FF3D00]/60'
-        )}
+        className="relative flex items-center min-h-[72px] rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3 shadow-sm touch-pan-y cursor-grab active:cursor-grabbing select-none outline-none focus-visible:ring-2 focus-visible:ring-[#111827]"
       >
-        <WalletDecor />
-        <div className="relative">{children}</div>
+        <div className="w-full">{children}</div>
       </motion.div>
     </div>
   )

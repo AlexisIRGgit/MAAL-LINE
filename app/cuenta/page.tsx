@@ -13,14 +13,13 @@ import {
   ShoppingBag,
   Loader2,
   ArrowUpRight,
-  MoveHorizontal,
   Copy,
   Eye,
   Truck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { toast } from '@/lib/toast'
-import { OrderStatusIndicator, toneStyles, type StatusTone } from '@/components/account/order-status'
+import { getOrderStatus, toneStyles, type StatusTone } from '@/components/account/order-status'
 import { walletSurface, walletToneTile, WalletDecor, trackSpotlight } from '@/components/account/wallet-surface'
 import { SwipeableRow, type SwipeAction, type SwipeSide } from '@/components/account/swipeable-list'
 
@@ -69,6 +68,7 @@ export default function AccountPage() {
   const [data, setData] = useState<SummaryData | null>(null)
   const [loading, setLoading] = useState(true)
   const [openRow, setOpenRow] = useState<{ id: string; side: SwipeSide } | null>(null)
+  const [statusLine, setStatusLine] = useState<string | null>(null)
   const router = useRouter()
   const userName = session?.user?.firstName || session?.user?.name?.split(' ')[0] || 'Usuario'
 
@@ -106,6 +106,7 @@ export default function AccountPage() {
   const copyOrderId = async (orderId: string) => {
     try {
       await navigator.clipboard.writeText(orderId)
+      setStatusLine(`Copiado ${orderId}`)
       toast.success('Número de pedido copiado')
     } catch {
       toast.error('No se pudo copiar')
@@ -176,27 +177,23 @@ export default function AccountPage() {
       </motion.div>
 
       {/* Recent Orders */}
-      <motion.div variants={itemVariants} className="space-y-3">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-base sm:text-lg font-semibold text-[#111827]">Pedidos Recientes</h2>
-            <p className="text-xs sm:text-sm text-[#6B7280] flex items-center gap-1.5">
-              {recentOrders.length > 0 ? (
-                <>
-                  <MoveHorizontal className="w-3.5 h-3.5" />
-                  Desliza un pedido para ver acciones
-                </>
-              ) : (
-                'Tus últimos pedidos'
-              )}
+      <motion.div
+        variants={itemVariants}
+        className="rounded-[2rem] border border-[#E5E7EB] bg-[#F9FAFB] p-3 shadow-sm dark:shadow-2xl"
+      >
+        <div className="flex items-start justify-between gap-4 px-2 pt-1 pb-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-[#111827]">Pedidos Recientes</h2>
+            <p className="text-xs text-[#6B7280] truncate">
+              {statusLine ?? (recentOrders.length > 0 ? 'Desliza un pedido para ver acciones' : 'Tus últimos pedidos')}
             </p>
           </div>
           <Link
             href="/cuenta/pedidos"
-            className="text-sm text-[#6B7280] hover:text-[#111827] flex items-center gap-1 transition-colors"
+            className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#6B7280] hover:text-[#111827] hover:bg-white transition-colors"
           >
             Ver todos
-            <ChevronRight className="w-4 h-4" />
+            <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
@@ -204,13 +201,14 @@ export default function AccountPage() {
           <div className="flex flex-col gap-2">
             {recentOrders.map((order) => {
               const orderHref = `/cuenta/pedidos?pedido=${encodeURIComponent(order.id)}`
+              const status = getOrderStatus(order.status)
               const rightActions: SwipeAction[] = [
-                { id: 'copy', label: 'Copiar', icon: Copy, tone: 'neutral', onAction: () => copyOrderId(order.id) },
-                { id: 'view', label: 'Ver', icon: Eye, tone: 'primary', onAction: () => router.push(orderHref) },
+                { id: 'copy', label: 'Copiar número', icon: Copy, tone: 'neutral', onAction: () => copyOrderId(order.id) },
+                { id: 'view', label: 'Ver pedido', icon: Eye, tone: 'primary', onAction: () => router.push(orderHref) },
               ]
               const leftActions: SwipeAction[] =
                 order.status === 'shipped'
-                  ? [{ id: 'track', label: 'Rastrear', icon: Truck, tone: 'success', onAction: () => router.push(orderHref) }]
+                  ? [{ id: 'track', label: 'Rastrear envío', icon: Truck, tone: 'success', onAction: () => router.push(orderHref) }]
                   : []
 
               return (
@@ -224,38 +222,27 @@ export default function AccountPage() {
                   onSelect={() => router.push(orderHref)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-xl overflow-hidden bg-white/5 ring-1 ring-white/10 flex items-center justify-center flex-shrink-0">
-                      {order.image ? (
-                        <img
-                          src={order.image}
-                          alt={`Pedido ${order.id}`}
-                          draggable={false}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <ShoppingBag className="w-5 h-5 text-white/40" />
-                      )}
+                    <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]">
+                      <status.icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-x-2.5 gap-y-0.5 flex-wrap">
-                        <span className="font-display font-semibold text-sm truncate">{order.id}</span>
-                        <OrderStatusIndicator status={order.status} />
-                      </div>
-                      <p className="text-xs text-white/50 mt-0.5">
-                        {order.items} {order.items === 1 ? 'artículo' : 'artículos'} • {order.date}
+                      <p className="text-sm font-medium text-[#111827] truncate">{order.id}</p>
+                      <p className="text-xs text-[#6B7280] truncate">
+                        <span className={toneStyles[status.tone].text}>{status.label}</span>
+                        {' · '}
+                        {order.items} {order.items === 1 ? 'artículo' : 'artículos'} · {order.date}
                       </p>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-display font-semibold tabular-nums">${order.total.toLocaleString()}</p>
-                      <p className="text-[8px] uppercase tracking-[0.2em] text-white/40">Total</p>
-                    </div>
+                    <span className="flex-shrink-0 text-xs font-medium tabular-nums text-[#6B7280]">
+                      ${order.total.toLocaleString()}
+                    </span>
                   </div>
                 </SwipeableRow>
               )
             })}
           </div>
         ) : (
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 text-center">
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center">
             <Package className="w-12 h-12 text-[#D1D5DB] mx-auto mb-3" />
             <p className="text-[#6B7280] font-medium">No tienes pedidos aún</p>
             <p className="text-sm text-[#9CA3AF] mt-1">Cuando hagas tu primer pedido, aparecerá aquí</p>
@@ -266,6 +253,15 @@ export default function AccountPage() {
               <ShoppingBag className="w-4 h-4" />
               Explorar productos
             </Link>
+          </div>
+        )}
+
+        {recentOrders.length > 0 && (
+          <div className="flex items-center justify-between px-2 pt-3 pb-1 text-xs text-[#6B7280]">
+            <span>
+              {recentOrders.length} {recentOrders.length === 1 ? 'pedido' : 'pedidos'}
+            </span>
+            <span>Último: {recentOrders[0].date}</span>
           </div>
         )}
       </motion.div>
