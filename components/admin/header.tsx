@@ -2,11 +2,20 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Bell, Search, ChevronDown, User, Settings, LogOut } from 'lucide-react'
+import { Bell, Search, ChevronDown, User, Settings, LogOut, Menu } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Image from 'next/image'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
-export function AdminHeader() {
+export function AdminHeader({
+  onMenuClick,
+  menuTriggerRef,
+  isMenuOpen,
+}: {
+  onMenuClick: () => void
+  menuTriggerRef: React.RefObject<HTMLButtonElement>
+  isMenuOpen: boolean
+}) {
   const { data: session } = useSession()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -14,7 +23,18 @@ export function AdminHeader() {
   const userName = session?.user?.firstName || session?.user?.email?.split('@')[0] || 'Admin'
 
   return (
-    <header className="h-16 bg-white border-b border-[#E5E7EB] pl-14 pr-4 lg:pl-6 lg:pr-6 flex items-center justify-between sticky top-0 z-30">
+    <header className="h-16 bg-white border-b border-[#E5E7EB] px-4 lg:px-6 flex items-center justify-between gap-3 sticky top-0 z-30">
+      {/* Mobile menu trigger (the desktop sidebar has its own collapse control) */}
+      <button
+        ref={menuTriggerRef}
+        onClick={onMenuClick}
+        aria-label="Abrir menú"
+        aria-expanded={isMenuOpen}
+        className="lg:hidden p-2 -ml-2 text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] rounded-xl transition-colors"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       {/* Search - Hidden on mobile, shown on larger screens */}
       <div className="hidden sm:block flex-1 max-w-md">
         <div className="relative">
@@ -78,6 +98,12 @@ export function AdminHeader() {
             </>
           )}
         </div>
+
+        {/* Theme */}
+        <ThemeToggle
+          className="p-2 rounded-xl text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6] transition-colors"
+          iconClassName="w-5 h-5"
+        />
 
         {/* User Menu */}
         <div className="relative">

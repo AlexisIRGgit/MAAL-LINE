@@ -12,13 +12,25 @@ import {
   Pie,
   Cell,
 } from 'recharts'
+import { useTheme } from 'next-themes'
 import { TrendingUp, Package } from 'lucide-react'
+import { adaptChartColor } from '@/lib/utils/chart-colors'
+
+export function useIsDarkTheme() {
+  const { resolvedTheme } = useTheme()
+  return resolvedTheme === 'dark'
+}
 
 interface SalesChartProps {
   data: Array<{ name: string; ventas: number }>
 }
 
 export function SalesChart({ data }: SalesChartProps) {
+  const isDark = useIsDarkTheme()
+  const line = isDark ? '#F5F5F5' : '#111827'
+  const grid = isDark ? 'rgba(255,255,255,0.08)' : '#E5E7EB'
+  const axis = isDark ? '#6B7280' : '#9CA3AF'
+
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-[#9CA3AF]">
@@ -35,30 +47,33 @@ export function SalesChart({ data }: SalesChartProps) {
       <AreaChart data={data}>
         <defs>
           <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#111827" stopOpacity={0.1} />
-            <stop offset="95%" stopColor="#111827" stopOpacity={0} />
+            <stop offset="5%" stopColor={line} stopOpacity={isDark ? 0.18 : 0.1} />
+            <stop offset="95%" stopColor={line} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-        <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} />
+        <CartesianGrid strokeDasharray="3 3" stroke={grid} />
+        <XAxis dataKey="name" stroke={axis} fontSize={12} />
         <YAxis
-          stroke="#9CA3AF"
+          stroke={axis}
           fontSize={12}
           tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
         />
         <Tooltip
           formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Ventas']}
           contentStyle={{
-            backgroundColor: '#fff',
-            border: '1px solid #E5E7EB',
+            backgroundColor: isDark ? '#22252D' : '#fff',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#E5E7EB'}`,
             borderRadius: '12px',
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            color: isDark ? '#F5F5F5' : '#111827',
           }}
+          labelStyle={{ color: isDark ? '#D1D5DB' : '#374151' }}
+          itemStyle={{ color: isDark ? '#F5F5F5' : '#111827' }}
         />
         <Area
           type="monotone"
           dataKey="ventas"
-          stroke="#111827"
+          stroke={line}
           strokeWidth={2}
           fillOpacity={1}
           fill="url(#salesGradient)"
@@ -73,6 +88,8 @@ interface CategoryChartProps {
 }
 
 export function CategoryChart({ data }: CategoryChartProps) {
+  const isDark = useIsDarkTheme()
+
   if (!data || data.length === 0 || data[0]?.name === 'Sin datos') {
     return (
       <div className="flex items-center justify-center h-full text-[#9CA3AF]">
@@ -97,7 +114,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
           dataKey="value"
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} />
+            <Cell key={`cell-${index}`} fill={adaptChartColor(entry.color, isDark)} stroke={isDark ? '#15171C' : '#fff'} />
           ))}
         </Pie>
       </PieChart>

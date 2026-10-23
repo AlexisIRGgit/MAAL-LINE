@@ -18,6 +18,8 @@ import {
   Loader2,
   RefreshCw,
 } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { adaptChartColor } from '@/lib/utils/chart-colors'
 
 // Lazy load charts to reduce initial bundle size (Recharts is ~45KB)
 const SalesChart = dynamic(
@@ -75,6 +77,8 @@ interface DashboardData {
 
 export default function AdminDashboard() {
   const { data: session } = useSession()
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === 'dark'
   const userName = session?.user?.firstName || 'Admin'
 
   const [data, setData] = useState<DashboardData | null>(null)
@@ -263,7 +267,7 @@ export default function AdminDashboard() {
               {data.categoryData.map((category) => (
                 <div key={category.name} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: adaptChartColor(category.color, isDark) }} />
                     <span className="text-sm text-[#6B7280]">{category.name}</span>
                   </div>
                   <span className="text-sm font-medium text-[#111827]">{category.value}%</span>
@@ -348,9 +352,9 @@ export default function AdminDashboard() {
           >
             <div
               className="p-2.5 rounded-xl transition-all group-hover:scale-110"
-              style={{ backgroundColor: `${action.color}10` }}
+              style={{ backgroundColor: `${adaptChartColor(action.color, isDark)}1A` }}
             >
-              <action.icon className="w-5 h-5" style={{ color: action.color }} />
+              <action.icon className="w-5 h-5" style={{ color: adaptChartColor(action.color, isDark) }} />
             </div>
             <span className="text-sm font-medium text-[#374151]">{action.label}</span>
           </Link>
