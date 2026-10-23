@@ -20,6 +20,9 @@ export interface Address {
   zipCode: string
   country: string
   isDefault: boolean
+  /** Pin chosen on the map, if any */
+  latitude?: number | null
+  longitude?: number | null
 }
 
 const typeIcons: Record<Address['type'], LucideIcon> = {

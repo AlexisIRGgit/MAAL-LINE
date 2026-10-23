@@ -6,6 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useTheme } from 'next-themes'
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { createPinElement, setPinLabel } from '@/components/ui/map-pin'
 
 // Same setup as mapcn (mapcn.dev): MapLibre GL with CARTO's free basemaps per theme
 const MAP_STYLES = {
@@ -33,31 +34,22 @@ function loadMapLibre() {
   return maplibrePromise
 }
 
-function createPinElement(label?: string) {
-  const el = document.createElement('div')
-  el.className = 'maal-map-pin'
-  el.innerHTML = `
-    <span class="maal-map-pin__pulse"></span>
-    <span class="maal-map-pin__dot"></span>
-    ${label ? `<span class="maal-map-pin__label"></span>` : ''}
-  `
-  // Text content (not innerHTML) so user-entered labels can't inject markup
-  const labelEl = el.querySelector('.maal-map-pin__label')
-  if (labelEl && label) labelEl.textContent = label
-  return el
-}
-
 export function AddressMap({
   longitude,
   latitude,
   label,
   zoom = 16,
+  draggable = false,
+  onPositionChange,
   className,
 }: {
   longitude: number
   latitude: number
   label?: string
   zoom?: number
+  /** Lets people drag the pin (or tap the map) to mark the exact spot */
+  draggable?: boolean
+  onPositionChange?: (position: { latitude: number; longitude: number }) => void
   className?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -67,6 +59,8 @@ export function AddressMap({
   const theme = resolvedTheme === 'dark' ? 'dark' : 'light'
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
+  const onPositionChangeRef = useRef(onPositionChange)
+  onPositionChangeRef.current = onPositionChange
 
   // Create the map once
   useEffect(() => {
@@ -92,9 +86,21 @@ export function AddressMap({
           containerRef.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
           setLoaded(true)
         })
-        markerRef.current = new lib.Marker({ element: createPinElement(label), anchor: 'center' })
+        const marker = new lib.Marker({ element: createPinElement(label), anchor: 'center', draggable })
           .setLngLat([longitude, latitude])
           .addTo(map)
+        if (draggable) {
+          const report = () => {
+            const { lat, lng } = marker.getLngLat()
+            onPositionChangeRef.current?.({ latitude: lat, longitude: lng })
+          }
+          marker.on('dragend', report)
+          map.on('click', (event) => {
+            marker.setLngLat(event.lngLat)
+            report()
+          })
+        }
+        markerRef.current = marker
         mapRef.current = map
       })
       .catch(() => !cancelled && setFailed(true))
@@ -110,9 +116,12 @@ export function AddressMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Follow the address when it changes
+  // Follow the address when it changes (a drag already moved the pin, so only pan if needed)
   useEffect(() => {
-    markerRef.current?.setLngLat([longitude, latitude])
+    const marker = markerRef.current
+    const current = marker?.getLngLat()
+    if (current && Math.abs(current.lat - latitude) < 1e-7 && Math.abs(current.lng - longitude) < 1e-7) return
+    marker?.setLngLat([longitude, latitude])
     mapRef.current?.flyTo({ center: [longitude, latitude], zoom, duration: 1200, essential: true })
   }, [longitude, latitude, zoom])
 
@@ -123,8 +132,8 @@ export function AddressMap({
 
   // Keep the pin label in sync
   useEffect(() => {
-    const labelEl = markerRef.current?.getElement().querySelector('.maal-map-pin__label')
-    if (labelEl) labelEl.textContent = label ?? ''
+    const pin = markerRef.current?.getElement()
+    if (pin) setPinLabel(pin, label)
   }, [label])
 
   return (

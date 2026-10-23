@@ -83,6 +83,8 @@ export default function AddressesPage() {
         zipCode: '',
         country: 'México',
         isDefault: addresses.length === 0,
+        latitude: null,
+        longitude: null,
       })
     }
     setWizardKey((key) => key + 1)

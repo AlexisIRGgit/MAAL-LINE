@@ -3,21 +3,25 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence, useReducedMotion, animate, useMotionValue } from 'framer-motion'
-import { Home, Building2, MapPin, ChevronLeft, ArrowRight, Check, Loader2, AlertTriangle, RotateCcw } from 'lucide-react'
+import { Home, Building2, MapPin, ChevronLeft, ArrowRight, Check, Loader2, AlertTriangle, RotateCcw, Hand } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { Stepper, type StepperStep } from '@/components/ui/stepper'
 import type { Address } from '@/components/account/address-card'
+import { hasGoogleMaps, loadGoogleMaps, type ParsedPlace } from '@/lib/google-maps'
+import { GoogleAddressSearch } from '@/components/account/google-address-search'
 
-// MapLibre touches window, so the map only loads on the client
-const AddressMap = dynamic(() => import('@/components/ui/address-map').then((m) => m.AddressMap), {
-  ssr: false,
-  loading: () => <div className="h-full w-full rounded-2xl bg-[#F3F4F6] animate-pulse" />,
-})
+const mapPlaceholder = () => <div className="h-full w-full rounded-2xl bg-[#F3F4F6] animate-pulse" />
+
+// Both maps touch window, so they only load on the client. Google is used when its key is
+// configured; otherwise the free CARTO/MapLibre map (mapcn style) with Nominatim geocoding.
+const PinMap = hasGoogleMaps
+  ? dynamic(() => import('@/components/ui/google-address-map').then((m) => m.GoogleAddressMap), { ssr: false, loading: mapPlaceholder })
+  : dynamic(() => import('@/components/ui/address-map').then((m) => m.AddressMap), { ssr: false, loading: mapPlaceholder })
 
 const STEPS: StepperStep[] = [
   { id: 'contact', label: 'Contacto', description: 'Quién recibe' },
-  { id: 'address', label: 'Dirección', description: 'Calle y colonia' },
-  { id: 'confirm', label: 'Confirmar', description: 'Revisa el mapa' },
+  { id: 'address', label: 'Dirección', description: hasGoogleMaps ? 'Búscala en el mapa' : 'Calle y colonia' },
+  { id: 'confirm', label: 'Confirmar', description: 'Revisa el pin' },
 ]
 
 const ADDRESS_TYPES = [
@@ -29,39 +33,62 @@ const ADDRESS_TYPES = [
 const inputClass =
   'w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all dark:bg-white/[0.05] dark:border-white/10'
 
-type GeoState =
-  | { status: 'idle' | 'loading' | 'failed' }
-  | { status: 'found' | 'approximate'; lat: number; lng: number }
+/** found: exact match · approximate: ZIP/city fallback · manual: the person placed the pin */
+type GeoStatus = 'idle' | 'loading' | 'found' | 'approximate' | 'manual' | 'failed'
+
+interface GeocodeResult {
+  status: 'found' | 'approximate'
+  latitude: number
+  longitude: number
+  formattedAddress?: string
+}
 
 interface NominatimResult {
   lat: string
   lon: string
 }
 
-/** Forward-geocodes with OpenStreetMap Nominatim, falling back to broader queries. */
-async function geocodeAddress(data: Partial<Address>, signal: AbortSignal): Promise<GeoState> {
+function addressQuery(data: Partial<Address>) {
+  return [`${data.street ?? ''} ${data.number ?? ''}`.trim(), data.neighborhood, data.city, data.state, data.zipCode, 'México']
+    .filter(Boolean)
+    .join(', ')
+}
+
+async function geocodeWithGoogle(data: Partial<Address>): Promise<GeocodeResult | null> {
+  await loadGoogleMaps()
+  const { Geocoder } = (await google.maps.importLibrary('geocoding')) as google.maps.GeocodingLibrary
+  const { results } = await new Geocoder().geocode({ address: addressQuery(data), region: 'mx', componentRestrictions: { country: 'MX' } })
+  const hit = results[0]
+  if (!hit) return null
+  const precise = hit.geometry.location_type === 'ROOFTOP' || hit.geometry.location_type === 'RANGE_INTERPOLATED'
+  return {
+    status: precise ? 'found' : 'approximate',
+    latitude: hit.geometry.location.lat(),
+    longitude: hit.geometry.location.lng(),
+    formattedAddress: hit.formatted_address,
+  }
+}
+
+/** OpenStreetMap Nominatim, falling back to broader queries. */
+async function geocodeWithNominatim(data: Partial<Address>, signal: AbortSignal): Promise<GeocodeResult | null> {
   const base = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=mx'
   const street = [data.number, data.street].filter(Boolean).join(' ')
   const attempts: { params: Record<string, string>; exact: boolean }[] = [
     { params: { street, city: data.city ?? '', state: data.state ?? '', postalcode: data.zipCode ?? '' }, exact: true },
-    { params: { q: [`${data.street ?? ''} ${data.number ?? ''}`, data.neighborhood, data.city, data.state, data.zipCode].filter(Boolean).join(', ') }, exact: true },
+    { params: { q: addressQuery(data) }, exact: true },
     { params: { postalcode: data.zipCode ?? '', country: 'México' }, exact: false },
     { params: { city: data.city ?? '', state: data.state ?? '' }, exact: false },
   ]
-
   for (const attempt of attempts) {
     const params = Object.entries(attempt.params).filter(([, value]) => value.trim())
     if (params.length === 0) continue
     const query = params.map(([key, value]) => `${key}=${encodeURIComponent(value.trim())}`).join('&')
     const response = await fetch(`${base}&${query}`, { signal, headers: { 'Accept-Language': 'es' } })
     if (!response.ok) continue
-    const results = (await response.json()) as NominatimResult[]
-    const hit = results[0]
-    if (hit) {
-      return { status: attempt.exact ? 'found' : 'approximate', lat: parseFloat(hit.lat), lng: parseFloat(hit.lon) }
-    }
+    const [hit] = (await response.json()) as NominatimResult[]
+    if (hit) return { status: attempt.exact ? 'found' : 'approximate', latitude: parseFloat(hit.lat), longitude: parseFloat(hit.lon) }
   }
-  return { status: 'failed' }
+  return null
 }
 
 /** Animates its height to fit the content, so step changes don't jump. */
@@ -103,6 +130,23 @@ function Field({ label, children, className }: { label: string; children: React.
   )
 }
 
+function PinHint({ status }: { status: GeoStatus }) {
+  if (status === 'approximate') {
+    return (
+      <p className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+        <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+        Ubicación aproximada. Arrastra el pin o toca el mapa para marcar dónde vives.
+      </p>
+    )
+  }
+  return (
+    <p className="flex items-start gap-2 text-xs text-[#6B7280]">
+      <Hand className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+      {status === 'manual' ? 'Pin ajustado. Lo guardaremos para tus envíos.' : '¿No es exacto? Arrastra el pin o toca el mapa.'}
+    </p>
+  )
+}
+
 export function AddressWizard({
   formData,
   onChange,
@@ -119,38 +163,70 @@ export function AddressWizard({
   const reduceMotion = useReducedMotion()
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState(1)
-  const [geo, setGeo] = useState<GeoState>({ status: 'idle' })
-  const geocodedKey = useRef<string | null>(null)
+  const hasPin = typeof formData.latitude === 'number' && typeof formData.longitude === 'number'
+  // A saved address that already has a pin opens as "found"
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>(hasPin ? 'found' : 'idle')
+  const [formattedAddress, setFormattedAddress] = useState<string | null>(null)
   const [retryToken, setRetryToken] = useState(0)
 
-  const canContinue = [
-    !!formData.fullName?.trim(),
-    !!formData.street?.trim() && !!formData.city?.trim(),
-    true,
-  ][step]
+  const canContinue = [!!formData.fullName?.trim(), !!formData.street?.trim() && !!formData.city?.trim(), hasPin || geoStatus === 'failed'][step]
 
   const goTo = (next: number) => {
     setDirection(next > step ? 1 : -1)
     setStep(next)
   }
 
-  // Geocode when the confirm step opens, and again only if the address changed
-  const addressKey = [formData.street, formData.number, formData.neighborhood, formData.city, formData.state, formData.zipCode].join('|')
+  /** Editing where the address is clears the pin, since it no longer matches */
+  const changeLocation = (patch: Partial<Address>) => {
+    onChange({ ...patch, latitude: null, longitude: null })
+    setFormattedAddress(null)
+    setGeoStatus('idle')
+  }
+
+  const handlePlace = (place: ParsedPlace) => {
+    onChange({
+      street: place.street,
+      number: place.number,
+      neighborhood: place.neighborhood,
+      city: place.city,
+      state: place.state,
+      zipCode: place.zipCode,
+      latitude: place.latitude,
+      longitude: place.longitude,
+    })
+    setFormattedAddress(place.formattedAddress || null)
+    setGeoStatus('found')
+  }
+
+  const handlePinMove = ({ latitude, longitude }: { latitude: number; longitude: number }) => {
+    onChange({ latitude, longitude })
+    setGeoStatus('manual')
+  }
+
+  // Geocode on the confirm step only when there's no pin yet
   useEffect(() => {
-    if (step !== 2) return
-    if (geocodedKey.current === `${addressKey}#${retryToken}`) return
-    geocodedKey.current = `${addressKey}#${retryToken}`
+    if (step !== 2 || hasPin) return
     const controller = new AbortController()
-    setGeo({ status: 'loading' })
-    geocodeAddress(formData, controller.signal)
-      .then(setGeo)
+    setGeoStatus('loading')
+    const run = hasGoogleMaps ? geocodeWithGoogle(formData) : geocodeWithNominatim(formData, controller.signal)
+    run
+      .then((result) => {
+        if (controller.signal.aborted) return
+        if (!result) {
+          setGeoStatus('failed')
+          return
+        }
+        onChange({ latitude: result.latitude, longitude: result.longitude })
+        if (result.formattedAddress) setFormattedAddress(result.formattedAddress)
+        setGeoStatus(result.status)
+      })
       .catch((error: unknown) => {
-        if ((error as Error).name !== 'AbortError') setGeo({ status: 'failed' })
+        if ((error as Error).name !== 'AbortError') setGeoStatus('failed')
       })
     return () => controller.abort()
-    // formData is read through addressKey; re-running on every keystroke elsewhere isn't needed
+    // formData is read once per attempt; hasPin flips after a successful geocode
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, addressKey, retryToken])
+  }, [step, hasPin, retryToken])
 
   const slide = {
     enter: (dir: number) => (reduceMotion ? { opacity: 0 } : { opacity: 0, x: dir * 28, filter: 'blur(4px)' }),
@@ -160,6 +236,21 @@ export function AddressWizard({
 
   const streetLine = `${formData.street ?? ''} ${formData.number ?? ''}`.trim() + (formData.interior ? `, ${formData.interior}` : '')
   const cityLine = [formData.neighborhood, formData.city, formData.state].filter(Boolean).join(', ') + (formData.zipCode ? ` ${formData.zipCode}` : '')
+
+  const pinMap = (height: string) =>
+    hasPin && (
+      <div className={cn('relative', height)}>
+        <PinMap
+          latitude={formData.latitude as number}
+          longitude={formData.longitude as number}
+          label={formData.label}
+          zoom={geoStatus === 'approximate' ? 14 : 17}
+          draggable
+          onPositionChange={handlePinMove}
+          className="h-full w-full"
+        />
+      </div>
+    )
 
   return (
     <div className="flex flex-col">
@@ -236,13 +327,21 @@ export function AddressWizard({
 
             {step === 1 && (
               <>
+                {hasGoogleMaps && (
+                  <>
+                    <GoogleAddressSearch onSelect={handlePlace} />
+                    {pinMap('h-40 sm:h-44')}
+                    {hasPin && <PinHint status={geoStatus} />}
+                    <p className="pt-1 text-[10px] uppercase tracking-[0.2em] text-[#9CA3AF]">Detalles</p>
+                  </>
+                )}
                 <div className="grid grid-cols-3 gap-3">
                   <Field label="Calle" className="col-span-2">
                     <input
                       type="text"
                       autoComplete="address-line1"
                       value={formData.street ?? ''}
-                      onChange={(e) => onChange({ street: e.target.value })}
+                      onChange={(e) => changeLocation({ street: e.target.value })}
                       className={inputClass}
                       placeholder="Av. Reforma"
                     />
@@ -251,7 +350,7 @@ export function AddressWizard({
                     <input
                       type="text"
                       value={formData.number ?? ''}
-                      onChange={(e) => onChange({ number: e.target.value })}
+                      onChange={(e) => changeLocation({ number: e.target.value })}
                       className={inputClass}
                       placeholder="123"
                     />
@@ -272,7 +371,7 @@ export function AddressWizard({
                     <input
                       type="text"
                       value={formData.neighborhood ?? ''}
-                      onChange={(e) => onChange({ neighborhood: e.target.value })}
+                      onChange={(e) => changeLocation({ neighborhood: e.target.value })}
                       className={inputClass}
                       placeholder="Col. Centro"
                     />
@@ -284,7 +383,7 @@ export function AddressWizard({
                       type="text"
                       autoComplete="address-level2"
                       value={formData.city ?? ''}
-                      onChange={(e) => onChange({ city: e.target.value })}
+                      onChange={(e) => changeLocation({ city: e.target.value })}
                       className={inputClass}
                       placeholder="Guadalajara"
                     />
@@ -294,7 +393,7 @@ export function AddressWizard({
                       type="text"
                       autoComplete="address-level1"
                       value={formData.state ?? ''}
-                      onChange={(e) => onChange({ state: e.target.value })}
+                      onChange={(e) => changeLocation({ state: e.target.value })}
                       className={inputClass}
                       placeholder="Jalisco"
                     />
@@ -305,7 +404,7 @@ export function AddressWizard({
                       inputMode="numeric"
                       autoComplete="postal-code"
                       value={formData.zipCode ?? ''}
-                      onChange={(e) => onChange({ zipCode: e.target.value })}
+                      onChange={(e) => changeLocation({ zipCode: e.target.value })}
                       className={inputClass}
                       placeholder="44580"
                     />
@@ -316,45 +415,47 @@ export function AddressWizard({
 
             {step === 2 && (
               <>
-                <div className="relative h-52 sm:h-56">
-                  {geo.status === 'found' || geo.status === 'approximate' ? (
-                    <AddressMap longitude={geo.lng} latitude={geo.lat} label={formData.label} zoom={geo.status === 'found' ? 16 : 13} className="h-full w-full" />
-                  ) : (
-                    <div className="h-full w-full rounded-2xl bg-[#F3F4F6] flex flex-col items-center justify-center gap-2 text-center px-6">
-                      {geo.status === 'failed' ? (
-                        <>
-                          <AlertTriangle className="w-5 h-5 text-amber-500" />
-                          <p className="text-sm text-[#6B7280]">No encontramos esta dirección en el mapa</p>
-                          <button
-                            type="button"
-                            onClick={() => setRetryToken((n) => n + 1)}
-                            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#111827] hover:underline"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            Reintentar
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin text-[#9CA3AF]" />
-                          <p className="text-sm text-[#6B7280]">Buscando tu dirección…</p>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {geo.status === 'approximate' && (
-                  <p className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
-                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                    Ubicación aproximada por código postal o ciudad. Revisa que los datos sean correctos.
-                  </p>
+                {hasPin ? (
+                  pinMap('h-52 sm:h-56')
+                ) : (
+                  <div className="h-52 sm:h-56 w-full rounded-2xl bg-[#F3F4F6] flex flex-col items-center justify-center gap-2 text-center px-6">
+                    {geoStatus === 'failed' ? (
+                      <>
+                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                        <p className="text-sm text-[#6B7280]">No encontramos esta dirección en el mapa</p>
+                        <button
+                          type="button"
+                          onClick={() => setRetryToken((n) => n + 1)}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#111827] hover:underline"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          Reintentar
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin text-[#9CA3AF]" />
+                        <p className="text-sm text-[#6B7280]">Buscando tu dirección…</p>
+                      </>
+                    )}
+                  </div>
                 )}
+
+                {hasPin && <PinHint status={geoStatus} />}
 
                 <div className="p-4 rounded-2xl bg-[#F9FAFB] dark:bg-white/[0.05] dark:ring-1 dark:ring-white/[0.06]">
                   <p className="text-sm font-semibold text-[#111827]">{formData.fullName}</p>
-                  <p className="mt-1 text-sm text-[#374151]">{streetLine}</p>
-                  <p className="text-sm text-[#6B7280]">{cityLine}</p>
+                  {formattedAddress ? (
+                    <>
+                      <p className="mt-1 text-sm text-[#374151]">{formattedAddress}</p>
+                      {formData.interior && <p className="text-sm text-[#6B7280]">Interior: {formData.interior}</p>}
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-1 text-sm text-[#374151]">{streetLine}</p>
+                      <p className="text-sm text-[#6B7280]">{cityLine}</p>
+                    </>
+                  )}
                   {formData.phone && <p className="mt-1 text-xs text-[#6B7280] tabular-nums">{formData.phone}</p>}
                   <button type="button" onClick={() => goTo(1)} className="mt-3 text-xs font-medium text-[#FF3D00] hover:underline">
                     ¿No es tu dirección? Corregir

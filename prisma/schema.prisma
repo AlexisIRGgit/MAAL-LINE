@@ -475,6 +475,9 @@ model Address {
   postalCode    String      @map("postal_code") @db.VarChar(20)
   country       String      @default("MX") @db.VarChar(2)
   deliveryNotes String?     @map("delivery_notes")
+  // Pin chosen on the map (Google Places result or a manual drag)
+  latitude      Float?
+  longitude     Float?
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
 import { AddressType } from '@prisma/client'
+import { parseCoordinates } from '@/lib/utils/coordinates'
 
 // GET - Fetch user addresses
 export async function GET() {
@@ -36,6 +37,8 @@ export async function GET() {
         state: addr.state,
         country: addr.country,
         isDefault: addr.isDefault,
+        latitude: addr.latitude,
+        longitude: addr.longitude,
       })),
     })
   } catch (error) {
@@ -67,7 +70,10 @@ export async function POST(request: NextRequest) {
       postalCode: postalCodeInput,
       country,
       isDefault,
+      latitude,
+      longitude,
     } = body
+    const coordinates = parseCoordinates(latitude, longitude)
 
     // If setting as default, unset other defaults
     if (isDefault) {
@@ -100,6 +106,8 @@ export async function POST(request: NextRequest) {
         postalCode,
         country: 'MX',
         isDefault: shouldBeDefault,
+        latitude: coordinates?.latitude ?? null,
+        longitude: coordinates?.longitude ?? null,
       },
     })
 
@@ -126,6 +134,8 @@ export async function POST(request: NextRequest) {
         state: newAddress.state,
         country: newAddress.country,
         isDefault: newAddress.isDefault,
+        latitude: newAddress.latitude,
+        longitude: newAddress.longitude,
       },
     })
   } catch (error) {

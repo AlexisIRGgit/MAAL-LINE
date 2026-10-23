@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
 import { AddressType } from '@prisma/client'
+import { parseCoordinates } from '@/lib/utils/coordinates'
 
 // PUT - Update address
 export async function PUT(
@@ -40,7 +41,10 @@ export async function PUT(
       postalCode: postalCodeInput,
       country,
       isDefault,
+      latitude,
+      longitude,
     } = body
+    const coordinates = parseCoordinates(latitude, longitude)
 
     // If setting as default, unset other defaults
     if (isDefault && !existingAddress.isDefault) {
@@ -73,6 +77,10 @@ export async function PUT(
         postalCode,
         country: 'MX',
         isDefault: isDefault ?? existingAddress.isDefault,
+        // Only touch the pin when the client sent one; an explicit null clears it
+        ...(latitude !== undefined || longitude !== undefined
+          ? { latitude: coordinates?.latitude ?? null, longitude: coordinates?.longitude ?? null }
+          : {}),
       },
     })
 
@@ -99,6 +107,8 @@ export async function PUT(
         state: updatedAddress.state,
         country: updatedAddress.country,
         isDefault: updatedAddress.isDefault,
+        latitude: updatedAddress.latitude,
+        longitude: updatedAddress.longitude,
       },
     })
   } catch (error) {
