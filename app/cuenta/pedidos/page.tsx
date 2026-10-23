@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   Package,
   Search,
@@ -13,7 +13,6 @@ import {
   Eye,
   RotateCcw,
   Loader2,
-  X,
   MapPin,
   Calendar,
   CreditCard,
@@ -29,6 +28,7 @@ import {
   PaidIndicator,
   IndicatorDivider,
 } from '@/components/account/order-status'
+import { CenterMorphModal } from '@/components/ui/center-morph-modal'
 
 interface OrderItem {
   name: string
@@ -82,6 +82,11 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  // Keeps the last order rendered while the modal folds closed
+  const lastSelectedOrder = useRef<Order | null>(null)
+  if (selectedOrder) lastSelectedOrder.current = selectedOrder
+  const modalOrder = selectedOrder ?? lastSelectedOrder.current
+  const detailsTriggerRef = useRef<HTMLButtonElement | null>(null)
   const [copied, setCopied] = useState(false)
 
   const fetchOrders = useCallback(async () => {
@@ -312,7 +317,10 @@ export default function OrdersPage() {
                     {/* Actions */}
                     <div className="px-4 sm:px-5 pb-4 sm:pb-5 flex flex-wrap gap-2">
                       <button
-                        onClick={() => setSelectedOrder(order)}
+                        onClick={(event) => {
+                          detailsTriggerRef.current = event.currentTarget
+                          setSelectedOrder(order)
+                        }}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors"
                       >
                         <Eye className="w-4 h-4" />
@@ -363,176 +371,150 @@ export default function OrdersPage() {
       </motion.div>
 
       {/* Order Details Modal */}
-      <AnimatePresence>
-        {selectedOrder && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-            onClick={() => setSelectedOrder(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-[#111827]">Detalles del Pedido</h2>
-                  <p className="text-sm text-[#6B7280]">{selectedOrder.id}</p>
-                </div>
-                <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="p-2 hover:bg-[#F3F4F6] rounded-xl transition-colors"
-                >
-                  <X className="w-5 h-5 text-[#6B7280]" />
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6 space-y-6">
-                {/* Status & Date */}
-                <div className="flex flex-wrap items-center gap-3">
-                  {selectedOrder.paymentStatus === 'paid' && (
-                    <PaidIndicator size="md" />
-                  )}
-                  <OrderStatusIndicator status={selectedOrder.status} size="md" />
-                  <span className="inline-flex items-center gap-2 text-sm text-[#6B7280]">
-                    <Calendar className="w-4 h-4" />
-                    {selectedOrder.date}
-                  </span>
-                </div>
-
-                {/* Products */}
-                <div>
-                  <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-[#6B7280]" />
-                    Productos ({selectedOrder.items.length})
-                  </h3>
-                  <div className="space-y-3">
-                    {selectedOrder.items.map((item, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="flex items-center gap-4 p-4 bg-[#F9FAFB] rounded-xl"
-                      >
-                        <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden border border-[#E5E7EB]">
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <ShoppingBag className="w-6 h-6 text-[#9CA3AF]" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-[#111827]">{item.name}</p>
-                          <p className="text-sm text-[#6B7280]">Talla: {item.size}</p>
-                          <p className="text-sm text-[#6B7280]">Cantidad: {item.quantity}</p>
-                        </div>
-                        <p className="font-bold text-[#111827]">${item.price.toLocaleString()}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Shipping Address */}
-                <div>
-                  <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-[#6B7280]" />
-                    Dirección de envío
-                  </h3>
-                  <div className="p-4 bg-[#F9FAFB] rounded-xl">
-                    <p className="text-sm text-[#374151]">{selectedOrder.shippingAddress}</p>
-                  </div>
-                </div>
-
-                {/* Tracking Number */}
-                {selectedOrder.trackingNumber && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-[#6B7280]" />
-                      Número de rastreo
-                    </h3>
-                    <div className="p-4 bg-[#F9FAFB] rounded-xl flex items-center justify-between gap-3">
-                      <code className="text-sm font-mono text-[#374151]">{selectedOrder.trackingNumber}</code>
-                      <button
-                        onClick={() => copyToClipboard(selectedOrder.trackingNumber!)}
-                        className="p-2 hover:bg-white rounded-lg transition-colors flex items-center gap-2 text-sm text-[#6B7280]"
-                      >
-                        {copied ? (
-                          <>
-                            <Check className={cn('w-4 h-4', toneStyles.green.text)} />
-                            <span className={toneStyles.green.text}>Copiado</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-4 h-4" />
-                            <span>Copiar</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
+      <CenterMorphModal
+        open={!!selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        labelledBy="order-details-title"
+        returnFocusRef={detailsTriggerRef}
+      >
+        {modalOrder && (
+          <div className="p-6 space-y-6">
+            {/* Header */}
+            <div className="pr-10">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#9CA3AF]">Detalles del pedido</p>
+              <h2 id="order-details-title" className="mt-1 text-lg font-bold text-[#111827] break-all">
+                {modalOrder.id}
+              </h2>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                {modalOrder.paymentStatus === 'paid' && (
+                  <>
+                    <PaidIndicator />
+                    <IndicatorDivider />
+                  </>
                 )}
-
-                {/* Order Summary */}
-                <div>
-                  <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-[#6B7280]" />
-                    Resumen
-                  </h3>
-                  <div className="p-4 bg-[#F9FAFB] rounded-xl space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-[#6B7280]">Subtotal</span>
-                      <span className="text-[#374151]">${selectedOrder.total.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-[#6B7280]">Envío</span>
-                      <span className="text-[#374151]">Gratis</span>
-                    </div>
-                    <div className="pt-2 border-t border-[#E5E7EB] flex justify-between">
-                      <span className="font-semibold text-[#111827]">Total</span>
-                      <span className="font-bold text-[#111827]">${selectedOrder.total.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
+                <OrderStatusIndicator status={modalOrder.status} />
+                <IndicatorDivider />
+                <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {modalOrder.date}
+                </span>
               </div>
+            </div>
 
-              {/* Modal Footer */}
-              <div className="sticky bottom-0 bg-white border-t border-[#E5E7EB] px-6 py-4 flex flex-wrap gap-3">
-                {selectedOrder.status === 'delivered' && (
-                  <button className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors">
-                    <RotateCcw className="w-4 h-4" />
-                    Reordenar
+            {/* Products */}
+            <div>
+              <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-[#6B7280]" />
+                Productos ({modalOrder.items.length})
+              </h3>
+              <div className="space-y-2">
+                {modalOrder.items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-[#F9FAFB] rounded-2xl">
+                    <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-[#E5E7EB]">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <ShoppingBag className="w-5 h-5 text-[#9CA3AF]" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#111827] truncate">{item.name}</p>
+                      <p className="text-xs text-[#6B7280]">
+                        Talla {item.size} · Cantidad {item.quantity}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold tabular-nums text-[#111827]">${item.price.toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Shipping Address */}
+            <div>
+              <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-[#6B7280]" />
+                Dirección de envío
+              </h3>
+              <div className="p-4 bg-[#F9FAFB] rounded-2xl">
+                <p className="text-sm text-[#374151]">{modalOrder.shippingAddress}</p>
+              </div>
+            </div>
+
+            {/* Tracking Number */}
+            {modalOrder.trackingNumber && (
+              <div>
+                <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-[#6B7280]" />
+                  Número de rastreo
+                </h3>
+                <div className="p-4 bg-[#F9FAFB] rounded-2xl flex items-center justify-between gap-3">
+                  <code className="text-sm font-mono text-[#374151] break-all">{modalOrder.trackingNumber}</code>
+                  <button
+                    onClick={() => copyToClipboard(modalOrder.trackingNumber!)}
+                    className="p-2 hover:bg-white rounded-lg transition-colors flex items-center gap-2 text-sm text-[#6B7280]"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className={cn('w-4 h-4', toneStyles.green.text)} />
+                        <span className={toneStyles.green.text}>Copiado</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>Copiar</span>
+                      </>
+                    )}
                   </button>
-                )}
-                {selectedOrder.trackingNumber && (
-                  <button className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-xl hover:bg-[#F9FAFB] transition-colors">
-                    <Truck className="w-4 h-4" />
-                    Rastrear envío
-                  </button>
-                )}
-                <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-xl hover:bg-[#F9FAFB] transition-colors"
-                >
-                  Cerrar
-                </button>
+                </div>
               </div>
-            </motion.div>
-          </motion.div>
+            )}
+
+            {/* Order Summary */}
+            <div>
+              <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-[#6B7280]" />
+                Resumen
+              </h3>
+              <div className="p-4 bg-[#F9FAFB] rounded-2xl space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#6B7280]">Subtotal</span>
+                  <span className="text-[#374151] tabular-nums">${modalOrder.total.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#6B7280]">Envío</span>
+                  <span className="text-[#374151]">Gratis</span>
+                </div>
+                <div className="pt-2 border-t border-[#E5E7EB] flex justify-between">
+                  <span className="font-semibold text-[#111827]">Total</span>
+                  <span className="font-bold text-[#111827] tabular-nums">${modalOrder.total.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2">
+              {modalOrder.status === 'delivered' && (
+                <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-full hover:bg-[#1F2937] transition-colors">
+                  <RotateCcw className="w-4 h-4" />
+                  Reordenar
+                </button>
+              )}
+              {modalOrder.trackingNumber && (
+                <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-full hover:bg-[#F9FAFB] transition-colors">
+                  <Truck className="w-4 h-4" />
+                  Rastrear envío
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-full hover:bg-[#F9FAFB] transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </CenterMorphModal>
     </motion.div>
   )
 }
