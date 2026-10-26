@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils/cn'
 import { ROLE_INFO } from '@/lib/permissions'
 import { toast } from '@/lib/toast'
 import { UserForm } from '@/components/admin/user-form'
+import { UserAvatar } from '@/components/ui/user-avatar'
 
 interface TeamMember {
   id: string
@@ -292,17 +293,12 @@ export default function UsersPage() {
                 <div className="flex items-center gap-4">
                   {/* Avatar */}
                   <div className="relative">
-                    {user.avatarUrl ? (
-                      <img
-                        src={user.avatarUrl}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white font-bold text-lg">
-                        {user.firstName?.[0] || user.email[0].toUpperCase()}
-                      </div>
-                    )}
+                    <UserAvatar
+                      seed={user.email}
+                      name={[user.firstName, user.lastName].filter(Boolean).join(' ')}
+                      avatarUrl={user.avatarUrl}
+                      size={48}
+                    />
                     <div className="absolute -bottom-0.5 -right-0.5">
                       {getRoleIcon(user.role)}
                     </div>

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Bell, Search, ChevronDown, User, Settings, LogOut, Menu } from 'lucide-react'
 import { signOut } from 'next-auth/react'
-import Image from 'next/image'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export function AdminHeader({
@@ -111,21 +111,12 @@ export function AdminHeader({
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#F3F4F6] rounded-xl transition-colors"
           >
-            <div className="w-8 h-8 bg-[#111827] rounded-full flex items-center justify-center">
-              {session?.user?.avatarUrl ? (
-                <Image
-                  src={session.user.avatarUrl}
-                  alt={userName}
-                  width={32}
-                  height={32}
-                  className="rounded-full"
-                />
-              ) : (
-                <span className="text-white text-sm font-medium">
-                  {userName.charAt(0).toUpperCase()}
-                </span>
-              )}
-            </div>
+            <UserAvatar
+              seed={session?.user?.email || session?.user?.id || userName}
+              name={userName}
+              avatarUrl={session?.user?.avatarUrl}
+              size={32}
+            />
             <div className="hidden md:block text-left">
               <p className="text-sm font-medium text-[#111827]">{userName}</p>
               <p className="text-xs text-[#6B7280] capitalize">{session?.user?.role || 'Admin'}</p>

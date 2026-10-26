@@ -29,6 +29,7 @@ import {
 
 const ITEMS_PER_PAGE = 10
 import { toast } from '@/lib/toast'
+import { UserAvatar } from '@/components/ui/user-avatar'
 
 interface Address {
   id: string
@@ -420,9 +421,7 @@ export default function CustomersPage() {
                   >
                     <td className="p-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                          {customer.name.charAt(0).toUpperCase()}
-                        </div>
+                        <UserAvatar seed={customer.email || customer.name} name={customer.name} size={40} />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-[#111827] font-medium text-sm truncate">{customer.name}</p>
@@ -581,9 +580,7 @@ export default function CustomersPage() {
               <div className="space-y-4">
                 {/* Customer Header */}
                 <div className="flex items-center gap-4 p-4 bg-[#F9FAFB] rounded-xl">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
-                    {selectedCustomer.name.charAt(0).toUpperCase()}
-                  </div>
+                  <UserAvatar seed={selectedCustomer.email || selectedCustomer.name} name={selectedCustomer.name} size={64} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-[#111827] font-semibold text-lg truncate">{selectedCustomer.name}</h3>

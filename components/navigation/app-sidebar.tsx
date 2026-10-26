@@ -9,6 +9,7 @@ import { LogOut, X, PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucid
 import { cn } from '@/lib/utils/cn'
 import { useThemeToggle, ThemeToggleIcon } from '@/components/ui/theme-toggle'
 import { useModalA11y } from '@/hooks/use-modal-a11y'
+import { UserAvatar } from '@/components/ui/user-avatar'
 
 // Shared sidebar for the customer panel (/cuenta) and the admin panel (/admin):
 // a desktop rail that collapses on a spring (button, edge click or Cmd/Ctrl+B) and
@@ -25,6 +26,8 @@ export interface SidebarUser {
   /** Second line under the name (email, role…) */
   subtitle?: string | null
   avatarUrl: string | null
+  /** Stable per person (email), seeds the blobatar shown when there's no photo */
+  seed: string
   /** Where tapping the user card goes */
   href: string
 }
@@ -49,18 +52,7 @@ const widthSpring: Transition = { type: 'spring', stiffness: 380, damping: 35, m
 const pillSpring: Transition = { type: 'spring', stiffness: 360, damping: 32 }
 
 export function SidebarAvatar({ user, className }: { user: SidebarUser; className?: string }) {
-  const initial = user.name.charAt(0).toUpperCase()
-  return (
-    <div className={cn('rounded-full overflow-hidden flex-shrink-0', className)}>
-      {user.avatarUrl ? (
-        <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
-      ) : (
-        <div className="w-full h-full bg-gradient-to-br from-[#111827] to-[#374151] flex items-center justify-center text-white font-bold">
-          {initial}
-        </div>
-      )}
-    </div>
-  )
+  return <UserAvatar seed={user.seed} name={user.name} avatarUrl={user.avatarUrl} className={className} />
 }
 
 // Fades labels in after the width has started opening, and out quickly when closing

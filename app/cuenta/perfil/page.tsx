@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from '@/lib/toast'
+import { UserAvatar } from '@/components/ui/user-avatar'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -346,8 +347,6 @@ export default function ProfilePage() {
     }
   }
 
-  const userInitial = formData.firstName?.charAt(0)?.toUpperCase() || session?.user?.email?.charAt(0)?.toUpperCase() || 'U'
-
   if (isLoadingProfile) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -373,19 +372,12 @@ export default function ProfilePage() {
       <motion.div variants={itemVariants} className="bg-white border border-[#E5E7EB] rounded-2xl p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <div className="relative">
-            {avatarUrl ? (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden relative">
-                <img
-                  src={avatarUrl}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#111827] to-[#374151] rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
-                {userInitial}
-              </div>
-            )}
+            <UserAvatar
+              seed={session?.user?.email || formData.email || session?.user?.id || 'maal'}
+              name={[formData.firstName, formData.lastName].filter(Boolean).join(' ')}
+              avatarUrl={avatarUrl}
+              className="w-20 h-20 sm:w-24 sm:h-24"
+            />
             <input
               ref={fileInputRef}
               type="file"

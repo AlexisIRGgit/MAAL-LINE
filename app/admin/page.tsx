@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { adaptChartColor } from '@/lib/utils/chart-colors'
+import { UserAvatar } from '@/components/ui/user-avatar'
 
 // Lazy load charts to reduce initial bundle size (Recharts is ~45KB)
 const SalesChart = dynamic(
@@ -72,6 +73,8 @@ interface DashboardData {
     total: string
     status: string
     avatar: string
+    email?: string | null
+    avatarUrl?: string | null
   }>
 }
 
@@ -309,9 +312,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-3 sm:px-5 py-3 sm:py-4 whitespace-nowrap hidden sm:table-cell">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-[#F3F4F6] rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-[#6B7280]">{order.avatar}</span>
-                        </div>
+                        <UserAvatar seed={order.email || order.customer} name={order.customer} avatarUrl={order.avatarUrl} size={32} />
                         <span className="text-sm text-[#374151]">{order.customer}</span>
                       </div>
                     </td>

@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Logo } from '@/components/common/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { MobileMenuSheet } from '@/components/navigation/mobile-menu-sheet'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { useCartStore, selectCartItems } from '@/lib/store/cart-store'
 import { useAuthModalStore } from '@/lib/store/auth-modal-store'
 import { cn } from '@/lib/utils/cn'
@@ -29,53 +30,6 @@ interface SearchResult {
   compareAtPrice: number | null
   images: { url: string; altText: string | null }[]
   category: { name: string } | null
-}
-
-function UserAvatar({ firstName, lastName, avatarUrl, size = 32 }: {
-  firstName: string | null
-  lastName: string | null
-  avatarUrl: string | null
-  size?: number
-}) {
-  const [imgError, setImgError] = useState(false)
-  const initials = `${(firstName ?? '')[0] ?? ''}${(lastName ?? '')[0] ?? ''}`.toUpperCase() || '?'
-
-  if (avatarUrl && !imgError) {
-    // Use <img> for data URIs, next/image for external URLs
-    const isDataUri = avatarUrl.startsWith('data:')
-    return (
-      <div
-        className="relative rounded-full overflow-hidden flex-shrink-0"
-        style={{ width: size, height: size }}
-      >
-        {isDataUri ? (
-          <img
-            src={avatarUrl}
-            alt={`${firstName ?? ''} ${lastName ?? ''}`}
-            className="w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <Image
-            src={avatarUrl}
-            alt={`${firstName ?? ''} ${lastName ?? ''}`}
-            fill
-            className="object-cover"
-            onError={() => setImgError(true)}
-          />
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div
-      className="rounded-full bg-[#F3F4F6] flex items-center justify-center flex-shrink-0"
-      style={{ width: size, height: size }}
-    >
-      <span className="text-xs font-semibold text-[#374151]">{initials}</span>
-    </div>
-  )
 }
 
 interface WishlistDropdownItem {
@@ -638,8 +592,8 @@ export function Navbar() {
                   </div>
                   {/* Avatar */}
                   <UserAvatar
-                    firstName={session.user.firstName}
-                    lastName={session.user.lastName}
+                    seed={session.user.email || session.user.id}
+                    name={[session.user.firstName, session.user.lastName].filter(Boolean).join(' ')}
                     avatarUrl={resolvedAvatarUrl}
                     size={32}
                   />
@@ -727,8 +681,8 @@ export function Navbar() {
         avatar={
           session ? (
             <UserAvatar
-              firstName={session.user.firstName}
-              lastName={session.user.lastName}
+              seed={session.user.email || session.user.id}
+              name={[session.user.firstName, session.user.lastName].filter(Boolean).join(' ')}
               avatarUrl={resolvedAvatarUrl}
               size={48}
             />

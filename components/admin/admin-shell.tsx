@@ -68,12 +68,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         name: userName,
         subtitle: roleLabels[role] ?? role,
         avatarUrl: session?.user?.avatarUrl ?? null,
+        seed: session?.user?.email || session?.user?.id || userName,
         href: '/admin/settings',
       },
       footerLinks: [{ href: '/', label: 'Ver tienda', icon: Store }],
       onSignOut: () => signOut({ callbackUrl: '/admin/login' }),
     }),
-    [role, userName, session?.user?.avatarUrl]
+    [role, userName, session?.user?.avatarUrl, session?.user?.email, session?.user?.id]
   )
 
   return (

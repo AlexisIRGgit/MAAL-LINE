@@ -74,11 +74,11 @@ export default function AccountLayout({
       brandHref: '/',
       items: menuItems,
       isActive: isItemActive,
-      user: { name: userName, subtitle: userEmail, avatarUrl, href: '/cuenta/perfil' },
+      user: { name: userName, subtitle: userEmail, avatarUrl, seed: userEmail || session?.user?.id || userName, href: '/cuenta/perfil' },
       footerLinks: [{ href: '/', label: 'Volver a la tienda', icon: ChevronLeft }],
       onSignOut: () => signOut({ callbackUrl: '/' }),
     }),
-    [userName, userEmail, avatarUrl]
+    [userName, userEmail, avatarUrl, session?.user?.id]
   )
 
   return (
