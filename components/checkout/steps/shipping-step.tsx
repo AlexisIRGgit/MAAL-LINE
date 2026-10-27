@@ -1,37 +1,26 @@
 'use client'
 
-import { useState } from 'react'
-import { Truck, Zap, Clock, MapPin } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Truck, Zap, Clock, MapPin, Loader2 } from 'lucide-react'
 import { useCheckoutModalStore } from '@/lib/store/checkout-modal-store'
 import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
 import { toast } from '@/lib/toast'
+import {
+  DEFAULT_SHIPPING_SETTINGS,
+  shippingCostFor,
+  type ShippingMethodId,
+  type ShippingSettings,
+} from '@/lib/store-settings'
 
-const FREE_SHIPPING_THRESHOLD = 999
+// Methods, prices and free-shipping rules come from Admin > Configuración > Envíos
+const METHOD_ICONS: Record<ShippingMethodId, typeof Truck> = {
+  standard: Truck,
+  express: Zap,
+  next_day: Clock,
+}
 
-const SHIPPING_METHODS = [
-  {
-    id: 'standard',
-    name: 'Envío Estándar',
-    description: '5-7 días hábiles',
-    price: 99,
-    icon: Truck,
-  },
-  {
-    id: 'express',
-    name: 'Envío Express',
-    description: '2-3 días hábiles',
-    price: 199,
-    icon: Zap,
-  },
-  {
-    id: 'next_day',
-    name: 'Envío al Día Siguiente',
-    description: '1 día hábil',
-    price: 349,
-    icon: Clock,
-  },
-]
+type PublicShipping = Pick<ShippingSettings, 'freeShippingThreshold' | 'methods'>
 
 export function ShippingStep() {
   const {
@@ -45,9 +34,35 @@ export function ShippingStep() {
 
   const items = useCartStore((s) => s.items)
   const subtotal = items.reduce((total, item) => total + item.product.price * item.quantity, 0)
-  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
-
+  const [shipping, setShipping] = useState<PublicShipping | null>(null)
   const [selected, setSelected] = useState<string>(storedMethod || 'standard')
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/store/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return
+        const config: PublicShipping = data?.shipping ?? {
+          ...DEFAULT_SHIPPING_SETTINGS,
+          methods: DEFAULT_SHIPPING_SETTINGS.methods.filter((m) => m.enabled),
+        }
+        setShipping(config)
+        // Keep the previous choice only if that method is still offered
+        setSelected((current) => (config.methods.some((m) => m.id === current) ? current : config.methods[0]?.id ?? ''))
+      })
+      .catch(() => {
+        if (!cancelled) setShipping({ ...DEFAULT_SHIPPING_SETTINGS })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const settingsForCost: ShippingSettings | null = shipping ? { ...DEFAULT_SHIPPING_SETTINGS, ...shipping } : null
+  const freeEligible = shipping?.methods.filter((m) => m.freeEligible) ?? []
+  const freeShipping =
+    !!shipping && shipping.freeShippingThreshold !== null && subtotal >= shipping.freeShippingThreshold && freeEligible.length > 0
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('es-MX', {
@@ -57,14 +72,11 @@ export function ShippingStep() {
     }).format(value)
   }
 
-  const getShippingCost = (methodId: string) => {
-    if (freeShipping && methodId === 'standard') return 0
-    const method = SHIPPING_METHODS.find((m) => m.id === methodId)
-    return method?.price || 0
-  }
+  const getShippingCost = (methodId: string) =>
+    settingsForCost ? shippingCostFor(settingsForCost, methodId, subtotal) ?? 0 : 0
 
   const handleContinue = () => {
-    if (!selected) {
+    if (!selected || !shipping?.methods.some((m) => m.id === selected)) {
       toast.warning('Selecciona un método de envío')
       return
     }
@@ -94,16 +106,22 @@ export function ShippingStep() {
         <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2">
           <Truck className="w-4 h-4 text-green-600" />
           <span className="text-green-700 text-sm font-medium">
-            Envío estándar gratis en compras mayores a {formatPrice(FREE_SHIPPING_THRESHOLD)}
+            {freeEligible.map((m) => m.name).join(' y ')} gratis en compras desde{' '}
+            {formatPrice(shipping?.freeShippingThreshold ?? 0)}
           </span>
         </div>
       )}
 
       <div className="space-y-3">
-        {SHIPPING_METHODS.map((method) => {
+        {!shipping && (
+          <div className="h-[74px] rounded-xl border border-gray-200 flex items-center justify-center">
+            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          </div>
+        )}
+        {shipping?.methods.map((method) => {
           const cost = getShippingCost(method.id)
           const isSelected = selected === method.id
-          const Icon = method.icon
+          const Icon = METHOD_ICONS[method.id] ?? Truck
 
           return (
             <button
@@ -157,7 +175,8 @@ export function ShippingStep() {
         </button>
         <button
           onClick={handleContinue}
-          className="px-8 py-3 bg-[#FF3D00] text-white font-bold tracking-wider rounded-xl hover:bg-[#E63600] transition-colors"
+          disabled={!shipping}
+          className="px-8 py-3 bg-[#FF3D00] text-white font-bold tracking-wider rounded-xl hover:bg-[#E63600] transition-colors disabled:opacity-50"
         >
           CONTINUAR
         </button>

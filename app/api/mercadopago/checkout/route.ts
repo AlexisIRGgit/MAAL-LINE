@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
 import { getPublicStoreSettings } from '@/lib/public-store-settings'
+import { shippingCostFor } from '@/lib/store-settings'
 import { preference } from '@/lib/mercadopago'
 import { nanoid } from 'nanoid'
 
@@ -18,20 +19,6 @@ interface CheckoutRequest {
   items: CheckoutItem[]
   discountCode?: string
 }
-
-const SHIPPING_COSTS: Record<string, number> = {
-  standard: 99,
-  express: 199,
-  next_day: 349,
-}
-
-const SHIPPING_NAMES: Record<string, string> = {
-  standard: 'Envío Estándar (5-7 días)',
-  express: 'Envío Express (2-3 días)',
-  next_day: 'Envío al Día Siguiente',
-}
-
-const FREE_SHIPPING_THRESHOLD = 999
 
 export async function POST(request: NextRequest) {
   try {
@@ -155,7 +142,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate shipping
-    const shippingTotal = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : (SHIPPING_COSTS[shippingMethod] || 99)
+    // Costs, names and free-shipping rules come from Admin > Configuración > Envíos
+    const { shipping } = await getPublicStoreSettings()
+    const shippingTotal = shippingCostFor(shipping, shippingMethod, subtotal)
+    const shippingOption = shipping.methods.find((m) => m.id === shippingMethod)
+    if (shippingTotal === null || !shippingOption) {
+      return NextResponse.json({ error: 'Este método de envío no está disponible' }, { status: 400 })
+    }
 
     // Handle discount code
     let discountTotal = 0
@@ -193,7 +186,7 @@ export async function POST(request: NextRequest) {
     if (shippingTotal > 0) {
       mpItems.push({
         id: 'shipping',
-        title: SHIPPING_NAMES[shippingMethod] || 'Envío',
+        title: shippingOption.description ? `${shippingOption.name} (${shippingOption.description})` : shippingOption.name,
         quantity: 1,
         unit_price: shippingTotal,
         currency_id: 'MXN',

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FREE_SHIPPING_THRESHOLD } from '@/lib/store-settings'
+import { DEFAULT_SHIPPING_SETTINGS } from '@/lib/store-settings'
 
-const FREE_SHIPPING_MESSAGE = `ENVÍO GRATIS EN PEDIDOS +$${FREE_SHIPPING_THRESHOLD}`
+const freeShippingMessage = (threshold: number) => `ENVÍO GRATIS EN PEDIDOS +$${threshold.toLocaleString('es-MX')}`
 const OTHER_MESSAGES = [
   'NEW DROP — OVERSIZED COLLECTION',
   'PAGO EN 3 MSI CON TARJETAS PARTICIPANTES',
@@ -31,6 +31,7 @@ export function PromoBar() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [barEnabled, setBarEnabled] = useState(true)
   const [showFreeShipping, setShowFreeShipping] = useState(true)
+  const [threshold, setThreshold] = useState<number | null>(DEFAULT_SHIPPING_SETTINGS.freeShippingThreshold)
 
   // Admin > Configuración: General turns the whole bar off, Envíos the free-shipping message
   useEffect(() => {
@@ -43,6 +44,9 @@ export function PromoBar() {
           setBarEnabled(data.promoBar)
           cacheFlag(BAR_CACHE_KEY, data.promoBar)
         }
+        if (data?.shipping && 'freeShippingThreshold' in data.shipping) {
+          setThreshold(data.shipping.freeShippingThreshold)
+        }
         if (typeof data?.freeShippingBanner === 'boolean') {
           setShowFreeShipping(data.freeShippingBanner)
           cacheFlag(BANNER_CACHE_KEY, data.freeShippingBanner)
@@ -51,7 +55,9 @@ export function PromoBar() {
       .catch(() => {})
   }, [])
 
-  const messages = showFreeShipping ? [FREE_SHIPPING_MESSAGE, ...OTHER_MESSAGES] : OTHER_MESSAGES
+  // No message when free shipping is off (no threshold) in Envíos
+  const messages =
+    showFreeShipping && threshold !== null ? [freeShippingMessage(threshold), ...OTHER_MESSAGES] : OTHER_MESSAGES
 
   useEffect(() => {
     const interval = setInterval(() => {

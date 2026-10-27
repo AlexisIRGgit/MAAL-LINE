@@ -64,23 +64,71 @@ export function parseLogoDataUrl(input: unknown): { data: string } | { error: st
 // ---------- Shipping ----------
 
 export const SHIPPING_SETTINGS_KEY = 'store.shipping'
-/** Orders at or above this subtotal ship free (also hardcoded in checkout APIs) */
-export const FREE_SHIPPING_THRESHOLD = 999
+/** Fixed method ids: orders store them and the checkout maps them to icons */
+export const SHIPPING_METHOD_IDS = ['standard', 'express', 'next_day'] as const
+export type ShippingMethodId = (typeof SHIPPING_METHOD_IDS)[number]
+
+export type ShippingMethod = {
+  id: ShippingMethodId
+  name: string
+  description: string
+  /** MXN */
+  price: number
+  enabled: boolean
+  /** Ships free when the subtotal reaches freeShippingThreshold */
+  freeEligible: boolean
+}
 
 export type ShippingSettings = {
-  /** Show the "free shipping over $999" message in the store's top promo bar */
+  /** Show the "free shipping over $X" message in the store's top promo bar */
   freeShippingBanner: boolean
+  /** MXN subtotal for free shipping on eligible methods; null turns it off */
+  freeShippingThreshold: number | null
+  methods: ShippingMethod[]
 }
+
+export const DEFAULT_SHIPPING_METHODS: ShippingMethod[] = [
+  { id: 'standard', name: 'Envío Estándar', description: '5-7 días hábiles', price: 99, enabled: true, freeEligible: true },
+  { id: 'express', name: 'Envío Express', description: '2-3 días hábiles', price: 199, enabled: true, freeEligible: false },
+  { id: 'next_day', name: 'Envío al Día Siguiente', description: '1 día hábil', price: 349, enabled: true, freeEligible: false },
+]
 
 export const DEFAULT_SHIPPING_SETTINGS: ShippingSettings = {
   freeShippingBanner: true,
+  freeShippingThreshold: 999,
+  methods: DEFAULT_SHIPPING_METHODS,
+}
+
+const isPrice = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100_000
+
+function readMethod(defaults: ShippingMethod, raw: Record<string, unknown> | undefined): ShippingMethod {
+  const text = (v: unknown, max: number, fallback: string) =>
+    typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : fallback
+  return {
+    id: defaults.id,
+    name: text(raw?.name, 60, defaults.name),
+    description: text(raw?.description, 80, defaults.description),
+    price: isPrice(raw?.price) ? Math.round(raw.price * 100) / 100 : defaults.price,
+    enabled: typeof raw?.enabled === 'boolean' ? raw.enabled : defaults.enabled,
+    freeEligible: typeof raw?.freeEligible === 'boolean' ? raw.freeEligible : defaults.freeEligible,
+  }
 }
 
 export function readShippingSettings(value: unknown): ShippingSettings {
   const raw = (value ?? {}) as Record<string, unknown>
+  const rawMethods = Array.isArray(raw.methods) ? (raw.methods as Record<string, unknown>[]) : []
   return {
     freeShippingBanner:
       typeof raw.freeShippingBanner === 'boolean' ? raw.freeShippingBanner : DEFAULT_SHIPPING_SETTINGS.freeShippingBanner,
+    freeShippingThreshold:
+      raw.freeShippingThreshold === null
+        ? null
+        : isPrice(raw.freeShippingThreshold)
+          ? raw.freeShippingThreshold
+          : DEFAULT_SHIPPING_SETTINGS.freeShippingThreshold,
+    methods: DEFAULT_SHIPPING_METHODS.map((defaults) =>
+      readMethod(defaults, rawMethods.find((m) => m?.id === defaults.id))
+    ),
   }
 }
 
@@ -90,12 +138,63 @@ export function parseShippingSettingsUpdate(
   input: unknown
 ): { data: ShippingSettings } | { error: string } {
   const raw = (input ?? {}) as Record<string, unknown>
-  const next = { ...current }
+  const next: ShippingSettings = { ...current, methods: current.methods.map((m) => ({ ...m })) }
+
   if ('freeShippingBanner' in raw) {
     if (typeof raw.freeShippingBanner !== 'boolean') return { error: 'Valor no válido para el aviso de envío gratis' }
     next.freeShippingBanner = raw.freeShippingBanner
   }
+
+  if ('freeShippingThreshold' in raw) {
+    if (raw.freeShippingThreshold !== null && !isPrice(raw.freeShippingThreshold)) {
+      return { error: 'El monto para envío gratis no es válido' }
+    }
+    next.freeShippingThreshold = raw.freeShippingThreshold as number | null
+  }
+
+  if ('methods' in raw) {
+    if (!Array.isArray(raw.methods)) return { error: 'Métodos de envío no válidos' }
+    for (const update of raw.methods as Record<string, unknown>[]) {
+      const method = next.methods.find((m) => m.id === update?.id)
+      if (!method) return { error: 'Método de envío desconocido' }
+      if ('name' in update) {
+        if (typeof update.name !== 'string' || !update.name.trim() || update.name.trim().length > 60) {
+          return { error: 'El nombre del envío debe tener entre 1 y 60 caracteres' }
+        }
+        method.name = update.name.trim()
+      }
+      if ('description' in update) {
+        if (typeof update.description !== 'string' || update.description.trim().length > 80) {
+          return { error: 'La descripción del envío debe tener máximo 80 caracteres' }
+        }
+        method.description = update.description.trim()
+      }
+      if ('price' in update) {
+        if (!isPrice(update.price)) return { error: 'El costo del envío no es válido' }
+        method.price = Math.round(update.price * 100) / 100
+      }
+      if ('enabled' in update) {
+        if (typeof update.enabled !== 'boolean') return { error: 'Valor no válido' }
+        method.enabled = update.enabled
+      }
+      if ('freeEligible' in update) {
+        if (typeof update.freeEligible !== 'boolean') return { error: 'Valor no válido' }
+        method.freeEligible = update.freeEligible
+      }
+    }
+    if (!next.methods.some((m) => m.enabled)) return { error: 'Debe quedar al menos un método de envío activo' }
+  }
+
   return { data: next }
+}
+
+/** Cost of a method for a subtotal, or null when it doesn't exist or is off. Server and checkout share it. */
+export function shippingCostFor(settings: ShippingSettings, methodId: string, subtotal: number): number | null {
+  const method = settings.methods.find((m) => m.id === methodId)
+  if (!method || !method.enabled) return null
+  const free =
+    method.freeEligible && settings.freeShippingThreshold !== null && subtotal >= settings.freeShippingThreshold
+  return free ? 0 : method.price
 }
 
 // ---------- Promo bar ----------

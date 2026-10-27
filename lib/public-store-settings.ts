@@ -8,6 +8,7 @@ import {
   readPaymentSettings,
   readPromoBarEnabled,
   readShippingSettings,
+  type ShippingSettings,
   type PaymentSettings,
 } from '@/lib/store-settings'
 
@@ -18,6 +19,7 @@ export type PublicStoreSettings = {
   promoBar: boolean
   freeShippingBanner: boolean
   payments: PaymentSettings
+  shipping: ShippingSettings
   /** Uploaded store logo; `version` busts browser caches (favicons are cached aggressively) */
   logo: { dataUrl: string; version: string } | null
 }
@@ -41,6 +43,7 @@ export const getPublicStoreSettings = unstable_cache(
     return {
       promoBar: readPromoBarEnabled(promoBarRow?.value),
       freeShippingBanner: readShippingSettings(shipping?.value).freeShippingBanner,
+      shipping: readShippingSettings(shipping?.value),
       payments: readPaymentSettings(paymentsRow?.value),
       logo:
         logoRow && typeof logoUrl === 'string'

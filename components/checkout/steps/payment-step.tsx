@@ -10,12 +10,6 @@ import { toast } from '@/lib/toast'
 
 import { DEFAULT_PAYMENT_SETTINGS, type PaymentProvider as PaymentMethod, type PaymentSettings } from '@/lib/store-settings'
 
-const SHIPPING_NAMES: Record<string, string> = {
-  standard: 'Envío Estándar (5-7 días)',
-  express: 'Envío Express (2-3 días)',
-  next_day: 'Envío al Día Siguiente',
-}
-
 export function PaymentStep() {
   const {
     selectedAddressId,
@@ -34,6 +28,8 @@ export function PaymentStep() {
   const [processing, setProcessing] = useState(false)
   // Methods switched on in Admin > Configuración > Pagos
   const [enabledMethods, setEnabledMethods] = useState<PaymentSettings | null>(null)
+  // Shipping names are editable in Admin > Configuración > Envíos
+  const [shippingNames, setShippingNames] = useState<Record<string, string>>({})
 
   useEffect(() => {
     let cancelled = false
@@ -42,6 +38,8 @@ export function PaymentStep() {
       .then((data) => {
         if (cancelled) return
         const methods: PaymentSettings = data?.payments ?? DEFAULT_PAYMENT_SETTINGS
+        const shippingMethods: { id: string; name: string; description: string }[] = data?.shipping?.methods ?? []
+        setShippingNames(Object.fromEntries(shippingMethods.map((m) => [m.id, m.description ? `${m.name} (${m.description})` : m.name])))
         setEnabledMethods(methods)
         setPaymentMethod(methods.stripe ? 'stripe' : 'mercadopago')
       })
@@ -147,7 +145,7 @@ export function PaymentStep() {
         {shippingMethod && (
           <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-2">
             <Truck className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-xs text-gray-600">{SHIPPING_NAMES[shippingMethod] || shippingMethod}</span>
+            <span className="text-xs text-gray-600">{shippingNames[shippingMethod] || 'Envío'}</span>
             <span className="ml-auto text-xs font-bold text-gray-900">
               {shippingCost === 0 ? 'GRATIS' : formatPrice(shippingCost)}
             </span>

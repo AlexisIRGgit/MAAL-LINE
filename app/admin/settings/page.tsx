@@ -32,7 +32,9 @@ import { resizeImageToDataUrl } from '@/lib/utils/resize-image'
 import {
   DEFAULT_GENERAL_SETTINGS,
   DEFAULT_NOTIFICATION_SETTINGS,
-  FREE_SHIPPING_THRESHOLD,
+  DEFAULT_SHIPPING_SETTINGS,
+  type ShippingMethodId,
+  type ShippingSettings as ShippingSettingsData,
   type GeneralSettings as GeneralSettingsData,
   type NotificationKey,
   type NotificationSettings as NotificationSettingsData,
@@ -800,10 +802,32 @@ function PaymentSettings() {
   )
 }
 
+const SWITCH_TRACK =
+  "w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#111827] peer-focus-visible:ring-offset-2 rounded-full peer peer-disabled:opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"
+
+/** Editable copy of the shipping config; prices and the threshold stay strings while typing */
+type ShippingForm = {
+  freeShippingEnabled: boolean
+  freeShippingThreshold: string
+  methods: { id: ShippingMethodId; name: string; description: string; price: string; enabled: boolean; freeEligible: boolean }[]
+}
+
+function toShippingForm(settings: ShippingSettingsData): ShippingForm {
+  return {
+    freeShippingEnabled: settings.freeShippingThreshold !== null,
+    freeShippingThreshold: String(settings.freeShippingThreshold ?? DEFAULT_SHIPPING_SETTINGS.freeShippingThreshold ?? ''),
+    methods: settings.methods.map((m) => ({ ...m, price: String(m.price) })),
+  }
+}
+
+const parseMoney = (value: string) => (value.trim() === '' ? NaN : Number(value.replace(/[$,\s]/g, '')))
+
 function ShippingSettings() {
   const { can } = usePermissions()
   const canEdit = can('settings:shipping')
   const [freeShippingBanner, setFreeShippingBanner] = useState(true)
+  const [form, setForm] = useState<ShippingForm>(() => toShippingForm(DEFAULT_SHIPPING_SETTINGS))
+  const [saved, setSaved] = useState<ShippingForm>(() => toShippingForm(DEFAULT_SHIPPING_SETTINGS))
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -812,7 +836,10 @@ function ShippingSettings() {
     fetch('/api/admin/settings/shipping')
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => {
-        if (!cancelled) setFreeShippingBanner(data.settings.freeShippingBanner)
+        if (cancelled) return
+        setFreeShippingBanner(data.settings.freeShippingBanner)
+        setForm(toShippingForm(data.settings))
+        setSaved(toShippingForm(data.settings))
       })
       .catch(() => {
         if (!cancelled) toast.error('No se pudo cargar la configuración', undefined, 2500)
@@ -825,20 +852,25 @@ function ShippingSettings() {
     }
   }, [])
 
-  // The switch saves right away; it reverts if the save fails
+  const putShipping = async (body: Record<string, unknown>) => {
+    const startedAt = Date.now()
+    const res = await fetch('/api/admin/settings/shipping', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json().catch(() => ({}))
+    await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+    return { res, data }
+  }
+
+  // The banner switch saves right away; it reverts if the save fails
   const toggleFreeShippingBanner = async (next: boolean) => {
     if (saving) return
     setFreeShippingBanner(next)
     setSaving(true)
-    const startedAt = Date.now()
     try {
-      const res = await fetch('/api/admin/settings/shipping', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ freeShippingBanner: next }),
-      })
-      const data = await res.json().catch(() => ({}))
-      await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+      const { res, data } = await putShipping({ freeShippingBanner: next })
       if (!res.ok) {
         setFreeShippingBanner(!next)
         toast.error('No se pudo guardar', data.error || 'Intenta de nuevo', 2500)
@@ -854,77 +886,238 @@ function ShippingSettings() {
     }
   }
 
+  const updateMethod = (id: ShippingMethodId, patch: Partial<ShippingForm['methods'][number]>) =>
+    setForm((current) => ({
+      ...current,
+      methods: current.methods.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+    }))
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(saved)
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (saving) return
+
+    // Validate here too so mistakes show next to the form, not just as a server error
+    const threshold = parseMoney(form.freeShippingThreshold)
+    if (form.freeShippingEnabled && !(threshold >= 0)) {
+      toast.error('Revisa el envío gratis', 'Escribe un monto válido', 2500)
+      return
+    }
+    for (const m of form.methods) {
+      if (!m.name.trim()) {
+        toast.error('Falta un nombre', 'Cada método de envío necesita nombre', 2500)
+        return
+      }
+      if (!(parseMoney(m.price) >= 0)) {
+        toast.error('Revisa los costos', `El costo de «${m.name}» no es válido`, 2500)
+        return
+      }
+    }
+    if (!form.methods.some((m) => m.enabled)) {
+      toast.error('No se pudo guardar', 'Debe quedar al menos un método de envío activo', 2500)
+      return
+    }
+
+    setSaving(true)
+    try {
+      const { res, data } = await putShipping({
+        freeShippingThreshold: form.freeShippingEnabled ? threshold : null,
+        methods: form.methods.map((m) => ({
+          id: m.id,
+          name: m.name,
+          description: m.description,
+          price: parseMoney(m.price),
+          enabled: m.enabled,
+          freeEligible: m.freeEligible,
+        })),
+      })
+      if (!res.ok) {
+        toast.error('No se pudo guardar', data.error || 'Intenta de nuevo', 2500)
+        return
+      }
+      setForm(toShippingForm(data.settings))
+      setSaved(toShippingForm(data.settings))
+      toast.success('Envíos guardados', 'El checkout ya usa estos costos', 2000)
+    } catch {
+      toast.error('No se pudo guardar', 'Revisa tu conexión e intenta de nuevo', 2500)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const disabled = loading || saving || !canEdit
+  const inputSm =
+    'w-full px-3 py-2 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all disabled:opacity-60'
+
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <form onSubmit={handleSave} className="space-y-4 sm:space-y-6" aria-busy={loading || saving}>
       <SavingOverlay show={loading || saving} label={saving ? 'Guardando' : 'Cargando'} />
       <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Configuración de Envíos</h2>
 
-      <div className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
-        <div className="min-w-0">
-          <p id="free-shipping-banner-label" className="text-[#111827] text-xs sm:text-sm font-medium">
-            Aviso de envío gratis
-          </p>
-          <p className="text-[#6B7280] text-[11px] sm:text-sm">
-            Muestra «Envío gratis en pedidos +${FREE_SHIPPING_THRESHOLD}» en la barra superior de la tienda
-          </p>
+      {/* Free shipping */}
+      <div className="p-3 sm:p-4 bg-[#F9FAFB] rounded-xl space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p id="free-shipping-label" className="text-[#111827] text-xs sm:text-sm font-medium">Envío gratis</p>
+            <p className="text-[#6B7280] text-[11px] sm:text-sm">
+              Los métodos marcados como «gratis» no cobran envío al llegar a este monto
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+            <input
+              type="checkbox"
+              role="switch"
+              aria-labelledby="free-shipping-label"
+              checked={form.freeShippingEnabled}
+              onChange={(e) => setForm((f) => ({ ...f, freeShippingEnabled: e.target.checked }))}
+              disabled={disabled}
+              className="sr-only peer"
+            />
+            <div className={SWITCH_TRACK}></div>
+          </label>
         </div>
-        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-          <input
-            type="checkbox"
-            role="switch"
-            aria-labelledby="free-shipping-banner-label"
-            checked={freeShippingBanner}
-            onChange={(e) => toggleFreeShippingBanner(e.target.checked)}
-            disabled={loading || saving || !canEdit}
-            className="sr-only peer"
-          />
-          <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#111827] peer-focus-visible:ring-offset-2 rounded-full peer peer-disabled:opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
-        </label>
+        {form.freeShippingEnabled && (
+          <div className="max-w-xs">
+            <label htmlFor="free-threshold" className="block text-xs font-medium text-[#374151] mb-1.5">
+              Envío gratis desde (MXN)
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9CA3AF]">$</span>
+              <input
+                id="free-threshold"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="1"
+                value={form.freeShippingThreshold}
+                onChange={(e) => setForm((f) => ({ ...f, freeShippingThreshold: e.target.value }))}
+                disabled={disabled}
+                className={`${inputSm} pl-7`}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#E5E7EB]">
+          <div className="min-w-0">
+            <p id="free-shipping-banner-label" className="text-[#111827] text-xs sm:text-sm font-medium">
+              Aviso en la barra de la tienda
+            </p>
+            <p className="text-[#6B7280] text-[11px] sm:text-sm">
+              Muestra «Envío gratis en pedidos +$
+              {form.freeShippingEnabled ? form.freeShippingThreshold || '…' : saved.freeShippingThreshold}» arriba de la
+              tienda (se guarda al moverlo)
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+            <input
+              type="checkbox"
+              role="switch"
+              aria-labelledby="free-shipping-banner-label"
+              checked={freeShippingBanner}
+              onChange={(e) => toggleFreeShippingBanner(e.target.checked)}
+              disabled={disabled}
+              className="sr-only peer"
+            />
+            <div className={SWITCH_TRACK}></div>
+          </label>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:gap-4">
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-[#374151] mb-2">Costo de envío estándar</label>
-          <input
-            type="text"
-            defaultValue="$99"
-            className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-          />
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-[#374151] mb-2">Envío gratis desde</label>
-          <input
-            type="text"
-            defaultValue="$999"
-            className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
-          />
-        </div>
-      </div>
-
+      {/* Methods shown in the checkout */}
       <div className="space-y-2 sm:space-y-3">
-        <h3 className="text-xs sm:text-sm font-medium text-[#111827]">Carriers</h3>
-        {[
-          { name: 'DHL Express', enabled: true },
-          { name: 'FedEx', enabled: true },
-          { name: 'Estafeta', enabled: false },
-        ].map((carrier) => (
-          <div key={carrier.name} className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl">
-            <span className="text-[#111827] text-xs sm:text-sm font-medium">{carrier.name}</span>
-            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-              <input type="checkbox" defaultChecked={carrier.enabled} className="sr-only peer" />
-              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
+        <div>
+          <h3 className="text-xs sm:text-sm font-semibold text-[#111827]">Métodos de envío</h3>
+          <p className="text-[#6B7280] text-[11px] sm:text-sm">Así aparecen al cliente en el paso «Envío» del checkout.</p>
+        </div>
+
+        {form.methods.map((m) => (
+          <div key={m.id} className={`p-3 sm:p-4 bg-[#F9FAFB] rounded-xl space-y-3 ${m.enabled ? '' : 'opacity-70'}`}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[#111827] text-xs sm:text-sm font-medium truncate">{m.name || 'Sin nombre'}</p>
+              <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <input
+                  type="checkbox"
+                  role="switch"
+                  aria-label={`Ofrecer ${m.name || 'este método'}`}
+                  checked={m.enabled}
+                  onChange={(e) => updateMethod(m.id, { enabled: e.target.checked })}
+                  disabled={disabled}
+                  className="sr-only peer"
+                />
+                <div className={SWITCH_TRACK}></div>
+              </label>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_140px] gap-2 sm:gap-3">
+              <div>
+                <label htmlFor={`ship-name-${m.id}`} className="block text-xs font-medium text-[#374151] mb-1.5">Nombre</label>
+                <input
+                  id={`ship-name-${m.id}`}
+                  type="text"
+                  value={m.name}
+                  maxLength={60}
+                  onChange={(e) => updateMethod(m.id, { name: e.target.value })}
+                  disabled={disabled}
+                  className={inputSm}
+                />
+              </div>
+              <div>
+                <label htmlFor={`ship-desc-${m.id}`} className="block text-xs font-medium text-[#374151] mb-1.5">Descripción</label>
+                <input
+                  id={`ship-desc-${m.id}`}
+                  type="text"
+                  value={m.description}
+                  maxLength={80}
+                  placeholder="Ej. 5-7 días hábiles"
+                  onChange={(e) => updateMethod(m.id, { description: e.target.value })}
+                  disabled={disabled}
+                  className={inputSm}
+                />
+              </div>
+              <div>
+                <label htmlFor={`ship-price-${m.id}`} className="block text-xs font-medium text-[#374151] mb-1.5">Costo (MXN)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9CA3AF]">$</span>
+                  <input
+                    id={`ship-price-${m.id}`}
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    step="1"
+                    value={m.price}
+                    onChange={(e) => updateMethod(m.id, { price: e.target.value })}
+                    disabled={disabled}
+                    className={`${inputSm} pl-7`}
+                  />
+                </div>
+              </div>
+            </div>
+            <label className="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm text-[#374151]">
+              <input
+                type="checkbox"
+                checked={m.freeEligible}
+                onChange={(e) => updateMethod(m.id, { freeEligible: e.target.checked })}
+                disabled={disabled || !form.freeShippingEnabled}
+                className="w-4 h-4 rounded accent-[#111827] dark:accent-emerald-500"
+              />
+              Gratis al llegar al monto de envío gratis
             </label>
           </div>
         ))}
       </div>
 
       <div className="flex justify-end pt-4 border-t border-[#E5E7EB]">
-        <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors">
+        <button
+          type="submit"
+          disabled={disabled || !isDirty}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Save className="w-4 h-4" />
           Guardar cambios
         </button>
       </div>
-    </div>
+    </form>
   )
 }
 
