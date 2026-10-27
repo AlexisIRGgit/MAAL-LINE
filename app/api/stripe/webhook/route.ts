@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/db'
 import Stripe from 'stripe'
+import { notifyOrderPaid } from '@/lib/ntfy'
 
 // Disable body parsing for webhook
 export const runtime = 'nodejs'
@@ -70,6 +71,8 @@ export async function POST(request: NextRequest) {
         console.error(`Order not found: ${orderId}`)
         break
       }
+      // Stripe retries webhooks; only the first confirmation should notify
+      const wasAlreadyPaid = order.paymentStatus === 'paid'
 
       // Update order payment status
       await prisma.order.update({
@@ -138,6 +141,7 @@ export async function POST(request: NextRequest) {
       })
 
       console.log(`Order ${orderNumber} successfully updated to paid/processing`)
+      if (!wasAlreadyPaid) await notifyOrderPaid(order.id, 'Stripe')
       break
     }
 

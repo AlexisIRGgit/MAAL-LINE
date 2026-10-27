@@ -179,6 +179,12 @@ export default function AdminOrdersPage() {
     }
   }
 
+  // ?search= prefills the box (links from the ntfy "Pago confirmado" push)
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('search')
+    if (fromUrl) setSearch(fromUrl)
+  }, [])
+
   useEffect(() => {
     setCurrentPage(1)
     fetchOrders(1)

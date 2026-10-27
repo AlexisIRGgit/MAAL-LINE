@@ -107,3 +107,24 @@ export function readPromoBarEnabled(value: unknown): boolean {
   const enabled = (value as { enabled?: unknown } | null)?.enabled
   return typeof enabled === 'boolean' ? enabled : true
 }
+
+// ---------- Notifications ----------
+
+export const NOTIFICATION_SETTINGS_KEY = 'store.notifications'
+
+export type NotificationSettings = {
+  /** Push to the owner's ntfy topic when an order's payment is confirmed */
+  paidOrderPush: boolean
+}
+
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  paidOrderPush: true,
+}
+
+export function readNotificationSettings(value: unknown): NotificationSettings {
+  const raw = (value ?? {}) as Record<string, unknown>
+  return {
+    paidOrderPush:
+      typeof raw.paidOrderPush === 'boolean' ? raw.paidOrderPush : DEFAULT_NOTIFICATION_SETTINGS.paidOrderPush,
+  }
+}

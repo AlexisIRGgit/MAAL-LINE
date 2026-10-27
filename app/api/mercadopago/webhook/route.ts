@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { payment } from '@/lib/mercadopago'
+import { notifyOrderPaid } from '@/lib/ntfy'
 
 export async function POST(request: NextRequest) {
   try {
@@ -151,6 +152,9 @@ export async function POST(request: NextRequest) {
               },
             })
           }
+
+          // Inside the first-time branch, so MercadoPago retries don't notify twice
+          await notifyOrderPaid(order.id, 'MercadoPago')
         }
       }
 

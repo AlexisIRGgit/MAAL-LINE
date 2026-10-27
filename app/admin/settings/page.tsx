@@ -848,8 +848,144 @@ function ShippingSettings() {
 }
 
 function NotificationSettings() {
+  const { canEditSettings: canEdit } = usePermissions()
+  const [paidOrderPush, setPaidOrderPush] = useState(true)
+  const [ntfyConfigured, setNtfyConfigured] = useState<boolean | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState<'saving' | 'testing' | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/admin/settings/notifications')
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        if (cancelled) return
+        setPaidOrderPush(data.settings.paidOrderPush)
+        setNtfyConfigured(data.ntfyConfigured)
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('No se pudo cargar la configuración', undefined, 2500)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const withMinDelay = async <T,>(work: Promise<T>) => {
+    const startedAt = Date.now()
+    const result = await work
+    await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+    return result
+  }
+
+  // The switch saves right away; it reverts if the save fails
+  const togglePaidOrderPush = async (next: boolean) => {
+    if (busy) return
+    setPaidOrderPush(next)
+    setBusy('saving')
+    try {
+      const res = await withMinDelay(
+        fetch('/api/admin/settings/notifications', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paidOrderPush: next }),
+        })
+      )
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setPaidOrderPush(!next)
+        toast.error('No se pudo guardar', data.error || 'Intenta de nuevo', 2500)
+        return
+      }
+      setPaidOrderPush(data.settings.paidOrderPush)
+      toast.success(next ? 'Avisos de pago activados' : 'Avisos de pago desactivados', undefined, 2000)
+    } catch {
+      setPaidOrderPush(!next)
+      toast.error('No se pudo guardar', 'Revisa tu conexión e intenta de nuevo', 2500)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const sendTest = async () => {
+    if (busy) return
+    setBusy('testing')
+    try {
+      const res = await withMinDelay(fetch('/api/admin/settings/notifications', { method: 'POST' }))
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error('No se envió la prueba', data.error || 'Intenta de nuevo', 3000)
+        return
+      }
+      toast.success('Prueba enviada', 'Revisa la app de ntfy en tu celular', 2000)
+    } catch {
+      toast.error('No se envió la prueba', 'Revisa tu conexión e intenta de nuevo', 2500)
+    } finally {
+      setBusy(null)
+    }
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      <SavingOverlay
+        show={loading || !!busy}
+        label={busy === 'testing' ? 'Enviando prueba' : busy === 'saving' ? 'Guardando' : 'Cargando'}
+      />
+
+      <div>
+        <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+          <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Notificaciones push</h2>
+          {ntfyConfigured !== null && (
+            <span className={`text-xs font-medium ${ntfyConfigured ? 'text-emerald-600' : 'text-amber-600'}`}>
+              {ntfyConfigured ? 'ntfy conectado' : 'Falta configurar ntfy'}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
+          <div className="min-w-0">
+            <p id="paid-order-push-label" className="text-[#111827] text-xs sm:text-sm font-medium">
+              Pago confirmado
+            </p>
+            <p className="text-[#6B7280] text-[11px] sm:text-sm">
+              Te llega una notificación a la app ntfy cuando se confirma el pago de un pedido
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+            <input
+              type="checkbox"
+              role="switch"
+              aria-labelledby="paid-order-push-label"
+              checked={paidOrderPush}
+              onChange={(e) => togglePaidOrderPush(e.target.checked)}
+              disabled={loading || !!busy || !canEdit}
+              className="sr-only peer"
+            />
+            <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#111827] peer-focus-visible:ring-offset-2 rounded-full peer peer-disabled:opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
+          </label>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={sendTest}
+            disabled={loading || !!busy || !canEdit || !ntfyConfigured}
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white border border-[#E5E7EB] rounded-xl text-xs sm:text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Bell className="w-4 h-4" />
+            Enviar notificación de prueba
+          </button>
+          {ntfyConfigured === false && (
+            <p className="text-[11px] sm:text-xs text-[#6B7280]">
+              Agrega la variable <code className="font-mono">NTFY_TOPIC_URL</code> en Vercel y vuelve a publicar.
+            </p>
+          )}
+        </div>
+      </div>
+
       <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Notificaciones por Email</h2>
 
       <div className="space-y-2 sm:space-y-3">
