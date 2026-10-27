@@ -29,7 +29,11 @@ import { TwoFactorSettings } from '@/components/admin/two-factor-settings'
 import { Loader } from '@/components/ui/loader'
 import { toast } from '@/lib/toast'
 import { resizeImageToDataUrl } from '@/lib/utils/resize-image'
-import { DEFAULT_GENERAL_SETTINGS, type GeneralSettings as GeneralSettingsData } from '@/lib/store-settings'
+import {
+  DEFAULT_GENERAL_SETTINGS,
+  FREE_SHIPPING_THRESHOLD,
+  type GeneralSettings as GeneralSettingsData,
+} from '@/lib/store-settings'
 
 const tabs = [
   { id: 'general', label: 'General', icon: Store },
@@ -639,7 +643,7 @@ function PaymentSettings() {
             </div>
             <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
               <input type="checkbox" defaultChecked={method.enabled} className="sr-only peer" />
-              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827]"></div>
+              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
             </label>
           </div>
         ))}
@@ -656,9 +660,86 @@ function PaymentSettings() {
 }
 
 function ShippingSettings() {
+  const { can } = usePermissions()
+  const canEdit = can('settings:shipping')
+  const [freeShippingBanner, setFreeShippingBanner] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/admin/settings/shipping')
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled) setFreeShippingBanner(data.settings.freeShippingBanner)
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('No se pudo cargar la configuración', undefined, 2500)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // The switch saves right away; it reverts if the save fails
+  const toggleFreeShippingBanner = async (next: boolean) => {
+    if (saving) return
+    setFreeShippingBanner(next)
+    setSaving(true)
+    const startedAt = Date.now()
+    try {
+      const res = await fetch('/api/admin/settings/shipping', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ freeShippingBanner: next }),
+      })
+      const data = await res.json().catch(() => ({}))
+      await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+      if (!res.ok) {
+        setFreeShippingBanner(!next)
+        toast.error('No se pudo guardar', data.error || 'Intenta de nuevo', 2500)
+        return
+      }
+      setFreeShippingBanner(data.settings.freeShippingBanner)
+      toast.success(next ? 'Aviso de envío gratis activado' : 'Aviso de envío gratis desactivado', undefined, 2000)
+    } catch {
+      setFreeShippingBanner(!next)
+      toast.error('No se pudo guardar', 'Revisa tu conexión e intenta de nuevo', 2500)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      <SavingOverlay show={loading || saving} label={saving ? 'Guardando' : 'Cargando'} />
       <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Configuración de Envíos</h2>
+
+      <div className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
+        <div className="min-w-0">
+          <p id="free-shipping-banner-label" className="text-[#111827] text-xs sm:text-sm font-medium">
+            Aviso de envío gratis
+          </p>
+          <p className="text-[#6B7280] text-[11px] sm:text-sm">
+            Muestra «Envío gratis en pedidos +${FREE_SHIPPING_THRESHOLD}» en la barra superior de la tienda
+          </p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+          <input
+            type="checkbox"
+            role="switch"
+            aria-labelledby="free-shipping-banner-label"
+            checked={freeShippingBanner}
+            onChange={(e) => toggleFreeShippingBanner(e.target.checked)}
+            disabled={loading || saving || !canEdit}
+            className="sr-only peer"
+          />
+          <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#111827] peer-focus-visible:ring-offset-2 rounded-full peer peer-disabled:opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
+        </label>
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:gap-4">
         <div>
@@ -690,7 +771,7 @@ function ShippingSettings() {
             <span className="text-[#111827] text-xs sm:text-sm font-medium">{carrier.name}</span>
             <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
               <input type="checkbox" defaultChecked={carrier.enabled} className="sr-only peer" />
-              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827]"></div>
+              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
             </label>
           </div>
         ))}
@@ -726,7 +807,7 @@ function NotificationSettings() {
             </div>
             <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
               <input type="checkbox" defaultChecked={notification.enabled} className="sr-only peer" />
-              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827]"></div>
+              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
             </label>
           </div>
         ))}

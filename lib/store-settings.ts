@@ -60,3 +60,40 @@ export function parseLogoDataUrl(input: unknown): { data: string } | { error: st
   }
   return { data: input }
 }
+
+// ---------- Shipping ----------
+
+export const SHIPPING_SETTINGS_KEY = 'store.shipping'
+/** Orders at or above this subtotal ship free (also hardcoded in checkout APIs) */
+export const FREE_SHIPPING_THRESHOLD = 999
+
+export type ShippingSettings = {
+  /** Show the "free shipping over $999" message in the store's top promo bar */
+  freeShippingBanner: boolean
+}
+
+export const DEFAULT_SHIPPING_SETTINGS: ShippingSettings = {
+  freeShippingBanner: true,
+}
+
+export function readShippingSettings(value: unknown): ShippingSettings {
+  const raw = (value ?? {}) as Record<string, unknown>
+  return {
+    freeShippingBanner:
+      typeof raw.freeShippingBanner === 'boolean' ? raw.freeShippingBanner : DEFAULT_SHIPPING_SETTINGS.freeShippingBanner,
+  }
+}
+
+/** Validates a partial update and merges it over the current values */
+export function parseShippingSettingsUpdate(
+  current: ShippingSettings,
+  input: unknown
+): { data: ShippingSettings } | { error: string } {
+  const raw = (input ?? {}) as Record<string, unknown>
+  const next = { ...current }
+  if ('freeShippingBanner' in raw) {
+    if (typeof raw.freeShippingBanner !== 'boolean') return { error: 'Valor no válido para el aviso de envío gratis' }
+    next.freeShippingBanner = raw.freeShippingBanner
+  }
+  return { data: next }
+}
