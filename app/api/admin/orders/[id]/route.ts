@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, requireAuth, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
+import { notifyOrderShipped } from '@/lib/store-notifications'
 import { OrderStatus, PaymentStatus, ShipmentStatus } from '@prisma/client'
 
 // GET - Get single order details
@@ -213,6 +214,11 @@ export async function PATCH(
       await prisma.orderStatusHistory.createMany({
         data: statusHistoryData,
       })
+    }
+
+    // Email the customer once, when the order first moves to "shipped"
+    if (updatedOrder.status === 'shipped' && order.status !== 'shipped') {
+      await notifyOrderShipped(id)
     }
 
     return NextResponse.json({

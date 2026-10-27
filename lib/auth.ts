@@ -190,6 +190,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               userId: newUser.id,
             },
           })
+
+          const { notifyNewAccount } = await import('./store-notifications')
+          await notifyNewAccount(newUser.id)
         }
       }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { payment } from '@/lib/mercadopago'
-import { notifyOrderPaid } from '@/lib/ntfy'
+import { notifyLowStock, notifyOrderPaid } from '@/lib/store-notifications'
 
 export async function POST(request: NextRequest) {
   try {
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Inside the first-time branch, so MercadoPago retries don't notify twice
-          await notifyOrderPaid(order.id, 'MercadoPago')
+          await Promise.all([notifyOrderPaid(order.id, 'MercadoPago'), notifyLowStock(orderItems)])
         }
       }
 

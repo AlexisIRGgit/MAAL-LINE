@@ -31,8 +31,11 @@ import { toast } from '@/lib/toast'
 import { resizeImageToDataUrl } from '@/lib/utils/resize-image'
 import {
   DEFAULT_GENERAL_SETTINGS,
+  DEFAULT_NOTIFICATION_SETTINGS,
   FREE_SHIPPING_THRESHOLD,
   type GeneralSettings as GeneralSettingsData,
+  type NotificationKey,
+  type NotificationSettings as NotificationSettingsData,
 } from '@/lib/store-settings'
 
 const tabs = [
@@ -847,12 +850,46 @@ function ShippingSettings() {
   )
 }
 
+const NOTIFICATION_ROWS: {
+  key: NotificationKey
+  name: string
+  description: string
+  channels: ('push' | 'email-owner' | 'email-customer')[]
+}[] = [
+  {
+    key: 'newOrder',
+    name: 'Nuevo pedido',
+    description: 'Cuando se confirma el pago de un pedido',
+    channels: ['push', 'email-owner'],
+  },
+  {
+    key: 'orderShipped',
+    name: 'Pedido enviado',
+    description: 'Al marcar un pedido como enviado, el cliente recibe su guía de rastreo',
+    channels: ['email-customer'],
+  },
+  {
+    key: 'lowStock',
+    name: 'Stock bajo',
+    description: 'Cuando una venta deja un producto en su mínimo de inventario',
+    channels: ['push', 'email-owner'],
+  },
+  {
+    key: 'newAccount',
+    name: 'Nueva cuenta',
+    description: 'Correo de bienvenida al cliente y aviso para ti',
+    channels: ['email-customer', 'push'],
+  },
+]
+
+const CHANNEL_LABEL = { push: 'ntfy', 'email-owner': 'Correo para ti', 'email-customer': 'Correo al cliente' }
+
 function NotificationSettings() {
   const { canEditSettings: canEdit } = usePermissions()
-  const [paidOrderPush, setPaidOrderPush] = useState(true)
-  const [ntfyConfigured, setNtfyConfigured] = useState<boolean | null>(null)
+  const [settings, setSettings] = useState<NotificationSettingsData>(DEFAULT_NOTIFICATION_SETTINGS)
+  const [status, setStatus] = useState<{ ntfy: boolean; email: boolean; ownerEmail: string } | null>(null)
   const [loading, setLoading] = useState(true)
-  const [busy, setBusy] = useState<'saving' | 'testing' | null>(null)
+  const [busy, setBusy] = useState<'saving' | 'test-ntfy' | 'test-email' | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -860,8 +897,8 @@ function NotificationSettings() {
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => {
         if (cancelled) return
-        setPaidOrderPush(data.settings.paidOrderPush)
-        setNtfyConfigured(data.ntfyConfigured)
+        setSettings(data.settings)
+        setStatus({ ntfy: data.ntfyConfigured, email: data.emailConfigured, ownerEmail: data.ownerEmail })
       })
       .catch(() => {
         if (!cancelled) toast.error('No se pudo cargar la configuración', undefined, 2500)
@@ -881,46 +918,58 @@ function NotificationSettings() {
     return result
   }
 
-  // The switch saves right away; it reverts if the save fails
-  const togglePaidOrderPush = async (next: boolean) => {
+  // Each switch saves right away; it reverts if the save fails
+  const toggle = async (key: NotificationKey, enabled: boolean) => {
     if (busy) return
-    setPaidOrderPush(next)
+    const previous = settings
+    setSettings({ ...settings, [key]: enabled })
     setBusy('saving')
     try {
       const res = await withMinDelay(
         fetch('/api/admin/settings/notifications', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paidOrderPush: next }),
+          body: JSON.stringify({ key, enabled }),
         })
       )
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setPaidOrderPush(!next)
+        setSettings(previous)
         toast.error('No se pudo guardar', data.error || 'Intenta de nuevo', 2500)
         return
       }
-      setPaidOrderPush(data.settings.paidOrderPush)
-      toast.success(next ? 'Avisos de pago activados' : 'Avisos de pago desactivados', undefined, 2000)
+      setSettings(data.settings)
+      const name = NOTIFICATION_ROWS.find((row) => row.key === key)?.name ?? 'Notificación'
+      toast.success(`${name}: ${enabled ? 'activada' : 'desactivada'}`, undefined, 2000)
     } catch {
-      setPaidOrderPush(!next)
+      setSettings(previous)
       toast.error('No se pudo guardar', 'Revisa tu conexión e intenta de nuevo', 2500)
     } finally {
       setBusy(null)
     }
   }
 
-  const sendTest = async () => {
+  const sendTest = async (channel: 'ntfy' | 'email') => {
     if (busy) return
-    setBusy('testing')
+    setBusy(channel === 'ntfy' ? 'test-ntfy' : 'test-email')
     try {
-      const res = await withMinDelay(fetch('/api/admin/settings/notifications', { method: 'POST' }))
+      const res = await withMinDelay(
+        fetch('/api/admin/settings/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channel }),
+        })
+      )
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         toast.error('No se envió la prueba', data.error || 'Intenta de nuevo', 3000)
         return
       }
-      toast.success('Prueba enviada', 'Revisa la app de ntfy en tu celular', 2000)
+      toast.success(
+        'Prueba enviada',
+        channel === 'ntfy' ? 'Revisa la app de ntfy en tu celular' : `Revisa la bandeja de ${data.to}`,
+        2000
+      )
     } catch {
       toast.error('No se envió la prueba', 'Revisa tu conexión e intenta de nuevo', 2500)
     } finally {
@@ -928,92 +977,94 @@ function NotificationSettings() {
     }
   }
 
+  const disabled = loading || !!busy || !canEdit
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <SavingOverlay
         show={loading || !!busy}
-        label={busy === 'testing' ? 'Enviando prueba' : busy === 'saving' ? 'Guardando' : 'Cargando'}
+        label={busy === 'saving' ? 'Guardando' : busy ? 'Enviando prueba' : 'Cargando'}
       />
 
       <div>
-        <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
-          <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Notificaciones push</h2>
-          {ntfyConfigured !== null && (
-            <span className={`text-xs font-medium ${ntfyConfigured ? 'text-emerald-600' : 'text-amber-600'}`}>
-              {ntfyConfigured ? 'ntfy conectado' : 'Falta configurar ntfy'}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
-          <div className="min-w-0">
-            <p id="paid-order-push-label" className="text-[#111827] text-xs sm:text-sm font-medium">
-              Pago confirmado
-            </p>
-            <p className="text-[#6B7280] text-[11px] sm:text-sm">
-              Te llega una notificación a la app ntfy cuando se confirma el pago de un pedido
-            </p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-            <input
-              type="checkbox"
-              role="switch"
-              aria-labelledby="paid-order-push-label"
-              checked={paidOrderPush}
-              onChange={(e) => togglePaidOrderPush(e.target.checked)}
-              disabled={loading || !!busy || !canEdit}
-              className="sr-only peer"
-            />
-            <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#111827] peer-focus-visible:ring-offset-2 rounded-full peer peer-disabled:opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
-          </label>
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={sendTest}
-            disabled={loading || !!busy || !canEdit || !ntfyConfigured}
-            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-white border border-[#E5E7EB] rounded-xl text-xs sm:text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Bell className="w-4 h-4" />
-            Enviar notificación de prueba
-          </button>
-          {ntfyConfigured === false && (
-            <p className="text-[11px] sm:text-xs text-[#6B7280]">
-              Agrega la variable <code className="font-mono">NTFY_TOPIC_URL</code> en Vercel y vuelve a publicar.
-            </p>
-          )}
-        </div>
+        <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Notificaciones</h2>
+        <p className="text-[#6B7280] text-xs sm:text-sm mt-1">
+          Avisos a tu celular con ntfy y correos desde contacto@maalline.com
+          {status?.ownerEmail ? `; los tuyos llegan a ${status.ownerEmail}` : ''}.
+        </p>
       </div>
 
-      <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Notificaciones por Email</h2>
-
-      <div className="space-y-2 sm:space-y-3">
-        {[
-          { name: 'Nuevo pedido', description: 'Recibe un email cuando hay un nuevo pedido', enabled: true },
-          { name: 'Pedido enviado', description: 'Notificar al cliente cuando se envía', enabled: true },
-          { name: 'Stock bajo', description: 'Alerta cuando un producto tiene poco stock', enabled: true },
-          { name: 'Nueva cuenta', description: 'Email de bienvenida a nuevos clientes', enabled: true },
-          { name: 'Carrito abandonado', description: 'Recordatorio de carrito abandonado', enabled: false },
-        ].map((notification) => (
-          <div key={notification.name} className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
-            <div className="min-w-0">
-              <p className="text-[#111827] text-xs sm:text-sm font-medium">{notification.name}</p>
-              <p className="text-[#6B7280] text-[10px] sm:text-sm truncate">{notification.description}</p>
+      {/* Channel status + tests */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+        {([
+          { channel: 'ntfy', title: 'ntfy (push)', ok: status?.ntfy, missing: 'NTFY_TOPIC_URL' },
+          { channel: 'email', title: 'Correo (Resend)', ok: status?.email, missing: 'RESEND_API_KEY' },
+        ] as const).map((item) => (
+          <div key={item.channel} className="p-3 sm:p-4 bg-[#F9FAFB] rounded-xl">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[#111827] text-xs sm:text-sm font-medium">{item.title}</p>
+              {status && (
+                <span className={`text-xs font-medium ${item.ok ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  {item.ok ? 'Conectado' : 'Sin configurar'}
+                </span>
+              )}
             </div>
-            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-              <input type="checkbox" defaultChecked={notification.enabled} className="sr-only peer" />
-              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
-            </label>
+            {status && !item.ok ? (
+              <p className="mt-2 text-[11px] sm:text-xs text-[#6B7280]">
+                Agrega <code className="font-mono">{item.missing}</code> en Vercel y vuelve a publicar.
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => sendTest(item.channel)}
+                disabled={disabled || !item.ok}
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-lg text-xs text-[#374151] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Bell className="w-3.5 h-3.5" />
+                Enviar prueba
+              </button>
+            )}
           </div>
         ))}
       </div>
 
-      <div className="flex justify-end pt-4 border-t border-[#E5E7EB]">
-        <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors">
-          <Save className="w-4 h-4" />
-          Guardar cambios
-        </button>
+      <div className="space-y-2 sm:space-y-3">
+        {NOTIFICATION_ROWS.map((row) => (
+          <div key={row.key} className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
+            <div className="min-w-0">
+              <p id={`notif-${row.key}`} className="text-[#111827] text-xs sm:text-sm font-medium">
+                {row.name}
+              </p>
+              <p className="text-[#6B7280] text-[11px] sm:text-sm">{row.description}</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {row.channels.map((channel) => (
+                  <span key={channel} className="text-[10px] sm:text-[11px] text-[#6B7280] border border-[#E5E7EB] rounded-md px-1.5 py-0.5">
+                    {CHANNEL_LABEL[channel]}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+              <input
+                type="checkbox"
+                role="switch"
+                aria-labelledby={`notif-${row.key}`}
+                checked={settings[row.key]}
+                onChange={(e) => toggle(row.key, e.target.checked)}
+                disabled={disabled}
+                className="sr-only peer"
+              />
+              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#111827] peer-focus-visible:ring-offset-2 rounded-full peer peer-disabled:opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+        ))}
+
+        <div className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3 opacity-60">
+          <div className="min-w-0">
+            <p className="text-[#111827] text-xs sm:text-sm font-medium">Carrito abandonado</p>
+            <p className="text-[#6B7280] text-[11px] sm:text-sm">Próximamente: necesita guardar los carritos en la base de datos</p>
+          </div>
+        </div>
       </div>
     </div>
   )

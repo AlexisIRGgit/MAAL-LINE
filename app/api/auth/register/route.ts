@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
+import { notifyNewAccount } from '@/lib/store-notifications'
 
 export async function POST(request: Request) {
   try {
@@ -66,6 +67,8 @@ export async function POST(request: Request) {
         userId: user.id,
       },
     })
+
+    await notifyNewAccount(user.id)
 
     // Log registration
     await prisma.activityLog.create({

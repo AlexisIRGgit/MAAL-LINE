@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/db'
 import Stripe from 'stripe'
-import { notifyOrderPaid } from '@/lib/ntfy'
+import { notifyLowStock, notifyOrderPaid } from '@/lib/store-notifications'
 
 // Disable body parsing for webhook
 export const runtime = 'nodejs'
@@ -141,7 +141,9 @@ export async function POST(request: NextRequest) {
       })
 
       console.log(`Order ${orderNumber} successfully updated to paid/processing`)
-      if (!wasAlreadyPaid) await notifyOrderPaid(order.id, 'Stripe')
+      if (!wasAlreadyPaid) {
+        await Promise.all([notifyOrderPaid(order.id, 'Stripe'), notifyLowStock(order.items)])
+      }
       break
     }
 

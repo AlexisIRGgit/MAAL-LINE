@@ -113,18 +113,38 @@ export function readPromoBarEnabled(value: unknown): boolean {
 export const NOTIFICATION_SETTINGS_KEY = 'store.notifications'
 
 export type NotificationSettings = {
-  /** Push to the owner's ntfy topic when an order's payment is confirmed */
-  paidOrderPush: boolean
+  /** Paid order: ntfy push + email to the store contact address */
+  newOrder: boolean
+  /** Order marked as shipped: email to the customer */
+  orderShipped: boolean
+  /** A variant reaches its low-stock threshold after a sale: ntfy push + email */
+  lowStock: boolean
+  /** New customer account: welcome email to them + ntfy push to the owner */
+  newAccount: boolean
 }
 
+export const NOTIFICATION_KEYS = ['newOrder', 'orderShipped', 'lowStock', 'newAccount'] as const
+export type NotificationKey = (typeof NOTIFICATION_KEYS)[number]
+
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
-  paidOrderPush: true,
+  newOrder: true,
+  orderShipped: true,
+  lowStock: true,
+  newAccount: true,
 }
 
 export function readNotificationSettings(value: unknown): NotificationSettings {
   const raw = (value ?? {}) as Record<string, unknown>
+  // "paidOrderPush" was the first name of the new-order switch
+  const legacy = { newOrder: raw.paidOrderPush }
+  const pick = (key: NotificationKey) => {
+    const v = raw[key] ?? legacy[key as keyof typeof legacy]
+    return typeof v === 'boolean' ? v : DEFAULT_NOTIFICATION_SETTINGS[key]
+  }
   return {
-    paidOrderPush:
-      typeof raw.paidOrderPush === 'boolean' ? raw.paidOrderPush : DEFAULT_NOTIFICATION_SETTINGS.paidOrderPush,
+    newOrder: pick('newOrder'),
+    orderShipped: pick('orderShipped'),
+    lowStock: pick('lowStock'),
+    newAccount: pick('newAccount'),
   }
 }
