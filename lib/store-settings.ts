@@ -148,3 +148,25 @@ export function readNotificationSettings(value: unknown): NotificationSettings {
     newAccount: pick('newAccount'),
   }
 }
+
+// ---------- Payments ----------
+
+export const PAYMENT_SETTINGS_KEY = 'store.payments'
+/** Providers with a working integration; the checkout only offers enabled ones */
+export const PAYMENT_PROVIDERS = ['stripe', 'mercadopago'] as const
+export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number]
+export type PaymentSettings = Record<PaymentProvider, boolean>
+
+// Stripe only for now (owner's decision, 2026-10-27)
+export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
+  stripe: true,
+  mercadopago: false,
+}
+
+export function readPaymentSettings(value: unknown): PaymentSettings {
+  const raw = (value ?? {}) as Record<string, unknown>
+  return {
+    stripe: typeof raw.stripe === 'boolean' ? raw.stripe : DEFAULT_PAYMENT_SETTINGS.stripe,
+    mercadopago: typeof raw.mercadopago === 'boolean' ? raw.mercadopago : DEFAULT_PAYMENT_SETTINGS.mercadopago,
+  }
+}

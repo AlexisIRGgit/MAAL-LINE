@@ -2,10 +2,13 @@ import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/db'
 import {
   LOGO_SETTINGS_KEY,
+  PAYMENT_SETTINGS_KEY,
   PROMO_BAR_SETTINGS_KEY,
   SHIPPING_SETTINGS_KEY,
+  readPaymentSettings,
   readPromoBarEnabled,
   readShippingSettings,
+  type PaymentSettings,
 } from '@/lib/store-settings'
 
 /** Admin routes that change these settings call revalidateTag(STORE_SETTINGS_TAG) */
@@ -14,6 +17,7 @@ export const STORE_SETTINGS_TAG = 'store-settings'
 export type PublicStoreSettings = {
   promoBar: boolean
   freeShippingBanner: boolean
+  payments: PaymentSettings
   /** Uploaded store logo; `version` busts browser caches (favicons are cached aggressively) */
   logo: { dataUrl: string; version: string } | null
 }
@@ -25,17 +29,19 @@ export type PublicStoreSettings = {
 export const getPublicStoreSettings = unstable_cache(
   async (): Promise<PublicStoreSettings> => {
     const rows = await prisma.storeSetting.findMany({
-      where: { key: { in: [SHIPPING_SETTINGS_KEY, LOGO_SETTINGS_KEY, PROMO_BAR_SETTINGS_KEY] } },
+      where: { key: { in: [SHIPPING_SETTINGS_KEY, LOGO_SETTINGS_KEY, PROMO_BAR_SETTINGS_KEY, PAYMENT_SETTINGS_KEY] } },
       select: { key: true, value: true, updatedAt: true },
     })
     const shipping = rows.find((row) => row.key === SHIPPING_SETTINGS_KEY)
     const logoRow = rows.find((row) => row.key === LOGO_SETTINGS_KEY)
     const promoBarRow = rows.find((row) => row.key === PROMO_BAR_SETTINGS_KEY)
+    const paymentsRow = rows.find((row) => row.key === PAYMENT_SETTINGS_KEY)
     const logoUrl = (logoRow?.value as { url?: unknown } | null)?.url
 
     return {
       promoBar: readPromoBarEnabled(promoBarRow?.value),
       freeShippingBanner: readShippingSettings(shipping?.value).freeShippingBanner,
+      payments: readPaymentSettings(paymentsRow?.value),
       logo:
         logoRow && typeof logoUrl === 'string'
           ? { dataUrl: logoUrl, version: String(logoRow.updatedAt.getTime()) }

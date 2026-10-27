@@ -27,9 +27,10 @@ export function CheckoutStepper() {
               layout
               className={cn(
                 'rounded-full px-4 py-2 flex items-center gap-2 text-sm font-medium transition-colors',
-                isActive && 'bg-[#F5F0E8] text-[#1a1a1a]',
-                isCompleted && !isActive && 'bg-green-500/10 text-green-600',
-                !isActive && !isCompleted && 'bg-gray-700 text-gray-400'
+                // Brand orange like the Continuar button, readable in both themes
+                isActive && 'bg-[#FF3D00] text-white shadow-[0_4px_14px_rgba(255,61,0,0.3)]',
+                isCompleted && !isActive && 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+                !isActive && !isCompleted && 'bg-black/[0.05] text-gray-500 dark:bg-white/[0.06] dark:text-gray-400'
               )}
             >
               {isCompleted && !isActive && (
@@ -47,7 +48,7 @@ export function CheckoutStepper() {
             </motion.div>
 
             {index < steps.length - 1 && (
-              <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-600 flex-shrink-0" />
             )}
           </div>
         )

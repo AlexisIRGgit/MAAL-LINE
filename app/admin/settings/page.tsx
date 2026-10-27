@@ -36,6 +36,9 @@ import {
   type GeneralSettings as GeneralSettingsData,
   type NotificationKey,
   type NotificationSettings as NotificationSettingsData,
+  DEFAULT_PAYMENT_SETTINGS,
+  type PaymentProvider,
+  type PaymentSettings as PaymentSettingsData,
 } from '@/lib/store-settings'
 
 const tabs = [
@@ -687,36 +690,111 @@ function ApisSettings() {
   )
 }
 
+const PAYMENT_ROWS: { provider: PaymentProvider; name: string; description: string }[] = [
+  { provider: 'stripe', name: 'Stripe', description: 'Tarjetas de crédito y débito (Visa, Mastercard, AMEX)' },
+  { provider: 'mercadopago', name: 'MercadoPago', description: 'Tarjetas, OXXO y SPEI' },
+]
+
 function PaymentSettings() {
+  const { can } = usePermissions()
+  const canEdit = can('settings:payments')
+  const [settings, setSettings] = useState<PaymentSettingsData>(DEFAULT_PAYMENT_SETTINGS)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/admin/settings/payments')
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled) setSettings(data.settings)
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('No se pudo cargar la configuración', undefined, 2500)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Each switch saves right away; it reverts if the save fails
+  const toggle = async (provider: PaymentProvider, enabled: boolean) => {
+    if (saving) return
+    const previous = settings
+    setSettings({ ...settings, [provider]: enabled })
+    setSaving(true)
+    const startedAt = Date.now()
+    try {
+      const res = await fetch('/api/admin/settings/payments', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, enabled }),
+      })
+      const data = await res.json().catch(() => ({}))
+      await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+      if (!res.ok) {
+        setSettings(previous)
+        toast.error('No se pudo guardar', data.error || 'Intenta de nuevo', 2500)
+        return
+      }
+      setSettings(data.settings)
+      const name = PAYMENT_ROWS.find((row) => row.provider === provider)?.name ?? 'Método'
+      toast.success(`${name} ${enabled ? 'activado' : 'desactivado'}`, undefined, 2000)
+    } catch {
+      setSettings(previous)
+      toast.error('No se pudo guardar', 'Revisa tu conexión e intenta de nuevo', 2500)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Métodos de Pago</h2>
+      <SavingOverlay show={loading || saving} label={saving ? 'Guardando' : 'Cargando'} />
+      <div>
+        <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Métodos de Pago</h2>
+        <p className="text-[#6B7280] text-xs sm:text-sm mt-1">Solo los métodos activos aparecen al pagar en la tienda.</p>
+      </div>
 
       <div className="space-y-2 sm:space-y-3">
-        {[
-          { name: 'Stripe', description: 'Tarjetas de crédito y débito', enabled: true },
-          { name: 'PayPal', description: 'Pagos con PayPal', enabled: false },
-          { name: 'Conekta', description: 'OXXO Pay y tarjetas', enabled: true },
-          { name: 'MercadoPago', description: 'Pagos en México', enabled: false },
-        ].map((method) => (
-          <div key={method.name} className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
+        {PAYMENT_ROWS.map((row) => (
+          <div key={row.provider} className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
             <div className="min-w-0">
-              <p className="text-[#111827] text-xs sm:text-sm font-medium">{method.name}</p>
-              <p className="text-[#6B7280] text-xs sm:text-sm truncate">{method.description}</p>
+              <p id={`pay-${row.provider}`} className="text-[#111827] text-xs sm:text-sm font-medium">
+                {row.name}
+              </p>
+              <p className="text-[#6B7280] text-xs sm:text-sm">{row.description}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-              <input type="checkbox" defaultChecked={method.enabled} className="sr-only peer" />
-              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
+              <input
+                type="checkbox"
+                role="switch"
+                aria-labelledby={`pay-${row.provider}`}
+                checked={settings[row.provider]}
+                onChange={(e) => toggle(row.provider, e.target.checked)}
+                disabled={loading || saving || !canEdit}
+                className="sr-only peer"
+              />
+              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#111827] peer-focus-visible:ring-offset-2 rounded-full peer peer-disabled:opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
             </label>
           </div>
         ))}
-      </div>
 
-      <div className="flex justify-end pt-4 border-t border-[#E5E7EB]">
-        <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors">
-          <Save className="w-4 h-4" />
-          Guardar cambios
-        </button>
+        {[
+          { name: 'PayPal', description: 'Pagos con PayPal' },
+          { name: 'Conekta', description: 'OXXO Pay y tarjetas' },
+        ].map((row) => (
+          <div key={row.name} className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3 opacity-60">
+            <div className="min-w-0">
+              <p className="text-[#111827] text-xs sm:text-sm font-medium">{row.name}</p>
+              <p className="text-[#6B7280] text-xs sm:text-sm">{row.description}</p>
+            </div>
+            <span className="text-[11px] sm:text-xs text-[#6B7280] flex-shrink-0">Próximamente</span>
+          </div>
+        ))}
       </div>
     </div>
   )

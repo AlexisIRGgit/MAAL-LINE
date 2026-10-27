@@ -76,7 +76,12 @@ export function AddressStep() {
   const updateMap = (addr: AddressData) => {
     const parts = [addr.streetLine1, addr.neighborhood, addr.city, addr.state, addr.postalCode].filter(Boolean)
     setMapAddress(parts.join(', '))
-    setMapCoords(undefined)
+    // Use the pin saved with the address; otherwise the map geocodes the text
+    setMapCoords(
+      typeof addr.latitude === 'number' && typeof addr.longitude === 'number'
+        ? { lat: addr.latitude, lng: addr.longitude }
+        : undefined
+    )
   }
 
   const handleSelectAddress = (addr: AddressData) => {

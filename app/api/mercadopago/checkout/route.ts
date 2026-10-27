@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
+import { getPublicStoreSettings } from '@/lib/public-store-settings'
 import { preference } from '@/lib/mercadopago'
 import { nanoid } from 'nanoid'
 
@@ -35,6 +36,12 @@ const FREE_SHIPPING_THRESHOLD = 999
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
+
+    // Admin > Configuración > Pagos can switch providers off
+    const { payments } = await getPublicStoreSettings()
+    if (!payments.mercadopago) {
+      return NextResponse.json({ error: 'Este método de pago no está disponible' }, { status: 403 })
+    }
     const userId = session.user.id
 
     const body: CheckoutRequest = await request.json()

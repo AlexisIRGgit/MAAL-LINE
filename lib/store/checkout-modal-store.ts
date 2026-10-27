@@ -12,6 +12,9 @@ export interface AddressData {
   postalCode: string
   country: string
   isDefault: boolean
+  /** Pin saved by the address wizard; null for older addresses */
+  latitude?: number | null
+  longitude?: number | null
 }
 
 interface CheckoutModalState {
