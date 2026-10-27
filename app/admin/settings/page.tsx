@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import {
   Store,
@@ -25,6 +25,9 @@ import {
 import { usePermissions } from '@/hooks/use-permissions'
 import { ROLE_INFO } from '@/lib/permissions'
 import { TwoFactorSettings } from '@/components/admin/two-factor-settings'
+import { Loader } from '@/components/ui/loader'
+import { toast } from '@/lib/toast'
+import { DEFAULT_GENERAL_SETTINGS, type GeneralSettings as GeneralSettingsData } from '@/lib/store-settings'
 
 const tabs = [
   { id: 'general', label: 'General', icon: Store },
@@ -83,7 +86,7 @@ export default function SettingsPage() {
       {/* Content */}
       <motion.div
         variants={itemVariants}
-        className="bg-white border border-[#E5E7EB] rounded-xl p-4 sm:p-6 shadow-sm"
+        className="relative bg-white border border-[#E5E7EB] rounded-xl p-4 sm:p-6 shadow-sm"
       >
         {activeTab === 'general' && <GeneralSettings />}
         {activeTab === 'team' && <TeamSettings />}
@@ -97,39 +100,147 @@ export default function SettingsPage() {
   )
 }
 
-function GeneralSettings() {
+const inputClass =
+  'w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all disabled:opacity-60'
+
+// Keep the overlay up long enough to read as feedback, even on fast saves
+const MIN_SAVING_MS = 600
+
+/** Dims the settings card and shows the dots loader while a section loads or saves */
+function SavingOverlay({ show, label }: { show: boolean; label: string }) {
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-[#E5E7EB]/60 dark:bg-[#0E0F13]/60 backdrop-blur-[1px] cursor-wait"
+          aria-live="polite"
+        >
+          <Loader size={36} label={label} className="text-[#111827]" />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+function GeneralSettings() {
+  const { canEditSettings: canEdit } = usePermissions()
+  const [form, setForm] = useState<GeneralSettingsData>(DEFAULT_GENERAL_SETTINGS)
+  const [saved, setSaved] = useState<GeneralSettingsData>(DEFAULT_GENERAL_SETTINGS)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/admin/settings/general')
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        if (cancelled) return
+        setForm(data.settings)
+        setSaved(data.settings)
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('No se pudo cargar la configuración', undefined, 2500)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const update = <K extends keyof GeneralSettingsData>(key: K, value: GeneralSettingsData[K]) =>
+    setForm((current) => ({ ...current, [key]: value }))
+
+  const isDirty = (Object.keys(form) as (keyof GeneralSettingsData)[]).some((key) => form[key] !== saved[key])
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (saving) return
+    setSaving(true)
+    const startedAt = Date.now()
+    try {
+      const res = await fetch('/api/admin/settings/general', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json().catch(() => ({}))
+      await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+      if (!res.ok) {
+        toast.error('No se pudo guardar', data.error || 'Intenta de nuevo', 2500)
+        return
+      }
+      setForm(data.settings)
+      setSaved(data.settings)
+      toast.success('Cambios guardados', 'La información de la tienda se actualizó', 2000)
+    } catch {
+      toast.error('No se pudo guardar', 'Revisa tu conexión e intenta de nuevo', 2500)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const disabled = loading || saving || !canEdit
+
+  return (
+    <form onSubmit={handleSave} className="space-y-4 sm:space-y-6" aria-busy={loading || saving}>
+      <SavingOverlay show={loading || saving} label={saving ? 'Guardando' : 'Cargando'} />
+
       <div>
         <h2 className="text-sm sm:text-base font-semibold text-[#111827] mb-3 sm:mb-4">Información de la Tienda</h2>
         <div className="grid grid-cols-1 gap-3 sm:gap-4">
           <div>
-            <label className="block text-sm font-medium text-[#374151] mb-2">Nombre de la tienda</label>
+            <label htmlFor="storeName" className="block text-sm font-medium text-[#374151] mb-2">Nombre de la tienda</label>
             <input
+              id="storeName"
               type="text"
-              defaultValue="MAAL LINE"
-              className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
+              value={form.storeName}
+              onChange={(e) => update('storeName', e.target.value)}
+              maxLength={100}
+              required
+              disabled={disabled}
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#374151] mb-2">Email de contacto</label>
+            <label htmlFor="contactEmail" className="block text-sm font-medium text-[#374151] mb-2">Email de contacto</label>
             <input
+              id="contactEmail"
               type="email"
-              defaultValue="hola@maalline.com"
-              className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
+              value={form.contactEmail}
+              onChange={(e) => update('contactEmail', e.target.value)}
+              maxLength={255}
+              required
+              disabled={disabled}
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#374151] mb-2">Teléfono</label>
+            <label htmlFor="phone" className="block text-sm font-medium text-[#374151] mb-2">Teléfono</label>
             <input
+              id="phone"
               type="tel"
-              defaultValue="+52 55 1234 5678"
-              className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
+              value={form.phone}
+              onChange={(e) => update('phone', e.target.value)}
+              maxLength={25}
+              disabled={disabled}
+              className={inputClass}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#374151] mb-2">Moneda</label>
-            <select className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all">
+            <label htmlFor="currency" className="block text-sm font-medium text-[#374151] mb-2">Moneda</label>
+            <select
+              id="currency"
+              value={form.currency}
+              onChange={(e) => update('currency', e.target.value as GeneralSettingsData['currency'])}
+              disabled={disabled}
+              className={inputClass}
+            >
               <option value="MXN">MXN - Peso Mexicano</option>
               <option value="USD">USD - Dólar Americano</option>
             </select>
@@ -143,7 +254,7 @@ function GeneralSettings() {
           <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[#F3F4F6] border border-[#E5E7EB] rounded-xl flex items-center justify-center flex-shrink-0">
             <Store className="w-6 sm:w-8 h-6 sm:h-8 text-[#9CA3AF]" />
           </div>
-          <button className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs sm:text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors">
+          <button type="button" className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs sm:text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors">
             <Upload className="w-4 h-4" />
             Cambiar logo
           </button>
@@ -151,12 +262,16 @@ function GeneralSettings() {
       </div>
 
       <div className="flex justify-end pt-4 border-t border-[#E5E7EB]">
-        <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors">
+        <button
+          type="submit"
+          disabled={disabled || !isDirty}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Save className="w-4 h-4" />
           Guardar cambios
         </button>
       </div>
-    </div>
+    </form>
   )
 }
 

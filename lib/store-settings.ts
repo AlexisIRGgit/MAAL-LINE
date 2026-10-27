@@ -1,0 +1,44 @@
+// Store settings live in store_settings as one JSON row per section (key = "store.<section>")
+
+export const CURRENCIES = ['MXN', 'USD'] as const
+
+export type GeneralSettings = {
+  storeName: string
+  contactEmail: string
+  phone: string
+  currency: (typeof CURRENCIES)[number]
+}
+
+export const GENERAL_SETTINGS_KEY = 'store.general'
+
+export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
+  storeName: 'MAAL LINE',
+  contactEmail: 'hola@maalline.com',
+  phone: '+52 55 1234 5678',
+  currency: 'MXN',
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const PHONE_RE = /^[+\d\s().-]{7,25}$/
+
+/** Returns the cleaned settings, or a Spanish error message for the first invalid field */
+export function parseGeneralSettings(input: unknown): { data: GeneralSettings } | { error: string } {
+  const raw = (input ?? {}) as Record<string, unknown>
+  const storeName = typeof raw.storeName === 'string' ? raw.storeName.trim() : ''
+  const contactEmail = typeof raw.contactEmail === 'string' ? raw.contactEmail.trim().toLowerCase() : ''
+  const phone = typeof raw.phone === 'string' ? raw.phone.trim() : ''
+  const currency = raw.currency
+
+  if (!storeName || storeName.length > 100) return { error: 'El nombre de la tienda debe tener entre 1 y 100 caracteres' }
+  if (!EMAIL_RE.test(contactEmail) || contactEmail.length > 255) return { error: 'El email de contacto no es válido' }
+  if (phone && !PHONE_RE.test(phone)) return { error: 'El teléfono no es válido' }
+  if (!CURRENCIES.includes(currency as GeneralSettings['currency'])) return { error: 'Moneda no válida' }
+
+  return { data: { storeName, contactEmail, phone, currency: currency as GeneralSettings['currency'] } }
+}
+
+/** Merges a stored JSON value over the defaults, ignoring anything malformed */
+export function readGeneralSettings(value: unknown): GeneralSettings {
+  const parsed = parseGeneralSettings({ ...DEFAULT_GENERAL_SETTINGS, ...((value as object) ?? {}) })
+  return 'data' in parsed ? parsed.data : DEFAULT_GENERAL_SETTINGS
+}

@@ -4,12 +4,13 @@ import { sileo } from 'sileo'
 const DARK_FILL = '#1F2937'
 
 export const toast = {
-  success: (title: string, description?: string) => {
-    sileo.success({ title, description, fill: DARK_FILL })
+  /** `duration` in ms; omit for Sileo's default */
+  success: (title: string, description?: string, duration?: number) => {
+    sileo.success({ title, description, fill: DARK_FILL, ...(duration ? { duration } : {}) })
   },
 
-  error: (title: string, description?: string) => {
-    sileo.error({ title, description, fill: DARK_FILL })
+  error: (title: string, description?: string, duration?: number) => {
+    sileo.error({ title, description, fill: DARK_FILL, ...(duration ? { duration } : {}) })
   },
 
   warning: (title: string, description?: string) => {
