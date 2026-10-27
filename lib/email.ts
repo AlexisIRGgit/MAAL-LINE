@@ -7,6 +7,16 @@ import { prisma } from '@/lib/db'
  */
 
 const DEFAULT_FROM = 'MAAL LINE <contacto@maalline.com>'
+// "email@domain" or "Name <email@domain>", the two formats Resend accepts
+const FROM_RE = /^(?:[^<>"]+ <[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+>|[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+)$/
+
+/** EMAIL_FROM is easy to paste with quotes into Vercel; clean it, else use the default */
+function senderAddress(): string {
+  const raw = process.env.EMAIL_FROM?.trim().replace(/^["']+|["']+$/g, '').trim()
+  if (raw && FROM_RE.test(raw)) return raw
+  if (raw) console.error(`EMAIL_FROM "${raw}" is not a valid sender, using ${DEFAULT_FROM}`)
+  return DEFAULT_FROM
+}
 
 type SendEmailInput = {
   to: string
@@ -35,7 +45,7 @@ export async function sendEmail(input: SendEmailInput): Promise<boolean> {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM || DEFAULT_FROM,
+        from: senderAddress(),
         to: [input.to],
         subject: input.subject,
         html: input.html,
