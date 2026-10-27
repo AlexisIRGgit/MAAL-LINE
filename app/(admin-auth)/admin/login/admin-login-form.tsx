@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export default function AdminLoginForm() {
   const router = useRouter()
@@ -43,9 +44,14 @@ export default function AdminLoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex">
+    <div className="relative min-h-screen bg-[#F5F5F7] flex">
+      <ThemeToggle
+        className="absolute right-4 top-4 z-10 w-10 h-10 rounded-full text-[#6B7280] hover:text-[#111827] hover:bg-[#E5E7EB] transition-colors lg:right-[calc(50%+1rem)]"
+        iconClassName="w-5 h-5"
+      />
+
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center px-5 py-16 sm:p-8">
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="mb-8">
@@ -130,7 +136,7 @@ export default function AdminLoginForm() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-[#D1D5DB] text-[#111827] focus:ring-[#111827] focus:ring-offset-0"
+                  className="w-4 h-4 rounded border-[#D1D5DB] accent-[#111827] dark:accent-[#F5F5F5] focus:ring-[#111827] focus:ring-offset-0"
                 />
                 <span className="text-sm text-[#6B7280]">Recordar sesión</span>
               </label>
@@ -164,7 +170,8 @@ export default function AdminLoginForm() {
       </div>
 
       {/* Right Side - Decorative */}
-      <div className="hidden lg:flex lg:flex-1 bg-[#111827] items-center justify-center p-12">
+      {/* gray-900 (= #111827) on purpose: the dark layer remaps bg-[#111827] to a light surface */}
+      <div className="hidden lg:flex lg:flex-1 bg-gray-900 dark:bg-[#15171C] dark:border-l dark:border-[#23262E] items-center justify-center p-12">
         <div className="max-w-md text-center">
           <div className="w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-8">
             <Lock className="w-12 h-12 text-white" />
