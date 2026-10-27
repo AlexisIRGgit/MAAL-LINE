@@ -8,33 +8,45 @@ const OTHER_MESSAGES = [
   'NEW DROP — OVERSIZED COLLECTION',
   'PAGO EN 3 MSI CON TARJETAS PARTICIPANTES',
 ]
-// Last value from the server, so returning visitors don't see the message flash in or out
+// Last values from the server, so returning visitors don't see the bar or message flash
+const BAR_CACHE_KEY = 'maal-promo-bar'
 const BANNER_CACHE_KEY = 'maal-free-shipping-banner'
 
-function readCachedBanner(): boolean {
+function readCachedFlag(key: string): boolean {
   try {
-    return localStorage.getItem(BANNER_CACHE_KEY) !== 'false'
+    return localStorage.getItem(key) !== 'false'
   } catch {
     return true
   }
 }
 
+function cacheFlag(key: string, value: boolean) {
+  try {
+    localStorage.setItem(key, String(value))
+  } catch {}
+}
+
 export function PromoBar() {
   const [isVisible, setIsVisible] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [barEnabled, setBarEnabled] = useState(true)
   const [showFreeShipping, setShowFreeShipping] = useState(true)
 
-  // The free-shipping message can be turned off in Admin > Configuración > Envíos
+  // Admin > Configuración: General turns the whole bar off, Envíos the free-shipping message
   useEffect(() => {
-    setShowFreeShipping(readCachedBanner())
+    setBarEnabled(readCachedFlag(BAR_CACHE_KEY))
+    setShowFreeShipping(readCachedFlag(BANNER_CACHE_KEY))
     fetch('/api/store/settings')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (typeof data?.freeShippingBanner !== 'boolean') return
-        setShowFreeShipping(data.freeShippingBanner)
-        try {
-          localStorage.setItem(BANNER_CACHE_KEY, String(data.freeShippingBanner))
-        } catch {}
+        if (typeof data?.promoBar === 'boolean') {
+          setBarEnabled(data.promoBar)
+          cacheFlag(BAR_CACHE_KEY, data.promoBar)
+        }
+        if (typeof data?.freeShippingBanner === 'boolean') {
+          setShowFreeShipping(data.freeShippingBanner)
+          cacheFlag(BANNER_CACHE_KEY, data.freeShippingBanner)
+        }
       })
       .catch(() => {})
   }, [])
@@ -49,7 +61,7 @@ export function PromoBar() {
     return () => clearInterval(interval)
   }, [messages.length])
 
-  if (!isVisible) return null
+  if (!isVisible || !barEnabled) return null
 
   return (
     <div className="bg-[#111827] text-white relative">

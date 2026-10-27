@@ -97,3 +97,13 @@ export function parseShippingSettingsUpdate(
   }
   return { data: next }
 }
+
+// ---------- Promo bar ----------
+
+export const PROMO_BAR_SETTINGS_KEY = 'store.promoBar'
+
+/** Whether the rotating announcement bar shows at the top of the store */
+export function readPromoBarEnabled(value: unknown): boolean {
+  const enabled = (value as { enabled?: unknown } | null)?.enabled
+  return typeof enabled === 'boolean' ? enabled : true
+}

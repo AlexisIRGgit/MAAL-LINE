@@ -139,18 +139,25 @@ function GeneralSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [promoBar, setPromoBar] = useState(true)
+  const [promoBarSaving, setPromoBarSaving] = useState(false)
   const [logoBusy, setLogoBusy] = useState<'uploading' | 'removing' | null>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let cancelled = false
     const getJson = (url: string) => fetch(url).then((res) => (res.ok ? res.json() : Promise.reject()))
-    Promise.all([getJson('/api/admin/settings/general'), getJson('/api/admin/settings/logo')])
-      .then(([general, logo]) => {
+    Promise.all([
+      getJson('/api/admin/settings/general'),
+      getJson('/api/admin/settings/logo'),
+      getJson('/api/admin/settings/promo-bar'),
+    ])
+      .then(([general, logo, bar]) => {
         if (cancelled) return
         setForm(general.settings)
         setSaved(general.settings)
         setLogoUrl(logo.logoUrl)
+        setPromoBar(bar.enabled)
       })
       .catch(() => {
         if (!cancelled) toast.error('No se pudo cargar la configuración', undefined, 2500)
@@ -252,12 +259,41 @@ function GeneralSettings() {
     }
   }
 
-  const disabled = loading || saving || !!logoBusy || !canEdit
-  const overlayLabel = saving ? 'Guardando' : logoBusy === 'uploading' ? 'Subiendo logo' : logoBusy === 'removing' ? 'Quitando logo' : 'Cargando'
+  // The switch saves right away; it reverts if the save fails
+  const togglePromoBar = async (next: boolean) => {
+    if (promoBarSaving) return
+    setPromoBar(next)
+    setPromoBarSaving(true)
+    const startedAt = Date.now()
+    try {
+      const res = await fetch('/api/admin/settings/promo-bar', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: next }),
+      })
+      const data = await res.json().catch(() => ({}))
+      await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+      if (!res.ok) {
+        setPromoBar(!next)
+        toast.error('No se pudo guardar', data.error || 'Intenta de nuevo', 2500)
+        return
+      }
+      setPromoBar(data.enabled)
+      toast.success(next ? 'Barra de anuncios activada' : 'Barra de anuncios desactivada', undefined, 2000)
+    } catch {
+      setPromoBar(!next)
+      toast.error('No se pudo guardar', 'Revisa tu conexión e intenta de nuevo', 2500)
+    } finally {
+      setPromoBarSaving(false)
+    }
+  }
+
+  const disabled = loading || saving || !!logoBusy || promoBarSaving || !canEdit
+  const overlayLabel = saving || promoBarSaving ? 'Guardando' : logoBusy === 'uploading' ? 'Subiendo logo' : logoBusy === 'removing' ? 'Quitando logo' : 'Cargando'
 
   return (
     <form onSubmit={handleSave} className="space-y-4 sm:space-y-6" aria-busy={loading || saving}>
-      <SavingOverlay show={loading || saving || !!logoBusy} label={overlayLabel} />
+      <SavingOverlay show={loading || saving || !!logoBusy || promoBarSaving} label={overlayLabel} />
 
       <div>
         <h2 className="text-sm sm:text-base font-semibold text-[#111827] mb-3 sm:mb-4">Información de la Tienda</h2>
@@ -365,6 +401,30 @@ function GeneralSettings() {
             onChange={handleLogoFile}
             className="hidden"
           />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-sm sm:text-base font-semibold text-[#111827] mb-3 sm:mb-4">Tienda</h2>
+        <div className="flex items-center justify-between p-3 sm:p-4 bg-[#F9FAFB] rounded-xl gap-3">
+          <div className="min-w-0">
+            <p id="promo-bar-label" className="text-[#111827] text-xs sm:text-sm font-medium">Barra de anuncios</p>
+            <p className="text-[#6B7280] text-[11px] sm:text-sm">
+              La franja de arriba de la tienda con los mensajes que rotan (envío gratis, new drop, MSI)
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+            <input
+              type="checkbox"
+              role="switch"
+              aria-labelledby="promo-bar-label"
+              checked={promoBar}
+              onChange={(e) => togglePromoBar(e.target.checked)}
+              disabled={disabled}
+              className="sr-only peer"
+            />
+            <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus-visible:ring-2 peer-focus-visible:ring-[#111827] peer-focus-visible:ring-offset-2 rounded-full peer peer-disabled:opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827] dark:bg-[#2A2E37] dark:peer-checked:bg-emerald-500"></div>
+          </label>
         </div>
       </div>
 
