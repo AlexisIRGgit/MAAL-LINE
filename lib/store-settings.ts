@@ -42,3 +42,21 @@ export function readGeneralSettings(value: unknown): GeneralSettings {
   const parsed = parseGeneralSettings({ ...DEFAULT_GENERAL_SETTINGS, ...((value as object) ?? {}) })
   return 'data' in parsed ? parsed.data : DEFAULT_GENERAL_SETTINGS
 }
+
+// ---------- Logo ----------
+
+export const LOGO_SETTINGS_KEY = 'store.logo'
+/** Max length of the stored data URI (~300KB image); the client resizes before upload */
+export const MAX_LOGO_DATA_URL_LENGTH = 400_000
+/** Raster only: an SVG data URI could carry scripts if someone opened it directly */
+const LOGO_DATA_URL_RE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/
+
+export function parseLogoDataUrl(input: unknown): { data: string } | { error: string } {
+  if (typeof input !== 'string' || !LOGO_DATA_URL_RE.test(input)) {
+    return { error: 'Formato de imagen no válido. Usa PNG, JPG o WebP' }
+  }
+  if (input.length > MAX_LOGO_DATA_URL_LENGTH) {
+    return { error: 'El logo es demasiado pesado' }
+  }
+  return { data: input }
+}

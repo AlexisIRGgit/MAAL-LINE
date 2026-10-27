@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import {
@@ -21,12 +21,14 @@ import {
   ExternalLink,
   CheckCircle,
   AlertCircle,
+  Trash2,
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
 import { ROLE_INFO } from '@/lib/permissions'
 import { TwoFactorSettings } from '@/components/admin/two-factor-settings'
 import { Loader } from '@/components/ui/loader'
 import { toast } from '@/lib/toast'
+import { resizeImageToDataUrl } from '@/lib/utils/resize-image'
 import { DEFAULT_GENERAL_SETTINGS, type GeneralSettings as GeneralSettingsData } from '@/lib/store-settings'
 
 const tabs = [
@@ -132,15 +134,19 @@ function GeneralSettings() {
   const [saved, setSaved] = useState<GeneralSettingsData>(DEFAULT_GENERAL_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoBusy, setLogoBusy] = useState<'uploading' | 'removing' | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let cancelled = false
-    fetch('/api/admin/settings/general')
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((data) => {
+    const getJson = (url: string) => fetch(url).then((res) => (res.ok ? res.json() : Promise.reject()))
+    Promise.all([getJson('/api/admin/settings/general'), getJson('/api/admin/settings/logo')])
+      .then(([general, logo]) => {
         if (cancelled) return
-        setForm(data.settings)
-        setSaved(data.settings)
+        setForm(general.settings)
+        setSaved(general.settings)
+        setLogoUrl(logo.logoUrl)
       })
       .catch(() => {
         if (!cancelled) toast.error('No se pudo cargar la configuración', undefined, 2500)
@@ -185,11 +191,69 @@ function GeneralSettings() {
     }
   }
 
-  const disabled = loading || saving || !canEdit
+  const handleLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // lets the same file be picked again
+    if (!file || logoBusy) return
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      toast.error('Formato no válido', 'Usa una imagen PNG, JPG o WebP', 2500)
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Imagen muy pesada', 'El archivo debe pesar menos de 10 MB', 2500)
+      return
+    }
+
+    setLogoBusy('uploading')
+    const startedAt = Date.now()
+    try {
+      const dataUrl = await resizeImageToDataUrl(file)
+      const res = await fetch('/api/admin/settings/logo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl }),
+      })
+      const data = await res.json().catch(() => ({}))
+      await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+      if (!res.ok) {
+        toast.error('No se pudo subir el logo', data.error || 'Intenta de nuevo', 2500)
+        return
+      }
+      setLogoUrl(data.logoUrl)
+      toast.success('Logo actualizado', undefined, 2000)
+    } catch (err) {
+      toast.error('No se pudo subir el logo', err instanceof Error ? err.message : 'Intenta de nuevo', 2500)
+    } finally {
+      setLogoBusy(null)
+    }
+  }
+
+  const handleLogoRemove = async () => {
+    if (logoBusy) return
+    setLogoBusy('removing')
+    const startedAt = Date.now()
+    try {
+      const res = await fetch('/api/admin/settings/logo', { method: 'DELETE' })
+      await new Promise((r) => setTimeout(r, Math.max(0, MIN_SAVING_MS - (Date.now() - startedAt))))
+      if (!res.ok) {
+        toast.error('No se pudo quitar el logo', 'Intenta de nuevo', 2500)
+        return
+      }
+      setLogoUrl(null)
+      toast.success('Logo eliminado', undefined, 2000)
+    } catch {
+      toast.error('No se pudo quitar el logo', 'Revisa tu conexión e intenta de nuevo', 2500)
+    } finally {
+      setLogoBusy(null)
+    }
+  }
+
+  const disabled = loading || saving || !!logoBusy || !canEdit
+  const overlayLabel = saving ? 'Guardando' : logoBusy === 'uploading' ? 'Subiendo logo' : logoBusy === 'removing' ? 'Quitando logo' : 'Cargando'
 
   return (
     <form onSubmit={handleSave} className="space-y-4 sm:space-y-6" aria-busy={loading || saving}>
-      <SavingOverlay show={loading || saving} label={saving ? 'Guardando' : 'Cargando'} />
+      <SavingOverlay show={loading || saving || !!logoBusy} label={overlayLabel} />
 
       <div>
         <h2 className="text-sm sm:text-base font-semibold text-[#111827] mb-3 sm:mb-4">Información de la Tienda</h2>
@@ -251,13 +315,52 @@ function GeneralSettings() {
       <div>
         <h2 className="text-sm sm:text-base font-semibold text-[#111827] mb-3 sm:mb-4">Logo</h2>
         <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-16 sm:w-20 h-16 sm:h-20 bg-[#F3F4F6] border border-[#E5E7EB] rounded-xl flex items-center justify-center flex-shrink-0">
-            <Store className="w-6 sm:w-8 h-6 sm:h-8 text-[#9CA3AF]" />
-          </div>
-          <button type="button" className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs sm:text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors">
-            <Upload className="w-4 h-4" />
-            Cambiar logo
+          <button
+            type="button"
+            onClick={() => logoInputRef.current?.click()}
+            disabled={disabled}
+            aria-label={logoUrl ? 'Cambiar logo' : 'Subir logo'}
+            className="group relative w-16 sm:w-20 h-16 sm:h-20 bg-[#F3F4F6] border border-[#E5E7EB] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden hover:border-[#D1D5DB] transition-colors disabled:cursor-not-allowed"
+          >
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- data URI, nothing for next/image to optimize
+              <img src={logoUrl} alt="Logo de la tienda" className="w-full h-full object-contain p-1.5" />
+            ) : (
+              <Store className="w-6 sm:w-8 h-6 sm:h-8 text-[#9CA3AF]" />
+            )}
           </button>
+          <div className="flex flex-col items-start gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => logoInputRef.current?.click()}
+                disabled={disabled}
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-xs sm:text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Upload className="w-4 h-4" />
+                {logoUrl ? 'Cambiar logo' : 'Subir logo'}
+              </button>
+              {logoUrl && (
+                <button
+                  type="button"
+                  onClick={handleLogoRemove}
+                  disabled={disabled}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Quitar
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] sm:text-xs text-[#9CA3AF]">PNG, JPG o WebP. Se ajusta a 512 px; mejor con fondo transparente.</p>
+          </div>
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={handleLogoFile}
+            className="hidden"
+          />
         </div>
       </div>
 
