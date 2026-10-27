@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
 import { ROLE_INFO } from '@/lib/permissions'
+import { TwoFactorSettings } from '@/components/admin/two-factor-settings'
 
 const tabs = [
   { id: 'general', label: 'General', icon: Store },
@@ -529,18 +530,7 @@ function SecuritySettings() {
       <h2 className="text-sm sm:text-base font-semibold text-[#111827]">Seguridad</h2>
 
       <div className="space-y-3 sm:space-y-4">
-        <div className="p-3 sm:p-4 bg-[#F9FAFB] rounded-xl">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[#111827] text-xs sm:text-sm font-medium">Autenticación de dos factores</p>
-              <p className="text-[#6B7280] text-[10px] sm:text-sm">Añade una capa extra de seguridad</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-              <input type="checkbox" className="sr-only peer" />
-              <div className="w-10 sm:w-11 h-5 sm:h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[#D1D5DB] after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-[#111827]"></div>
-            </label>
-          </div>
-        </div>
+        <TwoFactorSettings />
 
         <div className="p-3 sm:p-4 bg-[#F9FAFB] rounded-xl">
           <p className="text-[#111827] text-xs sm:text-sm font-medium mb-3 sm:mb-4">Cambiar contraseña</p>

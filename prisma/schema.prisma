@@ -54,6 +54,12 @@ model User {
   lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
 
+  // Two-factor auth (TOTP). The secret is AES-GCM encrypted; backup codes are SHA-256 hashes
+  twoFactorEnabled     Boolean  @default(false) @map("two_factor_enabled")
+  twoFactorSecret      String?  @map("two_factor_secret")
+  twoFactorBackupCodes String[] @default([]) @map("two_factor_backup_codes")
+  twoFactorLastStep    Int?     @map("two_factor_last_step")
+
   // Relations
   sessions          UserSession[]
   passwordResets    PasswordReset[]

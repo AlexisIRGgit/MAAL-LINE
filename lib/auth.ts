@@ -1,8 +1,22 @@
-import NextAuth from 'next-auth'
+import NextAuth, { CredentialsSignin } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import type { UserRole } from '@prisma/client'
 import { authConfig } from './auth.config'
+
+// Error codes reach the client as `result.code` from signIn('credentials', { redirect: false })
+class TwoFactorRequired extends CredentialsSignin {
+  code = 'two_factor_required'
+}
+class TwoFactorInvalid extends CredentialsSignin {
+  code = 'two_factor_invalid'
+}
+class TwoFactorLocked extends CredentialsSignin {
+  code = 'two_factor_locked'
+}
+
+const TWO_FACTOR_MAX_FAILURES = 5
+const TWO_FACTOR_LOCK_MINUTES = 15
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -16,6 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        otp: { label: 'Code', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -57,10 +72,43 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
+        // Second factor: only checked after the password, so it never leaks which accounts use 2FA
+        let twoFactorUpdate = {}
+        if (user.twoFactorEnabled) {
+          const otp = typeof credentials.otp === 'string' ? credentials.otp : ''
+          if (!otp) throw new TwoFactorRequired()
+
+          const recentFailures = await prisma.securityEvent.count({
+            where: {
+              userId: user.id,
+              eventType: 'login_failed',
+              metadata: { path: ['reason'], equals: 'invalid_2fa' },
+              createdAt: { gte: new Date(Date.now() - TWO_FACTOR_LOCK_MINUTES * 60_000) },
+            },
+          })
+          if (recentFailures >= TWO_FACTOR_MAX_FAILURES) throw new TwoFactorLocked()
+
+          const { checkSecondFactor } = await import('./two-factor')
+          const result = checkSecondFactor(user, otp)
+          if (!result) {
+            await prisma.securityEvent.create({
+              data: {
+                userId: user.id,
+                email: user.email,
+                eventType: 'login_failed',
+                severity: 'warning',
+                metadata: { reason: 'invalid_2fa' },
+              },
+            })
+            throw new TwoFactorInvalid()
+          }
+          twoFactorUpdate = result.update
+        }
+
         // Update last login
         await prisma.user.update({
           where: { id: user.id },
-          data: { lastLoginAt: new Date() },
+          data: { lastLoginAt: new Date(), ...twoFactorUpdate },
         })
 
         // Log successful login
@@ -96,6 +144,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         })
 
         if (existingUser) {
+          // Google sign-in would skip the authenticator code, so 2FA accounts must use the password flow
+          if (existingUser.twoFactorEnabled) {
+            return '/admin/login?error=two_factor_google'
+          }
+
           // Update OAuth info and fill missing profile data
           const firstName = user.name?.split(' ')[0] || null
           const lastName = user.name?.split(' ').slice(1).join(' ') || null

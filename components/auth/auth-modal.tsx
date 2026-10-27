@@ -37,7 +37,10 @@ function LoginView() {
         redirect: false,
       })
 
-      if (result?.error) {
+      if (result?.code === 'two_factor_required') {
+        // Staff accounts with 2FA finish signing in on the admin login, which asks for the code
+        setErrorMessage('Esta cuenta usa verificación en dos pasos. Inicia sesión desde maalline.com/admin/login')
+      } else if (result?.error) {
         setErrorMessage('Email o contraseña incorrectos')
       } else {
         closeAuthModal()
