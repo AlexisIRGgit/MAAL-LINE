@@ -144,6 +144,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         })
 
         if (existingUser) {
+          // Deactivated or deleted accounts can't come back through Google
+          if (existingUser.status !== 'active' || existingUser.deletedAt) {
+            return '/login?error=AccountDisabled'
+          }
+
           // Google sign-in would skip the authenticator code, so 2FA accounts must use the password flow
           if (existingUser.twoFactorEnabled) {
             return '/admin/login?error=two_factor_google'

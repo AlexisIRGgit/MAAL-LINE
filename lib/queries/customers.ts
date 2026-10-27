@@ -55,6 +55,7 @@ export async function getAdminCustomers(
       name: `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || customer.email.split('@')[0],
       email: customer.email,
       phone: customer.phone,
+      status: customer.status,
       orders: customer.customerProfile?.orderCount || customer._count.orders || 0,
       spent: parseFloat(customer.customerProfile?.totalSpent?.toString() || '0'),
       group: customer.customerProfile?.customerGroup || 'standard',

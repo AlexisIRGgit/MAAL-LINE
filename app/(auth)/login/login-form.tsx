@@ -17,7 +17,13 @@ export default function LoginForm() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState(error ? 'Credenciales inválidas' : '')
+  const [errorMessage, setErrorMessage] = useState(
+    error === 'AccountDisabled'
+      ? 'Esta cuenta está desactivada. Escríbenos a contacto@maalline.com'
+      : error
+        ? 'Credenciales inválidas'
+        : ''
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

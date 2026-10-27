@@ -25,11 +25,15 @@ import {
   Phone,
   Copy,
   Check,
+  UserX,
+  UserCheck,
+  Trash2,
 } from 'lucide-react'
 
 const ITEMS_PER_PAGE = 10
 import { toast } from '@/lib/toast'
 import { UserAvatar } from '@/components/ui/user-avatar'
+import { usePermissions } from '@/hooks/use-permissions'
 
 interface Address {
   id: string
@@ -51,6 +55,7 @@ interface Customer {
   name: string
   email: string
   phone: string | null
+  status: 'active' | 'inactive' | 'suspended' | 'banned'
   orders: number
   spent: number
   group: string
@@ -269,6 +274,84 @@ export default function CustomersPage() {
     fetchCustomers()
   }, [fetchCustomers])
 
+  // Row actions (⋮). The menu is position:fixed so the table's overflow can't clip it.
+  const { can } = usePermissions()
+  const canEditCustomers = can('customers:edit')
+  const canDeleteCustomers = can('customers:delete')
+  const [actionsMenu, setActionsMenu] = useState<{ customer: Customer; top: number; right: number } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<Customer | null>(null)
+  const [busyCustomerId, setBusyCustomerId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!actionsMenu) return
+    const close = () => setActionsMenu(null)
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
+    window.addEventListener('click', close)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('click', close)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [actionsMenu])
+
+  const openActionsMenu = (e: React.MouseEvent<HTMLButtonElement>, customer: Customer) => {
+    e.stopPropagation()
+    const rect = e.currentTarget.getBoundingClientRect()
+    setActionsMenu((current) =>
+      current?.customer.id === customer.id
+        ? null
+        : { customer, top: rect.bottom + 6, right: window.innerWidth - rect.right }
+    )
+  }
+
+  const handleToggleStatus = async (customer: Customer) => {
+    setActionsMenu(null)
+    const next = customer.status === 'active' ? 'inactive' : 'active'
+    setBusyCustomerId(customer.id)
+    try {
+      const res = await fetch(`/api/customers/${customer.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'No se pudo actualizar')
+      setCustomers((list) => list.map((c) => (c.id === customer.id ? { ...c, status: next } : c)))
+      toast.success(
+        next === 'inactive' ? 'Cliente desactivado' : 'Cliente reactivado',
+        next === 'inactive' ? `${customer.name} ya no puede iniciar sesión` : `${customer.name} puede volver a iniciar sesión`,
+        2000
+      )
+    } catch (error) {
+      toast.error('No se pudo actualizar', error instanceof Error ? error.message : undefined, 2500)
+    } finally {
+      setBusyCustomerId(null)
+    }
+  }
+
+  const handleDeleteCustomer = async () => {
+    const customer = confirmDelete
+    if (!customer) return
+    setBusyCustomerId(customer.id)
+    try {
+      const res = await fetch(`/api/customers/${customer.id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'No se pudo eliminar')
+      setConfirmDelete(null)
+      if (selectedCustomer?.id === customer.id) setSelectedCustomer(null)
+      toast.success('Cliente eliminado', customer.name, 2000)
+      fetchCustomers()
+    } catch (error) {
+      toast.error('No se pudo eliminar', error instanceof Error ? error.message : undefined, 2500)
+    } finally {
+      setBusyCustomerId(null)
+    }
+  }
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -416,7 +499,9 @@ export default function CustomersPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="hover:bg-[#F9FAFB] transition-colors cursor-pointer"
+                    className={`hover:bg-[#F9FAFB] transition-colors cursor-pointer ${
+                      customer.status !== 'active' ? 'opacity-60' : ''
+                    } ${busyCustomerId === customer.id ? 'pointer-events-none animate-pulse' : ''}`}
                     onClick={() => setSelectedCustomer(customer)}
                   >
                     <td className="p-3">
@@ -427,6 +512,11 @@ export default function CustomersPage() {
                             <p className="text-[#111827] font-medium text-sm truncate">{customer.name}</p>
                             {customer.group === 'vip' && (
                               <Crown className="w-3 h-3 text-purple-600 sm:hidden flex-shrink-0" />
+                            )}
+                            {customer.status !== 'active' && (
+                              <span className="flex-shrink-0 px-1.5 py-0.5 rounded-md bg-red-50 text-red-600 text-[10px] font-semibold uppercase tracking-wide">
+                                Inactivo
+                              </span>
                             )}
                           </div>
                           <p className="text-[#9CA3AF] text-xs truncate">
@@ -477,12 +567,11 @@ export default function CustomersPage() {
                           <Eye className="w-4 h-4 text-[#6B7280]" />
                         </button>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setSelectedCustomer(customer)
-                          }}
+                          onClick={(e) => openActionsMenu(e, customer)}
                           className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
                           title="Más opciones"
+                          aria-haspopup="menu"
+                          aria-expanded={actionsMenu?.customer.id === customer.id}
                         >
                           <MoreVertical className="w-4 h-4 text-[#6B7280]" />
                         </button>
@@ -965,6 +1054,123 @@ export default function CustomersPage() {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Row actions menu */}
+      <AnimatePresence>
+        {actionsMenu && (
+          <motion.div
+            role="menu"
+            initial={{ opacity: 0, scale: 0.96, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -4 }}
+            transition={{ duration: 0.12 }}
+            style={{ position: 'fixed', top: actionsMenu.top, right: actionsMenu.right }}
+            className="z-[100] w-52 origin-top-right bg-white border border-[#E5E7EB] rounded-xl shadow-lg p-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              role="menuitem"
+              onClick={() => {
+                setSelectedCustomer(actionsMenu.customer)
+                setActionsMenu(null)
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
+            >
+              <Eye className="w-4 h-4" />
+              Ver detalles
+            </button>
+            {canEditCustomers && (
+              <button
+                role="menuitem"
+                onClick={() => handleToggleStatus(actionsMenu.customer)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
+              >
+                {actionsMenu.customer.status === 'active' ? (
+                  <>
+                    <UserX className="w-4 h-4" />
+                    Desactivar
+                  </>
+                ) : (
+                  <>
+                    <UserCheck className="w-4 h-4" />
+                    Reactivar
+                  </>
+                )}
+              </button>
+            )}
+            {canDeleteCustomers && (
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setConfirmDelete(actionsMenu.customer)
+                  setActionsMenu(null)
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Eliminar
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation */}
+      <AnimatePresence>
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => busyCustomerId === null && setConfirmDelete(null)}
+            />
+            <motion.div
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="delete-customer-title"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-sm bg-white border border-[#E5E7EB] rounded-2xl shadow-xl p-5"
+            >
+              <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center mb-3">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 id="delete-customer-title" className="text-base font-semibold text-[#111827]">
+                ¿Eliminar a {confirmDelete.name}?
+              </h3>
+              <p className="text-sm text-[#6B7280] mt-1.5">
+                Se borran sus datos personales y direcciones, y ya no podrá iniciar sesión. Sus pedidos se conservan en el
+                historial. Esto no se puede deshacer.
+              </p>
+              {confirmDelete.status === 'active' && (
+                <p className="text-xs text-[#6B7280] mt-2">
+                  Si solo quieres bloquear su acceso, usa «Desactivar».
+                </p>
+              )}
+              <div className="flex gap-2 mt-5">
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  disabled={busyCustomerId !== null}
+                  className="flex-1 py-2.5 border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-xl hover:bg-[#F9FAFB] transition-colors disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDeleteCustomer}
+                  disabled={busyCustomerId !== null}
+                  className="flex-1 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                >
+                  {busyCustomerId !== null ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  Eliminar
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
