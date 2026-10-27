@@ -7,6 +7,7 @@ import { CartDrawer } from '@/components/cart/cart-drawer'
 import { QuickViewModal } from '@/components/product/quick-view-modal'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { CheckoutModal } from '@/components/checkout/checkout-modal'
+import { getPublicStoreSettings } from '@/lib/public-store-settings'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -21,10 +22,22 @@ const inter = Inter({
   variable: '--font-body',
 })
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   title: 'MAAL LINE | Streetwear Oversize con Actitud',
   description: 'Tienda oficial de MAAL Line. Hoodies, tees y bottoms oversized. Streetwear mexicano premium. Envío gratis +$999.',
   keywords: ['streetwear', 'oversize', 'hoodies', 'ropa urbana', 'mexico', 'maal line', 'gothic streetwear'],
+}
+
+// The logo uploaded in Admin > Configuración > General doubles as the favicon
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const { logo } = await getPublicStoreSettings()
+    if (!logo) return baseMetadata
+    const href = `/api/store/logo?v=${logo.version}`
+    return { ...baseMetadata, icons: { icon: href, apple: href } }
+  } catch {
+    return baseMetadata
+  }
 }
 
 export default function RootLayout({

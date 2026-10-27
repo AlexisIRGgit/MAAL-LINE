@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, handleAuthError } from '@/lib/auth-utils'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/db'
+import { STORE_SETTINGS_TAG } from '@/lib/public-store-settings'
 import { SHIPPING_SETTINGS_KEY, parseShippingSettingsUpdate, readShippingSettings } from '@/lib/store-settings'
 
 // GET - Shipping settings (defaults until first saved)
@@ -38,6 +40,7 @@ export async function PUT(request: NextRequest) {
       update: { value: parsed.data, updatedById: session.user.id },
     })
 
+    revalidateTag(STORE_SETTINGS_TAG)
     return NextResponse.json({ settings: readShippingSettings(saved.value) })
   } catch (error) {
     return handleAuthError(error)

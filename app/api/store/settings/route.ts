@@ -1,19 +1,18 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { SHIPPING_SETTINGS_KEY, readShippingSettings } from '@/lib/store-settings'
+import { getPublicStoreSettings } from '@/lib/public-store-settings'
+
+// Without this, Next 14 renders the handler once at build time and freezes the value
+export const dynamic = 'force-dynamic'
 
 // GET - Public, storefront-safe settings only (no auth)
 export async function GET() {
   try {
-    const row = await prisma.storeSetting.findUnique({ where: { key: SHIPPING_SETTINGS_KEY } })
-    const { freeShippingBanner } = readShippingSettings(row?.value)
-    return NextResponse.json(
-      { freeShippingBanner },
-      // Short CDN cache: admin changes show up within a minute
-      { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
-    )
+    const { freeShippingBanner } = await getPublicStoreSettings()
+    // Served from the Next data cache (invalidated on save), so skip the CDN cache:
+    // admin changes must show up right away
+    return NextResponse.json({ freeShippingBanner }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error('Store settings error:', error)
-    return NextResponse.json({ freeShippingBanner: true })
+    return NextResponse.json({ freeShippingBanner: true }, { headers: { 'Cache-Control': 'no-store' } })
   }
 }

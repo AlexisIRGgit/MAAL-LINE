@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, handleAuthError } from '@/lib/auth-utils'
+import { revalidateTag } from 'next/cache'
 import { prisma } from '@/lib/db'
+import { STORE_SETTINGS_TAG } from '@/lib/public-store-settings'
 import { LOGO_SETTINGS_KEY, parseLogoDataUrl } from '@/lib/store-settings'
 
 function readLogo(value: unknown): string | null {
@@ -41,6 +43,7 @@ export async function PUT(request: NextRequest) {
       update: { value: { url: parsed.data }, updatedById: session.user.id },
     })
 
+    revalidateTag(STORE_SETTINGS_TAG)
     return NextResponse.json({ logoUrl: parsed.data })
   } catch (error) {
     return handleAuthError(error)
@@ -52,6 +55,7 @@ export async function DELETE() {
   try {
     await requirePermission('settings:edit')
     await prisma.storeSetting.deleteMany({ where: { key: LOGO_SETTINGS_KEY } })
+    revalidateTag(STORE_SETTINGS_TAG)
     return NextResponse.json({ logoUrl: null })
   } catch (error) {
     return handleAuthError(error)
