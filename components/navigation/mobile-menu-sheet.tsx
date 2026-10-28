@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { X, LogOut, LogIn, Sparkles, Dumbbell, Footprints, Truck, LayoutGrid, Heart, User, type LucideIcon } from 'lucide-react'
+import { X, LogOut, LogIn, Sparkles, Dumbbell, Footprints, LayoutGrid, Heart, User, type LucideIcon } from 'lucide-react'
 import { Logo } from '@/components/common/logo'
 import { cn } from '@/lib/utils/cn'
 import { useModalA11y } from '@/hooks/use-modal-a11y'
@@ -22,7 +22,6 @@ const STORE_LINKS: MenuLink[] = [
   { href: '/coleccion?q=strap', label: 'Lifting Straps', icon: Dumbbell },
   { href: '/coleccion?q=chaleco', label: 'Chalecos de running', icon: Footprints },
   { href: '/drop', label: 'Drop 001 · Pronto', icon: Sparkles },
-  { href: '/envios', label: 'Envíos', icon: Truck },
 ]
 
 const pillSpring = { type: 'spring', stiffness: 360, damping: 32 } as const

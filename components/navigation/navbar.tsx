@@ -20,7 +20,6 @@ const NAV_LINKS: { href: string; label: string; highlight?: boolean; badge?: str
   { href: '/coleccion?q=strap', label: 'STRAPS' },
   { href: '/coleccion?q=chaleco', label: 'CHALECOS' },
   { href: '/drop', label: 'DROP 001', badge: 'PRONTO' },
-  { href: '/envios', label: 'ENVÍOS' },
 ]
 
 interface SearchResult {
