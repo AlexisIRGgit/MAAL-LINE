@@ -18,8 +18,8 @@ export default function PrivacyPage() {
     >
       <InfoSection title="Responsable de tus datos">
         <p>
-          MAAL LINE es responsable del tratamiento de los datos personales que nos proporcionas a través de
-          maalline.com, conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares. Para
+          MAAL LINE, marca de equipo deportivo con domicilio en Guadalajara, Jalisco, México, es responsable del
+          tratamiento de los datos personales que nos proporcionas a través de maalline.com, conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares. Para
           cualquier tema de privacidad, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
         </p>
       </InfoSection>
@@ -71,7 +71,10 @@ export default function PrivacyPage() {
         <p>No vendemos ni rentamos tus datos. Solo los compartimos con proveedores que nos ayudan a operar la tienda:</p>
         <ul>
           <li>Procesadores de pago (Stripe) para cobrar tus compras.</li>
-          <li>Paqueterías, para entregar tus pedidos.</li>
+          <li>
+            Servicios de mensajería local y paqueterías nacionales (directamente o a través de plataformas de guías de
+            envío), solo con los datos necesarios para entregar tu pedido: nombre, teléfono y dirección.
+          </li>
           <li>Proveedores de hospedaje, base de datos y envío de correos, que operan la tienda en nuestro nombre.</li>
           <li>Google, si eliges iniciar sesión con tu cuenta o usar el mapa para tu dirección.</li>
           <li>Autoridades, cuando una ley o una orden lo requiera.</li>

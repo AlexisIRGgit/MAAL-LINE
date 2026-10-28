@@ -6,7 +6,7 @@ import { CONTACT_EMAIL } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Preguntas frecuentes | MAAL LINE',
-  description: 'Respuestas sobre pedidos, pagos, envíos, tallas, cambios y devoluciones en MAAL LINE.',
+  description: 'Respuestas sobre pedidos, envíos desde Guadalajara, cuidado de lifting straps y chalecos, cambios y devoluciones.',
 }
 
 type Faq = { q: string; a: React.ReactNode }
@@ -39,41 +39,53 @@ const FAQ_GROUPS: { title: string; items: Faq[] }[] = [
     ],
   },
   {
-    title: 'Envíos',
+    title: 'Envíos y entregas',
     items: [
+      {
+        q: '¿Desde dónde envían?',
+        a: 'Desde nuestro propio almacén en Guadalajara, Jalisco. Tenemos el equipo en stock, así que no esperas importaciones ni proveedores externos.',
+      },
+      {
+        q: '¿Cuánto tarda en llegar mi pedido?',
+        a: (
+          <>
+            En la Zona Metropolitana de Guadalajara te llega el mismo día o al día siguiente. Al resto de México, de 2 a 5
+            días hábiles. Costos y detalles en <Link href="/envios">Envíos y devoluciones</Link>.
+          </>
+        ),
+      },
       {
         q: '¿Hacen envíos a todo México?',
         a: 'Sí, enviamos a toda la República Mexicana. Por ahora no hacemos envíos internacionales.',
       },
       {
-        q: '¿Cuánto cuesta el envío y cuánto tarda?',
-        a: (
-          <>
-            Depende del método que elijas al pagar. Consulta los costos y tiempos actualizados en{' '}
-            <Link href="/envios">Envíos y devoluciones</Link>.
-          </>
-        ),
-      },
-      {
         q: '¿Cómo rastreo mi pedido?',
         a: 'Cuando tu pedido sale te enviamos un correo con la paquetería y el número de rastreo. También lo ves en Mi cuenta → Pedidos.',
+      },
+      {
+        q: '¿Cómo viene empacado?',
+        a: 'En bolsa CPE negro mate esmerilado y dentro de un cilindro de cartón negro con nuestro logo en serigrafía plata. Protege tu equipo en el camino y el unboxing está a la altura.',
       },
     ],
   },
   {
-    title: 'Tallas y productos',
+    title: 'Cuidado del equipo',
     items: [
       {
-        q: '¿Cómo quedan las prendas?',
-        a: 'Nuestro corte es oversize: holgado y con caída. Si prefieres un ajuste más cercano al cuerpo, te recomendamos pedir una talla menos de la que usas normalmente.',
+        q: '¿Cómo lavo mis lifting straps?',
+        a: 'A mano, con agua fría y jabón neutro. Enjuaga bien y déjalos secar al aire, a la sombra. No uses secadora, cloro ni los planches: el calor daña el neopreno y el grip de silicona.',
       },
       {
-        q: '¿Cómo cuido mis prendas?',
-        a: 'Lava a mano o en ciclo delicado con agua fría, del revés y sin blanqueador. Seca a la sombra y no planches sobre los estampados.',
+        q: '¿Cómo mantengo el grip de los straps?',
+        a: 'Después de entrenar, quita el exceso de magnesio o sudor con un trapo húmedo. Guárdalos secos y lejos del sol directo para que la silicona conserve su agarre.',
       },
       {
-        q: '¿Van a volver a sacar un producto agotado?',
-        a: 'Algunos drops son de edición limitada y no se reponen. Síguenos en Instagram para enterarte de los restocks y nuevos lanzamientos.',
+        q: '¿Cómo lavo mi chaleco de running?',
+        a: 'Saca los depósitos o botellas y vacía los bolsillos. Lávalo a mano con agua fría y jabón neutro, sin cloro ni suavizante, y déjalo secar al aire. No lo metas a la secadora.',
+      },
+      {
+        q: '¿Cómo limpio los depósitos de hidratación?',
+        a: 'Enjuágalos con agua tibia después de cada uso y déjalos secar abiertos. Si les pusiste bebidas con azúcar o electrolitos, lávalos con un poco de jabón neutro y enjuaga muy bien.',
       },
     ],
   },
@@ -81,8 +93,8 @@ const FAQ_GROUPS: { title: string; items: Faq[] }[] = [
     title: 'Cambios y devoluciones',
     items: [
       {
-        q: '¿Puedo cambiar de talla?',
-        a: 'Sí, dentro de los 15 días naturales siguientes a la entrega, con la prenda sin usar y con etiquetas. Está sujeto a disponibilidad.',
+        q: '¿Puedo cambiar mi producto?',
+        a: 'Sí, dentro de los 15 días naturales siguientes a la entrega, con el producto sin usar, con etiquetas y en su empaque original. Está sujeto a disponibilidad.',
       },
       {
         q: '¿Cómo hago una devolución?',
@@ -95,7 +107,7 @@ const FAQ_GROUPS: { title: string; items: Faq[] }[] = [
       },
       {
         q: '¿Mi pedido llegó dañado o incorrecto, qué hago?',
-        a: 'Escríbenos dentro de las 48 horas siguientes a la entrega con fotos del paquete y de la prenda. Lo resolvemos sin costo para ti.',
+        a: 'Escríbenos dentro de las 48 horas siguientes a la entrega con fotos del paquete y del producto. Lo resolvemos sin costo para ti.',
       },
     ],
   },
@@ -106,7 +118,7 @@ export default function FaqPage() {
     <InfoPage
       eyebrow="Ayuda"
       title="Preguntas frecuentes"
-      intro="Lo que más nos preguntan sobre pedidos, envíos, tallas y devoluciones."
+      intro="Lo que más nos preguntan sobre pedidos, envíos, cuidado del equipo y devoluciones."
       current="/faq"
     >
       {FAQ_GROUPS.map((group) => (

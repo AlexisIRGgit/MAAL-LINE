@@ -40,7 +40,7 @@ function layout({ preheader, heading, body }: { preheader: string; heading: stri
 ${body}
 </td></tr>
 <tr><td style="padding:18px 28px;border-top:1px solid #E5E7EB;font-size:12px;color:#9CA3AF">
-MAAL LINE · Streetwear oversize · <a href="${SITE_URL}" style="color:#6B7280">maalline.com</a>
+MAAL LINE · Performance Gear · Guadalajara · <a href="${SITE_URL}" style="color:#6B7280">maalline.com</a>
 </td></tr>
 </table>
 </td></tr>
@@ -173,7 +173,7 @@ export function customerWelcomeEmail(firstName: string | null): EmailContent {
       heading: greeting,
       body:
         p('Tu cuenta en MAAL LINE ya está lista. Desde ella puedes seguir tus pedidos, guardar tus direcciones y comprar más rápido.') +
-        p('Streetwear oversize con actitud. Revisa los nuevos drops antes de que se agoten.') +
+        p('Performance gear para entrenar duro: lifting straps y chalecos de running con stock propio en Guadalajara.') +
         button('Ver la tienda', SITE_URL),
     }),
     text: `${firstName ? `¡Bienvenido, ${firstName}!` : '¡Bienvenido!'}\nTu cuenta en MAAL LINE ya está lista.\n\n${SITE_URL}`,

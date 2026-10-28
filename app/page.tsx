@@ -13,71 +13,11 @@ import { getNewArrivals, getBestSellers } from '@/lib/queries/products'
 import { getActiveCategories } from '@/lib/queries/categories'
 import { transformProductsForCards } from '@/lib/transformers/product'
 
-// Fallback categories when database is empty
-const FALLBACK_CATEGORIES = [
-  {
-    slug: 'longsleeves',
-    name: 'LONGSLEEVES',
-    image: '/images/IMG_3009.PNG',
-    large: true,
-  },
-  {
-    slug: 'tees',
-    name: 'TEES',
-    image: '/images/IMG_3008.PNG',
-  },
-  {
-    slug: 'gothic',
-    name: 'GOTHIC',
-    image: '/images/IMG_3010.PNG',
-  },
-  {
-    slug: 'new-drops',
-    name: 'NEW DROPS',
-    image: '/images/IMG_3009.PNG',
-    wide: true,
-  },
-]
-
-// Fallback products when database is empty
-const FALLBACK_PRODUCTS = [
-  {
-    id: '1',
-    slug: 'tee-maal-tribal-wings',
-    name: 'Tee MAAL Tribal Wings',
-    price: 699,
-    compareAtPrice: 899,
-    images: ['/images/IMG_3008.PNG', '/images/IMG_3009.PNG'],
-    isNew: true,
-    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-  },
-  {
-    id: '2',
-    slug: 'longsleeve-maal-dragon-wings',
-    name: 'Longsleeve MAAL Dragon Wings',
-    price: 899,
-    images: ['/images/IMG_3009.PNG', '/images/IMG_3008.PNG'],
-    isBestSeller: true,
-    sizes: ['XS', 'S', 'M', 'L', 'XL'],
-  },
-  {
-    id: '3',
-    slug: 'longsleeve-maal-gothic-cross',
-    name: 'Longsleeve MAAL Gothic Cross',
-    price: 899,
-    images: ['/images/IMG_3010.PNG', '/images/IMG_3009.PNG'],
-    isRestock: true,
-    sizes: ['M', 'L', 'XL'],
-  },
-  {
-    id: '4',
-    slug: 'tee-maal-oversized-black',
-    name: 'Tee MAAL Oversized Black',
-    price: 699,
-    images: ['/images/IMG_3008.PNG', '/images/IMG_3010.PNG'],
-    isNew: true,
-    sizes: ['S', 'M', 'L', 'XL'],
-  },
+// What sets the brand apart, shown under the hero
+const VALUE_PROPS = [
+  { value: 'Mismo día', label: 'Entrega en GDL' },
+  { value: '2–5 días', label: 'Resto de México' },
+  { value: 'Stock', label: 'Propio' },
 ]
 
 export default async function HomePage() {
@@ -88,25 +28,19 @@ export default async function HomePage() {
     getActiveCategories(),
   ])
 
-  // Transform products for ProductCard component
-  const newArrivals = newArrivalsRaw.length > 0
-    ? transformProductsForCards(newArrivalsRaw)
-    : FALLBACK_PRODUCTS
+  // Empty sections are hidden rather than filled with placeholder products
+  const newArrivals = transformProductsForCards(newArrivalsRaw)
+  const bestSellers = transformProductsForCards(bestSellersRaw)
+  const heroImage = newArrivals[0]?.images[0] ?? '/images/LogoMAAL-blanco.png'
 
-  const bestSellers = bestSellersRaw.length > 0
-    ? transformProductsForCards(bestSellersRaw)
-    : FALLBACK_PRODUCTS
+  const categories = dbCategories.map((cat, index) => ({
+    slug: cat.slug,
+    name: cat.name.toUpperCase(),
+    image: cat.imageUrl || heroImage,
+    large: index === 0,
+    wide: index === 3,
+  }))
 
-  // Use database categories or fallback
-  const categories = dbCategories.length > 0
-    ? dbCategories.map((cat, index) => ({
-        slug: cat.slug,
-        name: cat.name.toUpperCase(),
-        image: cat.imageUrl || '/images/IMG_3008.PNG',
-        large: index === 0,
-        wide: index === 3,
-      }))
-    : FALLBACK_CATEGORIES
   return (
     <>
       <PromoBar />
@@ -120,7 +54,7 @@ export default async function HomePage() {
               {/* Left - Content */}
               <div className="text-center lg:text-left">
                 <span className="inline-block px-4 py-2 bg-white border border-[#E5E7EB] text-[#111827] text-xs font-bold tracking-wider rounded-full mb-8 shadow-sm">
-                  NEW DROP 2026
+                  PERFORMANCE GEAR · GUADALAJARA
                 </span>
 
                 {/* Title */}
@@ -128,37 +62,33 @@ export default async function HomePage() {
                   <span className="block text-6xl md:text-8xl lg:text-9xl font-gothic text-[#111827] leading-none tracking-wide">
                     MAAL
                   </span>
-                  <span className="block text-2xl md:text-3xl font-bold text-[#6B7280] tracking-[0.3em] mt-2">
-                    STREETWEAR
+                  <span className="block text-lg sm:text-2xl md:text-3xl font-bold text-[#6B7280] tracking-[0.2em] sm:tracking-[0.3em] mt-2">
+                    PERFORMANCE GEAR
                   </span>
                 </h1>
 
                 <p className="text-lg md:text-xl text-[#6B7280] mb-10 max-w-md mx-auto lg:mx-0 leading-relaxed">
-                  Oversized con actitud. Piezas statement para los que no piden permiso.
+                  Lifting straps y chalecos de running hechos para entrenar duro. Equipo de alto rendimiento con stock propio y envío desde Guadalajara.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Link href="/coleccion">
                     <Button variant="primary" size="xl">
-                      VER COLECCIÓN
+                      VER EQUIPO
                     </Button>
                   </Link>
-                  <Link href="/lookbook">
+                  <Link href="/envios">
                     <Button variant="secondary" size="xl">
-                      LOOKBOOK
+                      ENVÍOS
                     </Button>
                   </Link>
                 </div>
 
                 {/* Stats */}
-                <div className="flex gap-6 mt-16 justify-center lg:justify-start">
-                  {[
-                    { value: '500+', label: 'Diseños' },
-                    { value: '10K+', label: 'Clientes' },
-                    { value: '24h', label: 'Express' },
-                  ].map((stat) => (
+                <div className="flex gap-3 sm:gap-6 mt-16 justify-center lg:justify-start">
+                  {VALUE_PROPS.map((stat) => (
                     <div key={stat.label} className="text-center lg:text-left px-4 py-3 bg-white rounded-2xl border border-[#E5E7EB] shadow-sm">
-                      <p className="text-2xl font-black text-[#111827]">{stat.value}</p>
+                      <p className="text-lg sm:text-2xl font-black text-[#111827] whitespace-nowrap">{stat.value}</p>
                       <p className="text-[10px] text-[#9CA3AF] tracking-wider uppercase">{stat.label}</p>
                     </div>
                   ))}
@@ -174,8 +104,8 @@ export default async function HomePage() {
 
                   <div className="relative h-full overflow-hidden rounded-2xl">
                     <Image
-                      src="/images/IMG_3009.PNG"
-                      alt="MAAL Line Streetwear"
+                      src={heroImage}
+                      alt="MAAL Line Performance Gear"
                       fill
                       priority
                       className="object-contain bg-[#F3F4F6]"
@@ -187,10 +117,10 @@ export default async function HomePage() {
 
                 {/* Floating badges */}
                 <div className="absolute -left-4 top-1/4 px-4 py-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-[#E5E7EB] shadow-md">
-                  <p className="text-sm font-bold text-[#111827] tracking-wider">✦ TRENDING</p>
+                  <p className="text-sm font-bold text-[#111827] tracking-wider">✦ STOCK EN GDL</p>
                 </div>
                 <div className="absolute -right-4 bottom-1/4 px-4 py-3 bg-[#111827] backdrop-blur-sm rounded-2xl shadow-md">
-                  <p className="text-sm font-bold text-white tracking-wider">NEW DROP</p>
+                  <p className="text-sm font-bold text-white tracking-wider">ENVÍO MISMO DÍA</p>
                 </div>
               </div>
             </div>
@@ -210,11 +140,11 @@ export default async function HomePage() {
             <div className="marquee-content whitespace-nowrap">
               {[...Array(10)].map((_, i) => (
                 <span key={i} className="inline-flex items-center gap-8 mx-8">
-                  <span className="text-white font-black text-sm tracking-[0.2em]">STREETWEAR</span>
+                  <span className="text-white font-black text-sm tracking-[0.2em]">PERFORMANCE GEAR</span>
                   <span className="text-white/30">✦</span>
-                  <span className="text-white font-black text-sm tracking-[0.2em]">OVERSIZED</span>
+                  <span className="text-white font-black text-sm tracking-[0.2em]">LIFTING STRAPS</span>
                   <span className="text-white/30">✦</span>
-                  <span className="text-white font-black text-sm tracking-[0.2em]">PREMIUM</span>
+                  <span className="text-white font-black text-sm tracking-[0.2em]">RUNNING VESTS</span>
                   <span className="text-white/30">✦</span>
                   <span className="text-white font-black text-sm tracking-[0.2em]">MAAL LINE</span>
                   <span className="text-white/30">✦</span>
@@ -224,19 +154,20 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* NEW DROPS SECTION */}
+        {/* NEW ARRIVALS SECTION */}
+        {newArrivals.length > 0 && (
         <section className="py-20 md:py-28 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-12">
               <div>
                 <span className="inline-block px-4 py-2 bg-[#111827] text-white text-[10px] font-bold tracking-[0.2em] rounded-full mb-4">
-                  JUST DROPPED
+                  LO NUEVO
                 </span>
                 <h2 className="text-4xl md:text-5xl font-black text-[#111827]">
                   NEW <span className="text-[#6B7280]">ARRIVALS</span>
                 </h2>
               </div>
-              <Link href="/drops" className="hidden md:block">
+              <Link href="/coleccion" className="hidden md:block">
                 <Button variant="outline" size="sm">
                   VER TODO →
                 </Button>
@@ -254,23 +185,26 @@ export default async function HomePage() {
             </div>
 
             <div className="mt-10 md:hidden">
-              <Link href="/drops">
+              <Link href="/coleccion">
                 <Button variant="outline" fullWidth>
-                  VER TODOS LOS DROPS
+                  VER TODO EL EQUIPO
                 </Button>
               </Link>
             </div>
           </div>
         </section>
 
+        )}
+
         {/* CATEGORIES GRID - Rounded Cards */}
+        {categories.length > 0 && (
         <section className="py-20 md:py-28 bg-[#F9FAFB]">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-black text-[#111827]">
                 SHOP BY <span className="text-[#6B7280]">CATEGORY</span>
               </h2>
-              <p className="text-[#9CA3AF] mt-3 tracking-wider text-sm">Encuentra tu estilo</p>
+              <p className="text-[#9CA3AF] mt-3 tracking-wider text-sm">Equipo para cada disciplina</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -309,7 +243,10 @@ export default async function HomePage() {
           </div>
         </section>
 
+        )}
+
         {/* BEST SELLERS SECTION */}
+        {bestSellers.length > 0 && (
         <section className="py-20 md:py-28 bg-white relative">
           <div className="container mx-auto px-4">
             <div className="flex items-end justify-between mb-12">
@@ -344,34 +281,33 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* LOOKBOOK PREVIEW */}
-        <section className="relative py-32 md:py-40 overflow-hidden">
-          {/* Background */}
-          <div className="absolute inset-0">
-            <Image
-              src="/images/IMG_3010.PNG"
-              alt="Lookbook"
-              fill
-              className="object-contain bg-[#111827]"
-            />
-            <div className="absolute inset-0 bg-[#111827]/85" />
-          </div>
+        )}
 
+        {/* PACKAGING */}
+        <section className="relative py-24 md:py-32 overflow-hidden bg-[#0B0B0D]">
           <div className="relative container mx-auto px-4 text-center">
             <span className="inline-block px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 text-xs font-bold tracking-[0.2em] rounded-full mb-6">
-              FALL/WINTER 2026
+              UNBOXING PREMIUM
             </span>
-            <h2 className="text-5xl md:text-7xl font-gothic text-white mb-6">
-              LOOKBOOK
+            <h2 className="text-4xl md:text-6xl font-gothic text-white mb-6">
+              ARMADO PARA LLEGAR
             </h2>
-            <p className="text-white/60 max-w-md mx-auto mb-10 text-lg">
-              Descubre las piezas de la temporada. Editorial street con actitud.
+            <p className="text-white/60 max-w-xl mx-auto mb-12 text-lg leading-relaxed">
+              Cada pedido sale en bolsa CPE negro mate esmerilado y en cilindro de cartón negro con nuestro logo en
+              serigrafía plata. Equipo de alto rendimiento, desde que lo abres.
             </p>
-            <Link href="/lookbook">
-              <Button variant="primary" size="xl">
-                EXPLORAR LOOKBOOK
-              </Button>
-            </Link>
+            <div className="grid gap-3 sm:grid-cols-3 max-w-3xl mx-auto text-left">
+              {[
+                { title: 'Bolsa CPE mate', text: 'Negro esmerilado, resistente y sellada.' },
+                { title: 'Cilindro de cartón', text: 'Negro, con logo en serigrafía plata.' },
+                { title: 'Desde Guadalajara', text: 'Stock propio, sale en 1–2 días hábiles.' },
+              ].map((item) => (
+                <div key={item.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+                  <p className="text-sm font-bold tracking-wider text-white">{item.title}</p>
+                  <p className="mt-1 text-sm text-white/55">{item.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -383,7 +319,7 @@ export default async function HomePage() {
                 ÚNETE AL <span className="text-[#6B7280]">CREW</span>
               </h2>
               <p className="text-[#6B7280] mb-8 max-w-md mx-auto">
-                Acceso anticipado a drops, restocks y contenido exclusivo. Sin spam.
+                Entérate primero de lanzamientos, restocks y promociones. Sin spam.
               </p>
 
               <form className="max-w-lg mx-auto">
@@ -400,9 +336,6 @@ export default async function HomePage() {
                 </div>
               </form>
 
-              <p className="text-[#9CA3AF] text-xs mt-8 tracking-wider">
-                +10,000 PERSONAS YA SON PARTE DEL CREW
-              </p>
             </div>
           </div>
         </section>

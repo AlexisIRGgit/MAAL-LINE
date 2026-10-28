@@ -23,9 +23,10 @@ const inter = Inter({
 })
 
 const baseMetadata: Metadata = {
-  title: 'MAAL LINE | Streetwear Oversize con Actitud',
-  description: 'Tienda oficial de MAAL Line. Hoodies, tees y bottoms oversized. Streetwear mexicano premium. Envío gratis +$999.',
-  keywords: ['streetwear', 'oversize', 'hoodies', 'ropa urbana', 'mexico', 'maal line', 'gothic streetwear'],
+  title: 'MAAL LINE | Performance Gear',
+  description:
+    'Equipo deportivo de alto rendimiento: lifting straps y chalecos de running e hidratación. Stock propio en Guadalajara, entrega el mismo día en GDL y de 2 a 5 días en todo México.',
+  keywords: ['lifting straps', 'correas de levantamiento', 'chaleco de running', 'chaleco de hidratación', 'performance gear', 'equipo deportivo', 'guadalajara', 'mexico', 'maal line'],
 }
 
 // The logo uploaded in Admin > Configuración > General doubles as the favicon

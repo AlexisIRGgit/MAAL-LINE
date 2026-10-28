@@ -9,7 +9,7 @@ import { CONTACT_EMAIL } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Envíos y devoluciones | MAAL LINE',
-  description: 'Métodos y costos de envío, tiempos de entrega, cambios y devoluciones en MAAL LINE.',
+  description: 'Envíos desde Guadalajara: mismo día o día siguiente en la ZMG y de 2 a 5 días hábiles en todo México. Cambios y devoluciones.',
 }
 
 const formatMXN = (value: number) =>
@@ -24,7 +24,7 @@ export default async function ShippingPage() {
     <InfoPage
       eyebrow="Ayuda"
       title="Envíos y devoluciones"
-      intro="Enviamos a todo México. Aquí encuentras los costos, los tiempos de entrega y cómo hacer un cambio o una devolución."
+      intro="Todo nuestro equipo está en stock en Guadalajara, Jalisco, así que tu pedido sale rápido. Aquí encuentras los tiempos de entrega, los costos y cómo hacer un cambio o una devolución."
       current="/envios"
     >
       <InfoSection title="Métodos y costos de envío">
@@ -58,13 +58,34 @@ export default async function ShippingPage() {
 
       <InfoSection title="Tiempos de entrega">
         <p>
-          Preparamos tu pedido en un plazo de 1 a 2 días hábiles después de confirmar el pago. Los tiempos de cada método
-          cuentan a partir de que el paquete sale de nuestro almacén y son en días hábiles (lunes a viernes, sin días
-          festivos).
+          No dependemos de proveedores externos ni de importaciones: enviamos desde nuestro propio almacén en
+          Guadalajara. Preparamos tu pedido el mismo día hábil en que se confirma el pago o, a más tardar, al día
+          siguiente.
         </p>
+        <div className="grid gap-2 pt-1 sm:grid-cols-2">
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+            <p className="text-sm font-semibold text-[#111827]">Zona Metropolitana de Guadalajara</p>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              Mismo día o día siguiente, con mensajería local. Si confirmas tu pedido tarde, te llega al día siguiente.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4">
+            <p className="text-sm font-semibold text-[#111827]">Resto de México</p>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              De 2 a 5 días hábiles con paqueterías nacionales, según tu código postal.
+            </p>
+          </div>
+        </div>
         <p>
-          Algunas zonas extendidas o de difícil acceso pueden tardar unos días más. Si eso ocurre con tu pedido, te
-          avisamos.
+          Los días hábiles son de lunes a viernes, sin días festivos. Algunas zonas extendidas o de difícil acceso
+          pueden tardar uno o dos días más; si es tu caso, te avisamos.
+        </p>
+      </InfoSection>
+
+      <InfoSection title="Empaque">
+        <p>
+          Cada pedido sale en bolsa CPE negro mate esmerilado y dentro de un cilindro de cartón negro con nuestro logo
+          en serigrafía plata, que protege tu equipo durante el envío.
         </p>
       </InfoSection>
 
@@ -77,24 +98,28 @@ export default async function ShippingPage() {
 
       <InfoSection title="Cambios y devoluciones">
         <p>
-          Tienes <strong>15 días naturales</strong> a partir de que recibes tu pedido para solicitar un cambio de talla o
-          una devolución.
+          Tienes <strong>15 días naturales</strong> a partir de que recibes tu pedido para solicitar un cambio o una
+          devolución.
         </p>
         <ul>
-          <li>La prenda debe estar sin usar, sin lavar y con sus etiquetas originales.</li>
-          <li>No aceptamos cambios ni devoluciones de prendas con olor, manchas o señales de uso.</li>
-          <li>Los cambios de talla están sujetos a disponibilidad.</li>
+          <li>El producto debe estar sin usar, limpio, con sus etiquetas y en su empaque original (bolsa y cilindro).</li>
+          <li>
+            No aceptamos cambios ni devoluciones de equipo con señales de uso, como desgaste en el grip, sudor, olor o
+            manchas.
+          </li>
+          <li>Por higiene, los depósitos o bolsas de hidratación que ya se hayan llenado no tienen cambio.</li>
+          <li>Los cambios de talla o modelo están sujetos a disponibilidad.</li>
         </ul>
       </InfoSection>
 
       <InfoSection title="Cómo solicitar un cambio o devolución">
         <ul>
           <li>
-            Escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> con tu número de pedido, la prenda y el
+            Escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> con tu número de pedido, el producto y el
             motivo.
           </li>
           <li>Te respondemos con las instrucciones y la dirección para enviar el paquete.</li>
-          <li>Cuando la recibimos, revisamos la prenda y te confirmamos el cambio o el reembolso.</li>
+          <li>Cuando lo recibimos, revisamos el producto y te confirmamos el cambio o el reembolso.</li>
         </ul>
         <p>
           El envío de regreso corre por tu cuenta, salvo que el producto llegue dañado, con un defecto de fabricación o
@@ -104,7 +129,7 @@ export default async function ShippingPage() {
 
       <InfoSection title="Reembolsos">
         <p>
-          Una vez aprobada la devolución, reembolsamos el importe de la prenda al mismo método de pago que usaste. El
+          Una vez aprobada la devolución, reembolsamos el importe del producto al mismo método de pago que usaste. El
           banco puede tardar de 5 a 10 días hábiles en reflejarlo. El costo del envío original no es reembolsable,
           salvo en los casos de producto dañado, defectuoso o equivocado.
         </p>
@@ -113,7 +138,7 @@ export default async function ShippingPage() {
       <InfoSection title="Pedido dañado o incorrecto">
         <p>
           Si tu paquete llega dañado o con un producto equivocado, escríbenos dentro de las 48 horas siguientes a la
-          entrega, con fotos del paquete y de la prenda, y lo resolvemos sin costo para ti.
+          entrega, con fotos del paquete y del producto, y lo resolvemos sin costo para ti.
         </p>
       </InfoSection>
     </InfoPage>

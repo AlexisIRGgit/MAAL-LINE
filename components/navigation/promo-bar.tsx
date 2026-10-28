@@ -5,8 +5,8 @@ import { DEFAULT_SHIPPING_SETTINGS } from '@/lib/store-settings'
 
 const freeShippingMessage = (threshold: number) => `ENVÍO GRATIS EN PEDIDOS +$${threshold.toLocaleString('es-MX')}`
 const OTHER_MESSAGES = [
-  'NEW DROP — OVERSIZED COLLECTION',
-  'PAGO EN 3 MSI CON TARJETAS PARTICIPANTES',
+  'ENTREGA MISMO DÍA EN ZONA METROPOLITANA DE GUADALAJARA',
+  'STOCK PROPIO — ENVÍOS A TODO MÉXICO EN 2 A 5 DÍAS HÁBILES',
 ]
 // Last values from the server, so returning visitors don't see the bar or message flash
 const BAR_CACHE_KEY = 'maal-promo-bar'

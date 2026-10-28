@@ -7,19 +7,15 @@ const FOOTER_LINKS = {
   shop: {
     title: 'SHOP',
     links: [
-      { href: '/drops', label: 'New Drops' },
-      { href: '/best-sellers', label: 'Best Sellers' },
-      { href: '/coleccion/hoodies', label: 'Hoodies' },
-      { href: '/coleccion/tees', label: 'Tees' },
-      { href: '/coleccion/bottoms', label: 'Bottoms' },
+      { href: '/coleccion', label: 'Todo el equipo' },
+      { href: '/coleccion?q=strap', label: 'Lifting Straps' },
+      { href: '/coleccion?q=chaleco', label: 'Chalecos de running' },
     ],
   },
   info: {
     title: 'INFO',
     links: [
       { href: '/about', label: 'Nuestra Historia' },
-      { href: '/lookbook', label: 'Lookbook' },
-      { href: '/guia-tallas', label: 'Guía de Tallas' },
       { href: `mailto:${CONTACT_EMAIL}`, label: 'Contacto' },
     ],
   },
@@ -43,7 +39,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Logo size="lg" className="mb-6" />
             <p className="text-[#6B7280] text-sm mb-6 max-w-xs leading-relaxed">
-              Streetwear oversize con actitud. Para los que no piden permiso.
+              Performance gear para entrenar duro. Stock propio desde Guadalajara, México.
             </p>
             {/* Support and general contact */}
             <a
