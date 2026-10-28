@@ -37,6 +37,7 @@ import { SwipeableRow, type SwipeAction, type SwipeSide } from '@/components/acc
 import { CenterMorphModal } from '@/components/ui/center-morph-modal'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { ListRowsSkeleton, SkeletonBlock } from '@/components/ui/skeleton'
 
 interface OrderItem {
   id: string
@@ -363,8 +364,24 @@ export default function AdminOrdersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[#111827]" />
+      <div className="space-y-6" role="status" aria-label="Cargando pedidos">
+        <div className="space-y-2">
+          <SkeletonBlock className="h-7 w-32" />
+          <SkeletonBlock index={1} className="h-4 w-64" />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {[0, 1, 2, 3, 4, 5].map((chip) => (
+            <SkeletonBlock key={chip} index={chip} className="h-8 w-24 rounded-full" />
+          ))}
+        </div>
+        <SkeletonBlock index={2} className="h-11 w-full rounded-xl" />
+        <div className="rounded-[2rem] border border-[#E5E7EB] bg-[#F9FAFB] p-3">
+          <div className="space-y-2 px-2 pt-1 pb-3">
+            <SkeletonBlock className="h-4 w-20" />
+            <SkeletonBlock index={1} className="h-3 w-48" />
+          </div>
+          <ListRowsSkeleton rows={6} label="Cargando pedidos" />
+        </div>
       </div>
     )
   }

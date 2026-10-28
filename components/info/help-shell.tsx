@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { HelpTabs } from '@/components/info/help-tabs'
+import { Skeleton, SkeletonBlock } from '@/components/ui/skeleton'
 
 type HelpMeta = { eyebrow: string; title: string; intro: string; updated?: string }
 
@@ -94,22 +95,15 @@ export function HelpShell({ children }: { children: React.ReactNode }) {
 /** Placeholder shown while a help page streams in (app/(ayuda)/loading.tsx) */
 export function HelpContentSkeleton() {
   return (
-    <div aria-hidden className="space-y-10 animate-pulse">
-      {[0, 1, 2].map((block) => (
-        <div key={block} className="space-y-3">
-          <div className="h-6 w-56 rounded-lg bg-[#E5E7EB]" />
-          <div className="h-4 w-full rounded-md bg-[#E5E7EB]/70" />
-          <div className="h-4 w-11/12 rounded-md bg-[#E5E7EB]/70" />
-          <div className="h-4 w-4/5 rounded-md bg-[#E5E7EB]/70" />
-          {block === 0 && (
-            <div className="grid gap-2 pt-2">
-              {[0, 1, 2].map((row) => (
-                <div key={row} className="h-[68px] rounded-2xl bg-[#E5E7EB]/60" />
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+    <div className="space-y-10">
+      <Skeleton lines={4} label="Cargando página" />
+      <div className="grid gap-2">
+        {[0, 1, 2].map((row) => (
+          <SkeletonBlock key={row} index={row + 4} className="h-[68px] w-full rounded-2xl" />
+        ))}
+      </div>
+      <Skeleton lines={3} />
+      <Skeleton lines={5} />
     </div>
   )
 }

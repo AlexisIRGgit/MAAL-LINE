@@ -1080,3 +1080,15 @@ html.dark .hover\:text-gray-800:hover { color: #E5E7EB; }
 [data-sileo-description] {
   color: rgb(229 231 235 / 0.85);
 }
+
+/* Skeleton (uiarc): a calm, finite pulse; each block dims a beat after the one above it, then rests after ~20s */
+.skeleton-pulse {
+  animation: skeleton-pulse 1.8s cubic-bezier(0.65, 0, 0.35, 1) calc(var(--index, 0) * 90ms) 11 both;
+}
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.52; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-pulse { animation: none; }
+}

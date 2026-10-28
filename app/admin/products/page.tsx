@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
-  Loader2,
 } from 'lucide-react'
 
 import Image from 'next/image'
@@ -24,6 +23,7 @@ import { usePermissions } from '@/hooks/use-permissions'
 import { toast } from '@/lib/toast'
 import { toneStyles, type StatusTone } from '@/components/account/order-status'
 import { SwipeableRow, type SwipeAction, type SwipeSide } from '@/components/account/swipeable-list'
+import { ListRowsSkeleton } from '@/components/ui/skeleton'
 
 const ITEMS_PER_PAGE = 10
 
@@ -203,9 +203,7 @@ export default function ProductsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 text-[#111827] animate-spin" />
-          </div>
+          <ListRowsSkeleton rows={6} label="Cargando productos" />
         ) : products.length === 0 ? (
           <div className="rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center">
             <Package className="w-12 h-12 text-[#D1D5DB] mx-auto mb-3" />
