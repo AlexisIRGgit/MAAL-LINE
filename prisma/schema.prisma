@@ -493,6 +493,20 @@ model Address {
   @@map("addresses")
 }
 
+/// Emails waiting for the first clothing drop (Drop 001); one row per address
+model DropWaitlist {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email      String    @unique @db.VarChar(255)
+  /// Where they signed up: home, drop
+  source     String    @default("home") @db.VarChar(30)
+  userId     String?   @map("user_id") @db.Uuid
+  notifiedAt DateTime? @map("notified_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([createdAt])
+  @@map("drop_waitlist")
+}
+
 model ProductWaitlist {
   id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId           String    @map("user_id") @db.Uuid

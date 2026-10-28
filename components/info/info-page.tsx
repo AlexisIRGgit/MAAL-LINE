@@ -1,16 +1,10 @@
-import Link from 'next/link'
 import { Mail } from 'lucide-react'
 import { Navbar } from '@/components/navigation/navbar'
 import { PromoBar } from '@/components/navigation/promo-bar'
 import { Footer } from '@/components/navigation/footer'
 import { CONTACT_EMAIL } from '@/lib/site'
+import { HelpTabs } from '@/components/info/help-tabs'
 
-const HELP_PAGES = [
-  { href: '/envios', label: 'Envíos y devoluciones' },
-  { href: '/faq', label: 'Preguntas frecuentes' },
-  { href: '/terminos', label: 'Términos y condiciones' },
-  { href: '/privacidad', label: 'Aviso de privacidad' },
-]
 
 /** Shared shell for the help and legal pages: header, readable column, help nav and contact card */
 export function InfoPage({
@@ -46,22 +40,9 @@ export function InfoPage({
         </section>
 
         <div className="container mx-auto px-4 py-12 md:py-16 max-w-3xl">
-          <nav aria-label="Ayuda" className="-mx-4 px-4 mb-10 flex gap-2 overflow-x-auto pb-1">
-            {HELP_PAGES.map((page) => (
-              <Link
-                key={page.href}
-                href={page.href}
-                aria-current={page.href === current ? 'page' : undefined}
-                className={
-                  page.href === current
-                    ? 'flex-shrink-0 rounded-full bg-[#111827] px-4 py-2 text-xs font-semibold text-white'
-                    : 'flex-shrink-0 rounded-full border border-[#E5E7EB] bg-white px-4 py-2 text-xs font-medium text-[#6B7280] hover:text-[#111827] hover:border-[#111827] transition-colors'
-                }
-              >
-                {page.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="mb-10">
+            <HelpTabs current={current} />
+          </div>
 
           <div className="space-y-10">{children}</div>
 

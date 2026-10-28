@@ -8,7 +8,7 @@ import { PromoBar } from '@/components/navigation/promo-bar'
 import { Footer } from '@/components/navigation/footer'
 import { ProductCard } from '@/components/product/product-card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { WaitlistForm } from '@/components/drop/waitlist-form'
 import { getNewArrivals, getBestSellers } from '@/lib/queries/products'
 import { getActiveCategories } from '@/lib/queries/categories'
 import { transformProductsForCards } from '@/lib/transformers/product'
@@ -311,32 +311,28 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* NEWSLETTER SECTION */}
-        <section className="py-20 md:py-28 bg-[#F9FAFB] relative overflow-hidden">
-          <div className="container mx-auto px-4 text-center relative z-10">
-            <div className="max-w-2xl mx-auto bg-white border border-[#E5E7EB] rounded-3xl p-8 md:p-12 shadow-sm">
-              <h2 className="text-3xl md:text-4xl font-black text-[#111827] mb-4">
-                ÚNETE AL <span className="text-[#6B7280]">CREW</span>
-              </h2>
-              <p className="text-[#6B7280] mb-8 max-w-md mx-auto">
-                Entérate primero de lanzamientos, restocks y promociones. Sin spam.
-              </p>
-
-              <form className="max-w-lg mx-auto">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="email"
-                    placeholder="tu@email.com"
-                    required
-                    className="flex-1 h-14 px-6 bg-[#F9FAFB] border-2 border-[#E5E7EB] rounded-xl text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#111827] transition-colors tracking-wider"
-                  />
-                  <Button type="submit" size="lg">
-                    SUSCRIBIR
-                  </Button>
-                </div>
-              </form>
-
-            </div>
+        {/* DROP 001 TEASER + WAITLIST */}
+        <section className="relative overflow-hidden border-t border-white/10 bg-[#0B0B0D] py-24 md:py-32">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-10 h-[360px] w-[620px] max-w-full -translate-x-1/2 rounded-full bg-white/[0.05] blur-3xl"
+          />
+          <div className="relative container mx-auto px-4 text-center">
+            <span className="inline-block rounded-full border border-white/20 bg-white/10 px-5 py-2 text-xs font-bold tracking-[0.24em] text-white/80">
+              CAPÍTULO 02 · PRÓXIMAMENTE
+            </span>
+            <h2 className="mt-6 font-gothic text-6xl leading-none text-white md:text-8xl">DROP 001</h2>
+            <p className="mx-auto mt-6 mb-10 max-w-lg text-lg leading-relaxed text-white/60">
+              Entrena primero. Viste después. Nuestra primera colección de ropa viene en camino. Únete a la lista y compra
+              antes que nadie.
+            </p>
+            <WaitlistForm source="home" />
+            <Link
+              href="/drop"
+              className="mt-8 inline-block text-xs font-bold tracking-[0.2em] text-white/50 transition-colors hover:text-white"
+            >
+              SABER MÁS DEL DROP →
+            </Link>
           </div>
         </section>
       </main>

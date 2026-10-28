@@ -14,12 +14,13 @@ import { useCartStore, selectCartItems } from '@/lib/store/cart-store'
 import { useAuthModalStore } from '@/lib/store/auth-modal-store'
 import { cn } from '@/lib/utils/cn'
 
-const NAV_LINKS = [
-  { href: '/drops', label: 'NEW DROPS', highlight: true },
-  { href: '/restocks', label: 'RESTOCKS' },
-  { href: '/best-sellers', label: 'BEST SELLERS' },
-  { href: '/coleccion', label: 'SHOP ALL' },
-  { href: '/lookbook', label: 'LOOKBOOK' },
+// Chapter 01 is the gear on sale now; Drop 001 (clothing) is teased with a waitlist
+const NAV_LINKS: { href: string; label: string; highlight?: boolean; badge?: string }[] = [
+  { href: '/coleccion', label: 'EQUIPO', highlight: true },
+  { href: '/coleccion?q=strap', label: 'STRAPS' },
+  { href: '/coleccion?q=chaleco', label: 'CHALECOS' },
+  { href: '/drop', label: 'DROP 001', badge: 'PRONTO' },
+  { href: '/envios', label: 'ENVÍOS' },
 ]
 
 interface SearchResult {
@@ -273,18 +274,23 @@ export function Navbar() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.1 }}
                 >
-                  {NAV_LINKS.map(({ href, label, highlight }) => (
+                  {NAV_LINKS.map(({ href, label, highlight, badge }) => (
                     <Link
                       key={href}
                       href={href}
                       className={cn(
-                        'text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300',
+                        'inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300',
                         highlight
                           ? 'text-[#111827] hover:text-[#6B7280]'
                           : 'text-[#6B7280] hover:text-[#111827]'
                       )}
                     >
                       {label}
+                      {badge && (
+                        <span className="rounded-full bg-[#FF3D00] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.12em] text-white">
+                          {badge}
+                        </span>
+                      )}
                     </Link>
                   ))}
                 </motion.div>

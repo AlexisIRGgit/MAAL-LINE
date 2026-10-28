@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { X, LogOut, LogIn, Sparkles, RotateCcw, Flame, LayoutGrid, Camera, Heart, User, type LucideIcon } from 'lucide-react'
+import { X, LogOut, LogIn, Sparkles, Dumbbell, Footprints, Truck, LayoutGrid, Heart, User, type LucideIcon } from 'lucide-react'
 import { Logo } from '@/components/common/logo'
 import { cn } from '@/lib/utils/cn'
 import { useModalA11y } from '@/hooks/use-modal-a11y'
@@ -18,11 +18,11 @@ interface MenuLink {
 
 // Same look as the account panel's mobile sheet (app/cuenta/layout.tsx)
 const STORE_LINKS: MenuLink[] = [
-  { href: '/drops', label: 'New Drops', icon: Sparkles },
-  { href: '/restocks', label: 'Restocks', icon: RotateCcw },
-  { href: '/best-sellers', label: 'Best Sellers', icon: Flame },
-  { href: '/coleccion', label: 'Shop All', icon: LayoutGrid },
-  { href: '/lookbook', label: 'Lookbook', icon: Camera },
+  { href: '/coleccion', label: 'Todo el equipo', icon: LayoutGrid },
+  { href: '/coleccion?q=strap', label: 'Lifting Straps', icon: Dumbbell },
+  { href: '/coleccion?q=chaleco', label: 'Chalecos de running', icon: Footprints },
+  { href: '/drop', label: 'Drop 001 · Pronto', icon: Sparkles },
+  { href: '/envios', label: 'Envíos', icon: Truck },
 ]
 
 const pillSpring = { type: 'spring', stiffness: 360, damping: 32 } as const
