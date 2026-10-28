@@ -1092,3 +1092,15 @@ html.dark .hover\:text-gray-800:hover { color: #E5E7EB; }
 @media (prefers-reduced-motion: reduce) {
   .skeleton-pulse { animation: none; }
 }
+
+/* In-view title (uiarc): server-rendered titles start hidden; if scripts haven't taken over after 2.4s, show them anyway */
+.in-view-title-pending .in-view-title-part {
+  animation: in-view-title-settle 0.4s cubic-bezier(0.16, 1, 0.3, 1) 2.4s forwards;
+}
+@keyframes in-view-title-settle {
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .in-view-title-part { opacity: 1 !important; transform: none !important; }
+  .in-view-title-pending .in-view-title-part { animation: none; }
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@/lib/auth'
+import { notifyDropWaitlist } from '@/lib/store-notifications'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const SOURCES = ['home', 'drop'] as const
@@ -44,6 +45,8 @@ export async function POST(request: NextRequest) {
     await prisma.dropWaitlist.create({
       data: { email, source, userId: session?.user?.id ?? null },
     })
+    // Only the first signup per address emails the owner; never throws
+    await notifyDropWaitlist(email, source)
     return NextResponse.json({ ok: true, already: false })
   } catch (error) {
     // A concurrent signup with the same email hits the unique index

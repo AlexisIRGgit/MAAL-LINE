@@ -5,6 +5,7 @@ import {
   customerWelcomeEmail,
   formatMXN,
   ownerLowStockEmail,
+  ownerDropWaitlistEmail,
   ownerNewOrderEmail,
 } from '@/lib/email-templates'
 import { sendNtfy } from '@/lib/ntfy'
@@ -208,5 +209,14 @@ export function notifyNewAccount(userId: string): Promise<void> {
         click: `${SITE_URL}/admin/customers`,
       }),
     ])
+  })
+}
+
+/** Someone joined the Drop 001 waitlist (first signup per email only); always on, email to the contact inbox */
+export function notifyDropWaitlist(email: string, source: string): Promise<void> {
+  return run('drop_waitlist', async () => {
+    const [to, total] = await Promise.all([ownerEmail(), prisma.dropWaitlist.count()])
+    const content = ownerDropWaitlistEmail({ email, source, total })
+    await sendEmail({ to, ...content, type: 'owner_drop_waitlist', replyTo: email })
   })
 }

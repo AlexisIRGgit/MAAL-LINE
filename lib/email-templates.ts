@@ -127,6 +127,22 @@ export function ownerLowStockEmail(variants: { name: string; sku: string; stock:
   }
 }
 
+export function ownerDropWaitlistEmail(signup: { email: string; source: string; total: number }): EmailContent {
+  const where = signup.source === 'drop' ? 'la página del Drop 001' : 'el Home'
+  return {
+    subject: `🔥 Nuevo interesado en el Drop 001 · ${signup.total} en la lista`,
+    html: layout({
+      preheader: `${signup.email} se unió a la lista de espera`,
+      heading: 'Nuevo en la lista del Drop 001',
+      body:
+        p(`<strong>${escapeHtml(signup.email)}</strong> se unió a la lista de espera desde ${where}.`) +
+        p(`Ya van <strong>${signup.total}</strong> ${signup.total === 1 ? 'persona' : 'personas'} en la lista.`) +
+        button('Ver la página del drop', `${SITE_URL}/drop`),
+    }),
+    text: `Nuevo en la lista del Drop 001\n${signup.email} se unió desde ${where}.\nYa van ${signup.total} en la lista.\n\n${SITE_URL}/drop`,
+  }
+}
+
 // ---------- Customer ----------
 
 export function customerOrderShippedEmail(order: {

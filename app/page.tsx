@@ -10,6 +10,7 @@ import { ProductCard } from '@/components/product/product-card'
 import { Button } from '@/components/ui/button'
 import { WaitlistForm } from '@/components/drop/waitlist-form'
 import { DotGrid } from '@/components/ui/dot-grid'
+import { InViewTitle } from '@/components/ui/in-view-title'
 import { getNewArrivals, getBestSellers } from '@/lib/queries/products'
 import { getActiveCategories } from '@/lib/queries/categories'
 import { transformProductsForCards } from '@/lib/transformers/product'
@@ -323,7 +324,7 @@ export default async function HomePage() {
             <span className="inline-block rounded-full border border-white/20 bg-white/10 px-5 py-2 text-xs font-bold tracking-[0.24em] text-white/80">
               CAPÍTULO 02 · PRÓXIMAMENTE
             </span>
-            <h2 className="mt-6 font-gothic text-6xl leading-none text-white md:text-8xl">DROP 001</h2>
+            <InViewTitle text="DROP 001" className="mt-6 font-gothic text-6xl leading-none text-white md:text-8xl" />
             <p className="mx-auto mt-6 mb-10 max-w-lg text-lg leading-relaxed text-white/60">
               Entrena primero. Viste después. Nuestra primera colección de ropa viene en camino. Únete a la lista y compra
               antes que nadie.
