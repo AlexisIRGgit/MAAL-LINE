@@ -13,7 +13,8 @@ import { Badge } from '@/components/ui/badge'
 import { ProductCard } from '@/components/product/product-card'
 import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
-import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw, Shield, Check, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw, Shield, Check, Loader2, Image as ImageIcon, Play } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { ProductDetailData, ProductCardData } from '@/lib/transformers/product'
 import { toast } from '@/lib/toast'
 
@@ -25,6 +26,7 @@ interface ProductPageClientProps {
 export function ProductPageClient({ product, relatedProducts }: ProductPageClientProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [media, setMedia] = useState<'image' | 'video'>('image')
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
@@ -98,6 +100,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
     isSoldOut,
     description,
     shortDescription,
+    videoUrl,
     category,
     variants,
   } = product
@@ -194,17 +197,53 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                   priority
                   className="object-cover"
                 />
+                {videoUrl && media === 'video' && (
+                  <video
+                    key={videoUrl}
+                    src={videoUrl}
+                    controls
+                    autoPlay
+                    muted
+                    playsInline
+                    loop
+                    preload="metadata"
+                    className="absolute inset-0 z-[1] h-full w-full bg-black object-contain"
+                  />
+                )}
 
-                {/* Badges */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                  {isNew && <Badge variant="new">NEW</Badge>}
-                  {isRestock && <Badge variant="restock">RESTOCK</Badge>}
-                  {isBestSeller && <Badge variant="bestseller">BEST SELLER</Badge>}
-                  {hasDiscount && <Badge variant="sale">-{discountPercent}%</Badge>}
+                {/* Image / Video switch (only when the product has a video), then the badges */}
+                <div className="absolute top-4 left-4 z-10 flex items-start gap-2">
+                  {videoUrl && (
+                    <Tabs value={media} onValueChange={(v) => setMedia(v === 'video' ? 'video' : 'image')} icons="selected">
+                      <TabsList aria-label="Ver imagen o video" className="border-black/[0.06] bg-white/85 backdrop-blur-md dark:border-white/10 dark:bg-black/50">
+                        {[
+                          { value: 'image', label: 'Imagen', icon: <ImageIcon className="h-3.5 w-3.5" /> },
+                          { value: 'video', label: 'Video', icon: <Play className="h-3.5 w-3.5" /> },
+                        ].map((tab) => (
+                          <TabsTrigger
+                            key={tab.value}
+                            value={tab.value}
+                            icon={tab.icon}
+                            className="text-xs"
+                            indicatorClassName="bg-black dark:bg-black"
+                            selectedLabelClassName="text-white dark:text-white"
+                          >
+                            {tab.label}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    {isNew && <Badge variant="new">NEW</Badge>}
+                    {isRestock && <Badge variant="restock">RESTOCK</Badge>}
+                    {isBestSeller && <Badge variant="bestseller">BEST SELLER</Badge>}
+                    {hasDiscount && <Badge variant="sale">-{discountPercent}%</Badge>}
+                  </div>
                 </div>
 
                 {/* Navigation Arrows */}
-                {images.length > 1 && (
+                {images.length > 1 && media === 'image' && (
                   <>
                     <button
                       onClick={prevImage}
@@ -237,7 +276,10 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                   {images.map((img, index) => (
                     <button
                       key={index}
-                      onClick={() => setSelectedImageIndex(index)}
+                      onClick={() => {
+                        setSelectedImageIndex(index)
+                        setMedia('image')
+                      }}
                       className={cn(
                         'relative w-20 h-24 flex-shrink-0 bg-gray-100 overflow-hidden border-2 transition-colors rounded-xl',
                         selectedImageIndex === index

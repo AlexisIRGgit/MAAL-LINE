@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseVideoUrl } from '@/lib/utils/video-url'
 import { prisma } from '@/lib/db'
 import { requireAdmin, handleAuthError } from '@/lib/auth-utils'
 import { ProductStatus } from '@prisma/client'
@@ -47,6 +48,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       slug,
       description,
       shortDescription,
+      videoUrl: rawVideoUrl,
       price,
       compareAtPrice,
       categoryId,
@@ -56,6 +58,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       images,
       variants,
     } = body
+
+    const video = parseVideoUrl(rawVideoUrl)
+    if ('error' in video) {
+      return NextResponse.json({ error: video.error }, { status: 400 })
+    }
+    const videoUrl = video.value
 
     // Check if product exists
     const existingProduct = await prisma.product.findUnique({
@@ -94,6 +102,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         slug,
         description,
         shortDescription,
+        videoUrl,
         price,
         compareAtPrice,
         categoryId,

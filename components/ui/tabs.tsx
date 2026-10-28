@@ -488,6 +488,7 @@ export function TabsTrigger({
   children,
   className,
   indicatorClassName,
+  selectedLabelClassName,
   onClick,
   ...props
 }: {
@@ -495,6 +496,8 @@ export function TabsTrigger({
   /** An icon before the label, such as a Lucide icon element. */
   icon?: ReactNode;
   indicatorClassName?: string;
+  /** Text color of the label over the indicator, e.g. to keep it white on a dark pill in both themes */
+  selectedLabelClassName?: string;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "value">) {
   const {
     value: current,
@@ -624,7 +627,7 @@ export function TabsTrigger({
           aria-hidden="true"
           {...({ inert: "" } as Record<string, string>)}
           // The indicator is a sibling, so the dark layer's bg-[#111827] text remap doesn't reach this label
-          className="pointer-events-none absolute inset-0 inline-flex items-center justify-center text-white dark:text-[#0A0A0A] [gap:inherit] [padding:inherit]"
+          className={cn("pointer-events-none absolute inset-0 inline-flex items-center justify-center text-white dark:text-[#0A0A0A] [gap:inherit] [padding:inherit]", selectedLabelClassName)}
           style={{ clipPath: initialClip }}
         >
           {content}

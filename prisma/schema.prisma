@@ -191,6 +191,8 @@ model Product {
   slug             String        @unique @db.VarChar(255)
   description      String?
   shortDescription String?       @map("short_description") @db.VarChar(500)
+  /// Product video (Vercel Blob URL), shown as the "Video" tab on the product page
+  videoUrl         String?       @map("video_url")
   price            Decimal       @db.Decimal(10, 2)
   compareAtPrice   Decimal?      @map("compare_at_price") @db.Decimal(10, 2)
   costPrice        Decimal?      @map("cost_price") @db.Decimal(10, 2)

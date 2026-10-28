@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { X, Minus, Plus, ShoppingBag, Trash2, ArrowLeft, Lock } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart-store'
 import { useCheckoutModalStore } from '@/lib/store/checkout-modal-store'
 import { toast } from '@/lib/toast'
@@ -210,35 +210,33 @@ export function CartDrawer() {
             {/* Footer */}
             {items.length > 0 && (
               <div className="border-t border-[#E5E7EB] p-4 space-y-4 bg-[#F9FAFB]">
-                {/* Subtotal */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[#6B7280]">Subtotal</span>
-                  <span className="text-lg font-bold text-[#111827]">
-                    {formatPrice(subtotal)}
-                  </span>
+                {/* Subtotal on the left, actions as pills on the right (same buttons as the product cards) */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-[#6B7280]">Subtotal</p>
+                    <p className="text-lg font-bold tabular-nums text-[#111827]">{formatPrice(subtotal)}</p>
+                    <p className="text-[11px] text-[#9CA3AF]">Envío calculado al pagar</p>
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-2">
+                    <button
+                      onClick={closeCart}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3.5 text-xs font-semibold text-[#111827] transition-colors hover:bg-[#F3F4F6] dark:border-white/15 dark:bg-white/[0.06] dark:hover:bg-white/[0.12]"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      Seguir
+                    </button>
+                    <button
+                      onClick={() => {
+                        closeCart()
+                        openCheckoutModal()
+                      }}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#111827] px-3.5 text-xs font-semibold text-white transition-colors hover:bg-[#1F2937] active:scale-[0.97]"
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      Pagar
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs text-[#9CA3AF]">
-                  Envío calculado en el checkout
-                </p>
-
-                {/* Checkout Button */}
-                <button
-                  onClick={() => {
-                    closeCart()
-                    openCheckoutModal()
-                  }}
-                  className="block w-full py-3.5 bg-[#111827] text-white text-center font-bold tracking-wider rounded-xl hover:bg-[#374151] transition-colors"
-                >
-                  FINALIZAR COMPRA
-                </button>
-
-                {/* Continue Shopping */}
-                <button
-                  onClick={closeCart}
-                  className="w-full py-3 border border-[#E5E7EB] text-[#374151] text-sm font-bold tracking-wider rounded-xl hover:bg-white transition-colors"
-                >
-                  SEGUIR COMPRANDO
-                </button>
               </div>
             )}
             </motion.div>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseVideoUrl } from '@/lib/utils/video-url'
 import { prisma } from '@/lib/db'
 import { requireAdmin, handleAuthError } from '@/lib/auth-utils'
 import { ProductStatus } from '@prisma/client'
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
       slug,
       description,
       shortDescription,
+      videoUrl: rawVideoUrl,
       price,
       compareAtPrice,
       categoryId,
@@ -90,6 +92,12 @@ export async function POST(request: NextRequest) {
       images,
       variants,
     } = body
+
+    const video = parseVideoUrl(rawVideoUrl)
+    if ('error' in video) {
+      return NextResponse.json({ error: video.error }, { status: 400 })
+    }
+    const videoUrl = video.value
 
     // Validate required fields
     if (!name || !slug || price === undefined) {
@@ -118,6 +126,7 @@ export async function POST(request: NextRequest) {
         slug,
         description,
         shortDescription,
+        videoUrl,
         price,
         compareAtPrice,
         categoryId,

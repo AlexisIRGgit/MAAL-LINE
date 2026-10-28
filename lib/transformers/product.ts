@@ -26,6 +26,8 @@ export interface ProductCardData {
 export interface ProductDetailData extends ProductCardData {
   description?: string
   shortDescription?: string
+  /** Product video (Vercel Blob URL) for the gallery's Video tab */
+  videoUrl?: string
   category?: {
     id: string
     name: string
@@ -111,6 +113,7 @@ export function transformProductForDetail(product: ProductWithRelations): Produc
     ...cardData,
     description: product.description ?? undefined,
     shortDescription: product.shortDescription ?? undefined,
+    videoUrl: product.videoUrl ?? undefined,
     category: product.category ? {
       id: product.category.id,
       name: product.category.name,

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, Loader2 } from 'lucide-react'
 import { ImageUploader } from './image-uploader'
+import { VideoUploader } from './video-uploader'
 import { toast } from '@/lib/toast'
 import { VariantManager } from './variant-manager'
 
@@ -39,6 +40,7 @@ interface ProductFormData {
   status: 'draft' | 'active' | 'archived'
   isFeatured: boolean
   images: ProductImage[]
+  videoUrl: string | null
   variants: ProductVariant[]
 }
 
@@ -65,6 +67,7 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
     status: initialData?.status || 'draft',
     isFeatured: initialData?.isFeatured || false,
     images: initialData?.images || [],
+    videoUrl: initialData?.videoUrl ?? null,
     variants: initialData?.variants || [],
   })
 
@@ -211,6 +214,13 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
               images={formData.images}
               onChange={(images) => setFormData({ ...formData, images })}
             />
+          </div>
+
+          {/* Video */}
+          <div className="bg-white border border-[#E5E7EB] rounded-xl p-6 shadow-sm">
+            <h3 className="text-base font-semibold text-[#111827] mb-1">Video</h3>
+            <p className="text-xs text-[#6B7280] mb-4">Se muestra en la pestaña &ldquo;Video&rdquo; de la página del producto.</p>
+            <VideoUploader value={formData.videoUrl} onChange={(videoUrl) => setFormData({ ...formData, videoUrl })} />
           </div>
 
           {/* Variants */}
