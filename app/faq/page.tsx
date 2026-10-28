@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ChevronDown } from 'lucide-react'
 import { InfoPage } from '@/components/info/info-page'
+import { BouncyAccordion } from '@/components/ui/bouncy-accordion'
 import { CONTACT_EMAIL } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -112,19 +112,14 @@ export default function FaqPage() {
       {FAQ_GROUPS.map((group) => (
         <section key={group.title}>
           <h2 className="font-display text-lg md:text-xl font-semibold text-[#111827] mb-3">{group.title}</h2>
-          <div className="rounded-[2rem] border border-[#E5E7EB] bg-white p-2">
-            {group.items.map((item) => (
-              <details key={item.q} className="group rounded-2xl open:bg-[#F9FAFB]">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-2xl px-4 py-4 text-sm md:text-[15px] font-medium text-[#111827] hover:bg-[#F9FAFB] transition-colors [&::-webkit-details-marker]:hidden">
-                  {item.q}
-                  <ChevronDown className="w-4 h-4 flex-shrink-0 text-[#9CA3AF] transition-transform duration-200 group-open:rotate-180" />
-                </summary>
-                <div className="px-4 pb-4 text-sm leading-relaxed text-[#374151] [&_a]:text-[#111827] [&_a]:underline [&_a]:underline-offset-2 dark:[&_a]:text-[#F5F5F5]">
-                  {item.a}
-                </div>
-              </details>
-            ))}
-          </div>
+          <BouncyAccordion
+            items={group.items.map((item, index) => ({ id: `${group.title}-${index}`, title: item.q, description: item.a }))}
+            classNames={{
+              item: 'ring-1 ring-black/[0.06] dark:ring-white/[0.08] dark:bg-[#17191F]',
+              description:
+                '[&_a]:text-[#111827] [&_a]:underline [&_a]:underline-offset-2 dark:[&_a]:text-[#F5F5F5]',
+            }}
+          />
         </section>
       ))}
     </InfoPage>
