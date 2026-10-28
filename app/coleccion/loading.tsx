@@ -28,7 +28,7 @@ export default function ShopAllLoading() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {Array.from({ length: 8 }, (_, card) => (
                 <div key={card} className="space-y-3">
-                  <SkeletonBlock index={card % 4} className="aspect-[3/4] w-full rounded-2xl" />
+                  <SkeletonBlock index={card % 4} className="aspect-[4/5] w-full rounded-[22px]" />
                   <SkeletonBlock index={(card % 4) + 1} className="h-3.5 w-3/4" />
                   <SkeletonBlock index={(card % 4) + 2} className="h-3.5 w-1/3" />
                 </div>
