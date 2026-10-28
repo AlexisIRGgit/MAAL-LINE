@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { WaitlistForm } from '@/components/drop/waitlist-form'
 import { DotGrid } from '@/components/ui/dot-grid'
 import { InViewTitle } from '@/components/ui/in-view-title'
+import { TextReveal } from '@/components/ui/text-reveal'
 import { getNewArrivals, getBestSellers } from '@/lib/queries/products'
 import { getActiveCategories } from '@/lib/queries/categories'
 import { transformProductsForCards } from '@/lib/transformers/product'
@@ -61,7 +62,7 @@ export default async function HomePage() {
 
                 {/* Title */}
                 <h1 className="mb-8">
-                  <span className="block text-6xl md:text-8xl lg:text-9xl font-gothic text-[#111827] leading-none tracking-wide">
+                  <span className="block text-6xl md:text-8xl lg:text-9xl font-body font-bold text-[#111827] leading-none tracking-[0.04em]">
                     MAAL
                   </span>
                   <span className="block text-lg sm:text-2xl md:text-3xl font-bold text-[#6B7280] tracking-[0.2em] sm:tracking-[0.3em] mt-2">
@@ -291,7 +292,7 @@ export default async function HomePage() {
             <span className="inline-block px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 text-xs font-bold tracking-[0.2em] rounded-full mb-6">
               UNBOXING PREMIUM
             </span>
-            <h2 className="text-4xl md:text-6xl font-gothic text-white mb-6">
+            <h2 className="text-3xl md:text-5xl font-body font-bold uppercase tracking-[0.04em] text-white mb-6">
               ARMADO PARA LLEGAR
             </h2>
             <p className="text-white/60 max-w-xl mx-auto mb-12 text-lg leading-relaxed">
@@ -324,11 +325,15 @@ export default async function HomePage() {
             <span className="inline-block rounded-full border border-white/20 bg-white/10 px-5 py-2 text-xs font-bold tracking-[0.24em] text-white/80">
               CAPÍTULO 02 · PRÓXIMAMENTE
             </span>
-            <InViewTitle text="DROP 001" className="mt-6 font-gothic text-6xl leading-none text-white md:text-8xl" />
-            <p className="mx-auto mt-6 mb-10 max-w-lg text-lg leading-relaxed text-white/60">
-              Entrena primero. Viste después. Nuestra primera colección de ropa viene en camino. Únete a la lista y compra
-              antes que nadie.
-            </p>
+            <InViewTitle text="DROP 001" className="mt-6 font-body font-bold uppercase tracking-[0.04em] text-5xl leading-none text-white md:text-7xl" />
+            <TextReveal
+              as="p"
+              whileInView
+              stagger={0.035}
+              delay={0.25}
+              text="Entrena primero. Viste después. Nuestra primera colección de ropa viene en camino. Únete a la lista y compra antes que nadie."
+              className="mx-auto mt-6 mb-10 max-w-lg text-lg leading-relaxed text-white/60"
+            />
             <WaitlistForm source="home" />
             <Link
               href="/drop"

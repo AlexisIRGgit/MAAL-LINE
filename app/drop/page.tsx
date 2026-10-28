@@ -6,6 +6,7 @@ import { WaitlistForm } from '@/components/drop/waitlist-form'
 import { ChapterCards } from '@/components/drop/chapter-cards'
 import { DotGrid } from '@/components/ui/dot-grid'
 import { InViewTitle } from '@/components/ui/in-view-title'
+import { TextReveal } from '@/components/ui/text-reveal'
 
 export const metadata: Metadata = {
   title: 'Drop 001 · Próximamente | MAAL LINE',
@@ -30,11 +31,15 @@ export default function DropPage() {
             <span className="inline-block rounded-full border border-white/20 bg-white/10 px-5 py-2 text-xs font-bold tracking-[0.24em] text-white/80">
               CAPÍTULO 02 · PRÓXIMAMENTE
             </span>
-            <InViewTitle as="h1" text="DROP 001" className="mt-8 font-gothic text-7xl leading-none text-white md:text-9xl" />
-            <p className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-white/60">
-              Entrena primero. Viste después. Nuestra primera colección de ropa viene en camino, en edición limitada. Los
-              de la lista compran antes que nadie.
-            </p>
+            <InViewTitle as="h1" text="DROP 001" className="mt-8 font-body font-bold uppercase tracking-[0.04em] text-6xl leading-none text-white md:text-8xl" />
+            <TextReveal
+              as="p"
+              whileInView
+              stagger={0.035}
+              delay={0.25}
+              text="Entrena primero. Viste después. Nuestra primera colección de ropa viene en camino, en edición limitada. Los de la lista compran antes que nadie."
+              className="mx-auto mt-8 max-w-xl text-lg leading-relaxed text-white/60"
+            />
             <div id="lista" className="mt-12 scroll-mt-32">
               <WaitlistForm source="drop" />
             </div>

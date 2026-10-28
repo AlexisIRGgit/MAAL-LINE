@@ -89,7 +89,7 @@ export function ChapterCards() {
           <div className="relative mt-8">
             <p className="text-[10px] font-semibold tracking-[0.24em] text-white/40">CAPÍTULO</p>
             <div className="mt-1 flex items-baseline gap-3">
-              <span className="font-gothic text-5xl leading-none text-white">{chapter.number}</span>
+              <span className="font-body text-5xl font-bold leading-none tabular-nums tracking-[0.02em] text-white">{chapter.number}</span>
               <span className="text-xl font-bold tracking-wide text-white">{chapter.title}</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-white/55">{chapter.text}</p>
