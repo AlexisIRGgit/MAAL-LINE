@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CircleHelp, FileText, ShieldCheck, Truck } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -17,6 +17,8 @@ export function HelpTabs({ current }: { current: string }) {
   const router = useRouter()
   // Selected locally first so the pill glides and the icon opens while the next page loads
   const [value, setValue] = useState(current)
+  // Back/forward navigation changes the page without a click
+  useEffect(() => setValue(current), [current])
 
   return (
     <nav aria-label="Ayuda">
@@ -24,8 +26,9 @@ export function HelpTabs({ current }: { current: string }) {
         value={value}
         icons="selected"
         onValueChange={(href) => {
+          if (href === value) return
           setValue(href)
-          router.push(href)
+          router.push(href, { scroll: false })
         }}
       >
         <TabsList>

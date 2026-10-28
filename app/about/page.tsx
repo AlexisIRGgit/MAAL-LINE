@@ -13,7 +13,6 @@ export default function AboutPage() {
       eyebrow="Nosotros"
       title="Performance gear, desde Guadalajara"
       intro="MAAL LINE hace equipo deportivo de alto rendimiento para quienes entrenan en serio. Estética oscura, materiales que aguantan y cero relleno."
-      current="/about"
     >
       <InfoSection title="Lo que hacemos">
         <ul>

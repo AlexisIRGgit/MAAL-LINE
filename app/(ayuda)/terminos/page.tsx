@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { InfoPage, InfoSection } from '@/components/info/info-page'
+import { InfoSection } from '@/components/info/info-page'
 import { CONTACT_EMAIL } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -10,13 +10,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <InfoPage
-      eyebrow="Legal"
-      title="Términos y condiciones"
-      intro="Al navegar o comprar en maalline.com aceptas estos términos. Te pedimos leerlos con atención."
-      updated="28 de octubre de 2026"
-      current="/terminos"
-    >
+    <>
       <InfoSection title="1. Quiénes somos">
         <p>
           MAAL LINE es una marca mexicana de equipo deportivo de alto rendimiento (&ldquo;performance gear&rdquo;),
@@ -135,6 +129,6 @@ export default function TermsPage() {
           se someten a los tribunales competentes y a la Procuraduría Federal del Consumidor (PROFECO).
         </p>
       </InfoSection>
-    </InfoPage>
+    </>
   )
 }

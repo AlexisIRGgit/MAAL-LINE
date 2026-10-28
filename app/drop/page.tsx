@@ -4,6 +4,7 @@ import { PromoBar } from '@/components/navigation/promo-bar'
 import { Footer } from '@/components/navigation/footer'
 import { WaitlistForm } from '@/components/drop/waitlist-form'
 import { ChapterCards } from '@/components/drop/chapter-cards'
+import { DotGrid } from '@/components/ui/dot-grid'
 
 export const metadata: Metadata = {
   title: 'Drop 001 · Próximamente | MAAL LINE',
@@ -18,6 +19,7 @@ export default function DropPage() {
 
       <main className="min-h-screen bg-[#0B0B0D] text-white">
         <section className="relative overflow-hidden">
+          <DotGrid />
           {/* Silver glow behind the title */}
           <div
             aria-hidden

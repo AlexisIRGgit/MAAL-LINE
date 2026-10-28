@@ -3,16 +3,13 @@ import { Navbar } from '@/components/navigation/navbar'
 import { PromoBar } from '@/components/navigation/promo-bar'
 import { Footer } from '@/components/navigation/footer'
 import { CONTACT_EMAIL } from '@/lib/site'
-import { HelpTabs } from '@/components/info/help-tabs'
 
-
-/** Shared shell for the help and legal pages: header, readable column, help nav and contact card */
+/** Standalone info page (header, readable column, contact card). The help pages use app/(ayuda)/layout.tsx instead. */
 export function InfoPage({
   eyebrow,
   title,
   intro,
   updated,
-  current,
   children,
 }: {
   eyebrow: string
@@ -20,8 +17,6 @@ export function InfoPage({
   intro?: string
   /** Shown as "Última actualización" on legal pages */
   updated?: string
-  /** href of this page, highlighted in the help nav */
-  current: string
   children: React.ReactNode
 }) {
   return (
@@ -40,29 +35,9 @@ export function InfoPage({
         </section>
 
         <div className="container mx-auto px-4 py-12 md:py-16 max-w-3xl">
-          <div className="mb-10">
-            <HelpTabs current={current} />
-          </div>
-
           <div className="space-y-10">{children}</div>
 
-          <aside className="mt-14 rounded-[2rem] border border-[#E5E7EB] bg-white p-6 md:p-8 flex flex-col sm:flex-row sm:items-center gap-5">
-            <div className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-[#111827] text-white">
-              <Mail className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-display font-semibold text-[#111827]">¿Te quedó alguna duda?</p>
-              <p className="text-sm text-[#6B7280]">
-                Escríbenos y te respondemos en días hábiles. Soporte, pedidos y contacto en general.
-              </p>
-            </div>
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="inline-flex flex-shrink-0 items-center justify-center rounded-xl bg-[#111827] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1F2937] transition-colors break-all"
-            >
-              {CONTACT_EMAIL}
-            </a>
-          </aside>
+          <ContactCard />
         </div>
       </main>
 
@@ -80,5 +55,28 @@ export function InfoSection({ title, children }: { title: string; children: Reac
         {children}
       </div>
     </section>
+  )
+}
+
+/** "¿Te quedó alguna duda?" card with the support email */
+export function ContactCard() {
+  return (
+    <aside className="mt-14 rounded-[2rem] border border-[#E5E7EB] bg-white p-6 md:p-8 flex flex-col sm:flex-row sm:items-center gap-5">
+      <div className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-[#111827] text-white">
+        <Mail className="w-5 h-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-display font-semibold text-[#111827]">¿Te quedó alguna duda?</p>
+        <p className="text-sm text-[#6B7280]">
+          Escríbenos y te respondemos en días hábiles. Soporte, pedidos y contacto en general.
+        </p>
+      </div>
+      <a
+        href={`mailto:${CONTACT_EMAIL}`}
+        className="inline-flex flex-shrink-0 items-center justify-center rounded-xl bg-[#111827] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1F2937] transition-colors break-all"
+      >
+        {CONTACT_EMAIL}
+      </a>
+    </aside>
   )
 }

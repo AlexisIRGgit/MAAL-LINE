@@ -70,7 +70,7 @@ export function WaitlistForm({ source, className }: { source: 'home' | 'drop'; c
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="tu@email.com"
-          className="h-14 flex-1 rounded-xl border border-white/15 bg-white/[0.06] px-5 text-white placeholder:text-white/40 outline-none transition-colors focus:border-white/50"
+          className="h-14 w-full min-w-0 sm:flex-1 rounded-xl border border-white/15 bg-white/[0.06] px-5 text-white placeholder:text-white/40 outline-none transition-colors focus:border-white/50"
         />
         {/* Honeypot: hidden from people, filled by bots */}
         <input

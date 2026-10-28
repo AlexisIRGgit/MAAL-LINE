@@ -9,6 +9,7 @@ import { Footer } from '@/components/navigation/footer'
 import { ProductCard } from '@/components/product/product-card'
 import { Button } from '@/components/ui/button'
 import { WaitlistForm } from '@/components/drop/waitlist-form'
+import { DotGrid } from '@/components/ui/dot-grid'
 import { getNewArrivals, getBestSellers } from '@/lib/queries/products'
 import { getActiveCategories } from '@/lib/queries/categories'
 import { transformProductsForCards } from '@/lib/transformers/product'
@@ -313,6 +314,7 @@ export default async function HomePage() {
 
         {/* DROP 001 TEASER + WAITLIST */}
         <section className="relative overflow-hidden border-t border-white/10 bg-[#0B0B0D] py-24 md:py-32">
+          <DotGrid />
           <div
             aria-hidden
             className="pointer-events-none absolute left-1/2 top-10 h-[360px] w-[620px] max-w-full -translate-x-1/2 rounded-full bg-white/[0.05] blur-3xl"

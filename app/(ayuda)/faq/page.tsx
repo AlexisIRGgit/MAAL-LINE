@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { InfoPage } from '@/components/info/info-page'
 import { BouncyAccordion } from '@/components/ui/bouncy-accordion'
 import { CONTACT_EMAIL } from '@/lib/site'
 
@@ -115,12 +114,7 @@ const FAQ_GROUPS: { title: string; items: Faq[] }[] = [
 
 export default function FaqPage() {
   return (
-    <InfoPage
-      eyebrow="Ayuda"
-      title="Preguntas frecuentes"
-      intro="Lo que más nos preguntan sobre pedidos, envíos, cuidado del equipo y devoluciones."
-      current="/faq"
-    >
+    <>
       {FAQ_GROUPS.map((group) => (
         <section key={group.title}>
           <h2 className="font-display text-lg md:text-xl font-semibold text-[#111827] mb-3">{group.title}</h2>
@@ -134,6 +128,6 @@ export default function FaqPage() {
           />
         </section>
       ))}
-    </InfoPage>
+    </>
   )
 }

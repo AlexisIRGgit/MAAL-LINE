@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
 import { Truck } from 'lucide-react'
-import { InfoPage, InfoSection } from '@/components/info/info-page'
+import { InfoSection } from '@/components/info/info-page'
 import { getPublicStoreSettings } from '@/lib/public-store-settings'
 import { CONTACT_EMAIL } from '@/lib/site'
 
@@ -21,12 +21,7 @@ export default async function ShippingPage() {
   const threshold = shipping.freeShippingThreshold
 
   return (
-    <InfoPage
-      eyebrow="Ayuda"
-      title="Envíos y devoluciones"
-      intro="Todo nuestro equipo está en stock en Guadalajara, Jalisco, así que tu pedido sale rápido. Aquí encuentras los tiempos de entrega, los costos y cómo hacer un cambio o una devolución."
-      current="/envios"
-    >
+    <>
       <InfoSection title="Métodos y costos de envío">
         <p>El costo se calcula al finalizar tu compra, según el método que elijas:</p>
         <div className="not-prose grid gap-2 pt-1">
@@ -141,6 +136,6 @@ export default async function ShippingPage() {
           entrega, con fotos del paquete y del producto, y lo resolvemos sin costo para ti.
         </p>
       </InfoSection>
-    </InfoPage>
+    </>
   )
 }

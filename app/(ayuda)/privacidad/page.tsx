@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { InfoPage, InfoSection } from '@/components/info/info-page'
+import { InfoSection } from '@/components/info/info-page'
 import { CONTACT_EMAIL } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -9,13 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <InfoPage
-      eyebrow="Legal"
-      title="Aviso de privacidad"
-      intro="Tu privacidad nos importa. Aquí te explicamos qué datos recabamos, para qué los usamos y cómo puedes ejercer tus derechos."
-      updated="28 de octubre de 2026"
-      current="/privacidad"
-    >
+    <>
       <InfoSection title="Responsable de tus datos">
         <p>
           MAAL LINE, marca de equipo deportivo con domicilio en Guadalajara, Jalisco, México, es responsable del
@@ -116,6 +110,6 @@ export default function PrivacyPage() {
           actualización.
         </p>
       </InfoSection>
-    </InfoPage>
+    </>
   )
 }
