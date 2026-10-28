@@ -28,9 +28,13 @@ import {
   Edit2,
   Save,
   RefreshCw,
+  Copy,
+  type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { toast } from '@/lib/toast'
+import { toneStyles, type StatusTone } from '@/components/account/order-status'
+import { SwipeableRow, type SwipeAction, type SwipeSide } from '@/components/account/swipeable-list'
 
 interface OrderItem {
   id: string
@@ -108,22 +112,30 @@ interface Pagination {
 
 const ITEMS_PER_PAGE = 10
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  pending: { label: 'Pendiente', color: 'text-yellow-700', bg: 'bg-yellow-50', icon: Clock },
-  confirmed: { label: 'Confirmado', color: 'text-blue-700', bg: 'bg-blue-50', icon: CheckCircle },
-  processing: { label: 'Procesando', color: 'text-purple-700', bg: 'bg-purple-50', icon: Package },
-  shipped: { label: 'Enviado', color: 'text-indigo-700', bg: 'bg-indigo-50', icon: Truck },
-  delivered: { label: 'Entregado', color: 'text-green-700', bg: 'bg-green-50', icon: CheckCircle },
-  cancelled: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-50', icon: XCircle },
-  refunded: { label: 'Reembolsado', color: 'text-gray-700', bg: 'bg-gray-50', icon: RefreshCw },
+// Tones shared with the customer panel's order list (components/account/order-status)
+const ORDER_TONES: Record<string, { label: string; tone: StatusTone; icon: LucideIcon }> = {
+  pending: { label: 'Pendiente', tone: 'amber', icon: Clock },
+  confirmed: { label: 'Confirmado', tone: 'blue', icon: CheckCircle },
+  processing: { label: 'Procesando', tone: 'amber', icon: Package },
+  shipped: { label: 'Enviado', tone: 'blue', icon: Truck },
+  delivered: { label: 'Entregado', tone: 'green', icon: CheckCircle },
+  cancelled: { label: 'Cancelado', tone: 'red', icon: XCircle },
+  refunded: { label: 'Reembolsado', tone: 'neutral', icon: RefreshCw },
 }
 
-const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pending: { label: 'Pendiente', color: 'text-yellow-700', bg: 'bg-yellow-50' },
-  paid: { label: 'Pagado', color: 'text-green-700', bg: 'bg-green-50' },
-  partially_refunded: { label: 'Reembolso parcial', color: 'text-orange-700', bg: 'bg-orange-50' },
-  refunded: { label: 'Reembolsado', color: 'text-gray-700', bg: 'bg-gray-50' },
-  failed: { label: 'Fallido', color: 'text-red-700', bg: 'bg-red-50' },
+const PAYMENT_TONES: Record<string, { label: string; tone: StatusTone }> = {
+  pending: { label: 'Pago pendiente', tone: 'amber' },
+  paid: { label: 'Pagado', tone: 'green' },
+  partially_refunded: { label: 'Reembolso parcial', tone: 'amber' },
+  refunded: { label: 'Reembolsado', tone: 'neutral' },
+  failed: { label: 'Pago fallido', tone: 'red' },
+}
+
+// Quick action on the left rail: move the order one step forward
+const NEXT_STATUS: Record<string, { status: string; label: string; icon: LucideIcon }> = {
+  confirmed: { status: 'shipped', label: 'Marcar como enviado', icon: Truck },
+  processing: { status: 'shipped', label: 'Marcar como enviado', icon: Truck },
+  shipped: { status: 'delivered', label: 'Marcar como entregado', icon: CheckCircle },
 }
 
 const containerVariants = {
@@ -147,6 +159,7 @@ export default function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [updating, setUpdating] = useState(false)
+  const [openRow, setOpenRow] = useState<{ id: string; side: SwipeSide } | null>(null)
 
   // Tracking form
   const [trackingNumber, setTrackingNumber] = useState('')
@@ -210,6 +223,18 @@ export default function AdminOrdersPage() {
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const formatShortDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  const copyOrderNumber = async (orderNumber: string) => {
+    try {
+      await navigator.clipboard.writeText(orderNumber)
+      toast.success('Número copiado', undefined, 1500)
+    } catch {
+      toast.error('No se pudo copiar')
+    }
   }
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
@@ -428,145 +453,105 @@ export default function AdminOrdersPage() {
         </div>
       </motion.div>
 
-      {/* Orders Table */}
-      <motion.div variants={itemVariants} className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase">Pedido</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase">Cliente</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase">Estado</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase">Pago</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase">Total</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase">Fecha</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5E7EB]">
-              {orders.map((order) => {
-                const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
-                const paymentConfig = PAYMENT_STATUS_CONFIG[order.paymentStatus] || PAYMENT_STATUS_CONFIG.pending
-                const StatusIcon = statusConfig.icon
-
-                return (
-                  <tr key={order.id} className="hover:bg-[#F9FAFB] transition-colors">
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
-                          <ShoppingCart className="w-5 h-5 text-[#6B7280]" />
-                        </div>
-                        <div>
-                          <p className="font-mono font-semibold text-[#111827]">{order.orderNumber}</p>
-                          <p className="text-xs text-[#6B7280]">{order.itemsCount} items</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="font-medium text-[#111827]">{order.customer.name}</p>
-                      <p className="text-xs text-[#6B7280]">{order.email}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={cn(
-                        'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full',
-                        statusConfig.bg,
-                        statusConfig.color
-                      )}>
-                        <StatusIcon className="w-3 h-3" />
-                        {statusConfig.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={cn(
-                        'px-2.5 py-1 text-xs font-medium rounded-full',
-                        paymentConfig.bg,
-                        paymentConfig.color
-                      )}>
-                        {paymentConfig.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="font-semibold text-[#111827]">{formatPrice(order.total)}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="text-sm text-[#6B7280]">{formatDate(order.createdAt)}</p>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <button
-                        onClick={() => openOrderModal(order)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#111827] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Ver
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+      {/* Orders list (same swipeable card list as the account's recent orders) */}
+      <motion.div
+        variants={itemVariants}
+        className="rounded-[2rem] border border-[#E5E7EB] bg-[#F9FAFB] p-3 shadow-sm dark:shadow-2xl"
+      >
+        <div className="flex items-start justify-between gap-4 px-2 pt-1 pb-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-[#111827]">Pedidos</h2>
+            <p className="text-xs text-[#6B7280] truncate">
+              {orders.length > 0 ? 'Desliza un pedido para ver acciones' : 'Pedidos de la tienda'}
+            </p>
+          </div>
         </div>
 
-        {orders.length === 0 && (
-          <div className="p-12 text-center">
+        {orders.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {orders.map((order) => {
+              const status = ORDER_TONES[order.status] ?? { label: order.status, tone: 'neutral' as const, icon: Package }
+              const payment = PAYMENT_TONES[order.paymentStatus] ?? { label: order.paymentStatus, tone: 'neutral' as const }
+              const next = NEXT_STATUS[order.status]
+              const rightActions: SwipeAction[] = [
+                { id: 'copy', label: 'Copiar número', icon: Copy, tone: 'neutral', onAction: () => copyOrderNumber(order.orderNumber) },
+                { id: 'view', label: 'Ver pedido', icon: Eye, tone: 'primary', onAction: () => openOrderModal(order) },
+              ]
+              const leftActions: SwipeAction[] = next
+                ? [{ id: 'advance', label: next.label, icon: next.icon, tone: 'success', onAction: () => handleStatusChange(order.id, next.status) }]
+                : []
+
+              return (
+                <SwipeableRow
+                  key={order.id}
+                  label={`Pedido ${order.orderNumber}`}
+                  openSide={openRow?.id === order.id ? openRow.side : null}
+                  onOpenChange={(side) => setOpenRow(side ? { id: order.id, side } : null)}
+                  leftActions={leftActions}
+                  rightActions={rightActions}
+                  onSelect={() => openOrderModal(order)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] text-[#6B7280]">
+                      <status.icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#111827] truncate">{order.orderNumber}</p>
+                      <p className="text-xs text-[#6B7280] truncate">
+                        <span className={toneStyles[status.tone].text}>{status.label}</span>
+                        {' · '}
+                        <span className={toneStyles[payment.tone].text}>{payment.label}</span>
+                        {' · '}
+                        {order.customer.name}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <p className="text-xs font-medium tabular-nums text-[#111827]">{formatPrice(order.total)}</p>
+                      <p className="text-[11px] tabular-nums text-[#9CA3AF]">{formatShortDate(order.createdAt)}</p>
+                    </div>
+                  </div>
+                </SwipeableRow>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-[#E5E7EB] bg-white p-8 text-center">
             <ShoppingCart className="w-12 h-12 text-[#D1D5DB] mx-auto mb-3" />
             <p className="text-[#6B7280] font-medium">No hay pedidos</p>
             <p className="text-sm text-[#9CA3AF] mt-1">Los pedidos aparecerán aquí cuando se realicen</p>
           </div>
         )}
 
-        {/* Pagination */}
-        {pagination && pagination.totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-[#E5E7EB] flex items-center justify-between">
-            <p className="text-sm text-[#6B7280]">
-              Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, pagination.total)} de {pagination.total} pedidos
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F3F4F6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-                .filter(page => {
-                  if (pagination.totalPages <= 5) return true
-                  if (page === 1 || page === pagination.totalPages) return true
-                  if (Math.abs(page - currentPage) <= 1) return true
-                  return false
-                })
-                .map((page, index, array) => {
-                  const showEllipsis = index > 0 && page - array[index - 1] > 1
-                  return (
-                    <div key={page} className="flex items-center">
-                      {showEllipsis && (
-                        <span className="px-2 text-[#9CA3AF]">...</span>
-                      )}
-                      <button
-                        onClick={() => setCurrentPage(page)}
-                        className={cn(
-                          'w-8 h-8 rounded-lg text-sm font-medium transition-colors',
-                          currentPage === page
-                            ? 'bg-[#111827] text-white'
-                            : 'hover:bg-[#F3F4F6] text-[#374151]'
-                        )}
-                      >
-                        {page}
-                      </button>
-                    </div>
-                  )
-                })}
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
-                disabled={currentPage === pagination.totalPages}
-                className="p-2 rounded-lg border border-[#E5E7EB] hover:bg-[#F3F4F6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+        {orders.length > 0 && pagination && (
+          <div className="flex items-center justify-between gap-3 px-2 pt-3 pb-1 text-xs text-[#6B7280]">
+            <span>
+              {pagination.totalPages > 1
+                ? `${(currentPage - 1) * ITEMS_PER_PAGE + 1}–${Math.min(currentPage * ITEMS_PER_PAGE, pagination.total)} de ${pagination.total} pedidos`
+                : `${pagination.total} ${pagination.total === 1 ? 'pedido' : 'pedidos'}`}
+            </span>
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Página anterior"
+                  className="p-1.5 rounded-full border border-[#E5E7EB] hover:bg-white hover:text-[#111827] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <span className="px-2 tabular-nums">
+                  {currentPage} / {pagination.totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))}
+                  disabled={currentPage === pagination.totalPages}
+                  aria-label="Página siguiente"
+                  className="p-1.5 rounded-full border border-[#E5E7EB] hover:bg-white hover:text-[#111827] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </motion.div>
