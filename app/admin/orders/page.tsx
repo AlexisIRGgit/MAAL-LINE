@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Image from 'next/image'
 import {
   ShoppingCart,
@@ -16,7 +16,6 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  X,
   Loader2,
   MapPin,
   User,
@@ -35,6 +34,9 @@ import { cn } from '@/lib/utils/cn'
 import { toast } from '@/lib/toast'
 import { toneStyles, type StatusTone } from '@/components/account/order-status'
 import { SwipeableRow, type SwipeAction, type SwipeSide } from '@/components/account/swipeable-list'
+import { CenterMorphModal } from '@/components/ui/center-morph-modal'
+import { BottomSheet } from '@/components/ui/bottom-sheet'
+import { useMediaQuery } from '@/hooks/use-media-query'
 
 interface OrderItem {
   id: string
@@ -138,6 +140,11 @@ const NEXT_STATUS: Record<string, { status: string; label: string; icon: LucideI
   shipped: { status: 'delivered', label: 'Marcar como entregado', icon: CheckCircle },
 }
 
+// Section surface and form field styles inside the order detail dialog
+const SURFACE = 'rounded-2xl bg-[#F9FAFB] dark:bg-white/[0.05] dark:ring-1 dark:ring-white/[0.06]'
+const FIELD =
+  'w-full px-3.5 py-2.5 bg-white dark:bg-white/[0.06] border border-[#E5E7EB] rounded-xl text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827] disabled:opacity-50'
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
@@ -160,6 +167,9 @@ export default function AdminOrdersPage() {
   const [showModal, setShowModal] = useState(false)
   const [updating, setUpdating] = useState(false)
   const [openRow, setOpenRow] = useState<{ id: string; side: SwipeSide } | null>(null)
+  // Phones get a bottom sheet; larger screens get the center morph modal
+  const isMobile = useMediaQuery('(max-width: 767px)')
+  const DetailsDialog = isMobile ? BottomSheet : CenterMorphModal
 
   // Tracking form
   const [trackingNumber, setTrackingNumber] = useState('')
@@ -556,323 +566,305 @@ export default function AdminOrdersPage() {
         )}
       </motion.div>
 
-      {/* Order Detail Modal */}
-      <AnimatePresence>
-        {showModal && selectedOrder && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setShowModal(false)}
-                className="fixed inset-0 bg-black/50 transition-opacity"
-              />
-
-              {/* Trick to center modal */}
-              <span className="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="inline-block w-full max-w-4xl my-8 text-left align-middle bg-white rounded-2xl shadow-xl overflow-hidden relative"
-              >
-              {/* Modal Header */}
-              <div className="sticky top-0 bg-white border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between z-10">
-                <div>
-                  <h2 className="text-lg font-bold text-[#111827]">Pedido {selectedOrder.orderNumber}</h2>
-                  <p className="text-sm text-[#6B7280]">{formatDate(selectedOrder.createdAt)}</p>
+      {/* Order Detail: center morph modal (bottom sheet on phones), same as the account panel */}
+      <DetailsDialog
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        labelledBy="admin-order-title"
+        className="md:max-w-2xl"
+      >
+        {selectedOrder && (() => {
+          const status = ORDER_TONES[selectedOrder.status] ?? { label: selectedOrder.status, tone: 'neutral' as const, icon: Package }
+          const payment = PAYMENT_TONES[selectedOrder.paymentStatus] ?? { label: selectedOrder.paymentStatus, tone: 'neutral' as const }
+          return (
+            <div className={cn('p-6 space-y-5', isMobile && 'pt-1')}>
+              {/* Header */}
+              <div className="pr-10">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#9CA3AF]">Detalles del pedido</p>
+                <h2 id="admin-order-title" className="mt-1 text-lg font-bold text-[#111827] break-all">
+                  {selectedOrder.orderNumber}
+                </h2>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                  <span className={cn('inline-flex items-center gap-1.5 font-medium', toneStyles[status.tone].text)}>
+                    <span className={cn('w-1.5 h-1.5 rounded-full', toneStyles[status.tone].dot)} />
+                    {status.label}
+                  </span>
+                  <span className="h-3 w-px bg-[#E5E7EB]" aria-hidden />
+                  <span className={cn('font-medium', toneStyles[payment.tone].text)}>{payment.label}</span>
+                  <span className="h-3 w-px bg-[#E5E7EB]" aria-hidden />
+                  <span className="inline-flex items-center gap-1.5 text-[#6B7280]">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {formatDate(selectedOrder.createdAt)}
+                  </span>
                 </div>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-[#6B7280]" />
-                </button>
               </div>
 
-              <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-                {/* Status Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Order Status */}
-                  <div className="p-4 bg-[#F9FAFB] rounded-xl">
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Estado del Pedido</label>
-                    <select
-                      value={selectedOrder.status}
-                      onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
-                      disabled={updating}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#111827] disabled:opacity-50"
+              {/* Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className={cn(SURFACE, 'block p-4')}>
+                  <span className="block text-xs font-medium text-[#6B7280] mb-2">Estado del pedido</span>
+                  <select
+                    value={selectedOrder.status}
+                    onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
+                    disabled={updating}
+                    className={FIELD}
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="confirmed">Confirmado</option>
+                    <option value="processing">Procesando</option>
+                    <option value="shipped">Enviado</option>
+                    <option value="delivered">Entregado</option>
+                    <option value="cancelled">Cancelado</option>
+                  </select>
+                </label>
+                <label className={cn(SURFACE, 'block p-4')}>
+                  <span className="block text-xs font-medium text-[#6B7280] mb-2">Estado del pago</span>
+                  <select
+                    value={selectedOrder.paymentStatus}
+                    onChange={(e) => handlePaymentStatusChange(selectedOrder.id, e.target.value)}
+                    disabled={updating}
+                    className={FIELD}
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="paid">Pagado</option>
+                    <option value="failed">Fallido</option>
+                    <option value="refunded">Reembolsado</option>
+                  </select>
+                </label>
+              </div>
+
+              {/* Tracking */}
+              <div className={cn(SURFACE, 'p-4')}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-[#111827] flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-[#6B7280]" />
+                    Envío
+                  </h3>
+                  {!showTrackingForm && (
+                    <button
+                      onClick={() => {
+                        setCarrier(selectedOrder.shipment?.carrier || '')
+                        setTrackingNumber(selectedOrder.shipment?.trackingNumber || '')
+                        setShowTrackingForm(true)
+                      }}
+                      className="rounded-full border border-[#E5E7EB] px-3 py-1 text-xs font-medium text-[#6B7280] hover:text-[#111827] hover:bg-white dark:hover:bg-white/10 transition-colors"
                     >
-                      <option value="pending">Pendiente</option>
-                      <option value="confirmed">Confirmado</option>
-                      <option value="processing">Procesando</option>
-                      <option value="shipped">Enviado</option>
-                      <option value="delivered">Entregado</option>
-                      <option value="cancelled">Cancelado</option>
-                    </select>
-                  </div>
-
-                  {/* Payment Status */}
-                  <div className="p-4 bg-[#F9FAFB] rounded-xl">
-                    <label className="block text-sm font-medium text-[#374151] mb-2">Estado del Pago</label>
-                    <select
-                      value={selectedOrder.paymentStatus}
-                      onChange={(e) => handlePaymentStatusChange(selectedOrder.id, e.target.value)}
-                      disabled={updating}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#111827] disabled:opacity-50"
-                    >
-                      <option value="pending">Pendiente</option>
-                      <option value="paid">Pagado</option>
-                      <option value="failed">Fallido</option>
-                      <option value="refunded">Reembolsado</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Tracking Section */}
-                <div className="p-4 bg-[#F9FAFB] rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-sm font-medium text-[#374151]">Información de Envío</label>
-                    {!showTrackingForm && (
-                      <button
-                        onClick={() => setShowTrackingForm(true)}
-                        className="text-sm text-[#111827] hover:underline"
-                      >
-                        {selectedOrder.shipment?.trackingNumber ? 'Editar' : 'Agregar tracking'}
-                      </button>
-                    )}
-                  </div>
-
-                  {selectedOrder.shipment?.trackingNumber && !showTrackingForm ? (
-                    <div className="flex items-center gap-6">
-                      <div>
-                        <p className="text-sm text-[#6B7280]">Paquetería</p>
-                        <p className="font-medium text-[#111827]">{selectedOrder.shipment.carrier || 'No especificada'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-[#6B7280]">Número de rastreo</p>
-                        <p className="font-mono font-medium text-[#111827]">{selectedOrder.shipment.trackingNumber}</p>
-                      </div>
-                    </div>
-                  ) : showTrackingForm ? (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <input
-                          type="text"
-                          placeholder="Paquetería (ej: DHL, Fedex)"
-                          value={carrier}
-                          onChange={(e) => setCarrier(e.target.value)}
-                          className="px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Número de rastreo"
-                          value={trackingNumber}
-                          onChange={(e) => setTrackingNumber(e.target.value)}
-                          className="px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#111827]"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleAddTracking}
-                          disabled={updating || !trackingNumber}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-[#111827] text-white text-sm font-medium rounded-xl hover:bg-[#1F2937] disabled:opacity-50 transition-colors"
-                        >
-                          {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                          Guardar
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowTrackingForm(false)
-                            setTrackingNumber('')
-                            setCarrier('')
-                          }}
-                          className="px-4 py-2 text-sm text-[#6B7280] hover:bg-white rounded-xl transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-[#9CA3AF]">No hay información de envío todavía</p>
+                      {selectedOrder.shipment?.trackingNumber ? 'Editar' : 'Agregar rastreo'}
+                    </button>
                   )}
                 </div>
 
-                {/* Customer & Address */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Customer Info */}
-                  <div className="p-4 border border-[#E5E7EB] rounded-xl">
-                    <h3 className="font-medium text-[#111827] mb-3 flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      Cliente
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      <p className="text-[#111827] font-medium">{selectedOrder.customer.name}</p>
-                      <p className="text-[#6B7280] flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5" />
-                        {selectedOrder.email}
-                      </p>
-                      {selectedOrder.phone && (
-                        <p className="text-[#6B7280] flex items-center gap-2">
-                          <Phone className="w-3.5 h-3.5" />
-                          {selectedOrder.phone}
-                        </p>
-                      )}
+                {showTrackingForm ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        placeholder="Paquetería (ej: DHL, FedEx)"
+                        value={carrier}
+                        onChange={(e) => setCarrier(e.target.value)}
+                        className={FIELD}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Número de rastreo"
+                        value={trackingNumber}
+                        onChange={(e) => setTrackingNumber(e.target.value)}
+                        className={FIELD}
+                      />
                     </div>
-                  </div>
-
-                  {/* Shipping Address */}
-                  <div className="p-4 border border-[#E5E7EB] rounded-xl">
-                    <h3 className="font-medium text-[#111827] mb-3 flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Dirección de Envío
-                    </h3>
-                    <div className="text-sm text-[#6B7280]">
-                      <p className="text-[#111827] font-medium">{selectedOrder.shippingAddress.fullName}</p>
-                      <p>{selectedOrder.shippingAddress.streetLine1}</p>
-                      {selectedOrder.shippingAddress.streetLine2 && (
-                        <p>{selectedOrder.shippingAddress.streetLine2}</p>
-                      )}
-                      <p>
-                        {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}{' '}
-                        {selectedOrder.shippingAddress.postalCode}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Order Items */}
-                <div>
-                  <h3 className="font-medium text-[#111827] mb-3">Productos ({selectedOrder.itemsCount})</h3>
-                  <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
-                    {selectedOrder.items.map((item, index) => (
-                      <div
-                        key={item.id}
-                        className={cn(
-                          'flex items-center gap-4 p-4',
-                          index < selectedOrder.items.length - 1 && 'border-b border-[#E5E7EB]'
-                        )}
-                      >
-                        <div className="w-16 h-16 bg-[#F3F4F6] rounded-lg overflow-hidden flex-shrink-0">
-                          {item.image ? (
-                            <Image
-                              src={item.image}
-                              alt={item.name}
-                              width={64}
-                              height={64}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package className="w-6 h-6 text-[#9CA3AF]" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-[#111827]">{item.name}</p>
-                          {item.variant && (
-                            <p className="text-sm text-[#6B7280]">Talla: {item.variant}</p>
-                          )}
-                          <p className="text-sm text-[#6B7280]">Cantidad: {item.quantity}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-[#111827]">{formatPrice(item.total)}</p>
-                          <p className="text-xs text-[#6B7280]">{formatPrice(item.price)} c/u</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Order Summary */}
-                <div className="p-4 bg-[#F9FAFB] rounded-xl">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-[#6B7280]">Subtotal</span>
-                      <span className="text-[#111827]">{formatPrice(selectedOrder.subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-[#6B7280]">Envío ({selectedOrder.shippingMethod || 'estándar'})</span>
-                      <span className="text-[#111827]">
-                        {selectedOrder.shippingTotal === 0 ? 'Gratis' : formatPrice(selectedOrder.shippingTotal)}
-                      </span>
-                    </div>
-                    {selectedOrder.discountTotal > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Descuento {selectedOrder.discountCode && `(${selectedOrder.discountCode})`}</span>
-                        <span>-{formatPrice(selectedOrder.discountTotal)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between pt-2 border-t border-[#E5E7EB] font-semibold">
-                      <span className="text-[#111827]">Total</span>
-                      <span className="text-[#111827] text-lg">{formatPrice(selectedOrder.total)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Internal Notes */}
-                <div className="p-4 border border-[#E5E7EB] rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-[#111827]">Notas Internas</h3>
-                    {!editingNotes ? (
+                    <div className="flex gap-2">
                       <button
-                        onClick={() => setEditingNotes(true)}
-                        className="text-sm text-[#111827] hover:underline flex items-center gap-1"
+                        onClick={handleAddTracking}
+                        disabled={updating || !trackingNumber}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#111827] text-white text-sm font-medium rounded-xl hover:bg-[#1F2937] disabled:opacity-50 transition-colors"
                       >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        Editar
+                        {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        Guardar
                       </button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleSaveNotes}
-                          disabled={updating}
-                          className="text-sm text-[#111827] hover:underline flex items-center gap-1"
-                        >
-                          {updating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                          Guardar
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingNotes(false)
-                            setInternalNotes(selectedOrder.internalNotes || '')
-                          }}
-                          className="text-sm text-[#6B7280] hover:underline"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    )}
+                      <button
+                        onClick={() => {
+                          setShowTrackingForm(false)
+                          setTrackingNumber('')
+                          setCarrier('')
+                        }}
+                        className="px-4 py-2 text-sm text-[#6B7280] hover:text-[#111827] rounded-xl transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
-                  {editingNotes ? (
-                    <textarea
-                      value={internalNotes}
-                      onChange={(e) => setInternalNotes(e.target.value)}
-                      rows={3}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#111827]"
-                      placeholder="Agregar notas internas sobre este pedido..."
-                    />
-                  ) : (
-                    <p className="text-sm text-[#6B7280]">
-                      {selectedOrder.internalNotes || 'Sin notas internas'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Customer Notes */}
-                {selectedOrder.customerNotes && (
-                  <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-xl">
-                    <h3 className="font-medium text-yellow-800 mb-2">Notas del Cliente</h3>
-                    <p className="text-sm text-yellow-700">{selectedOrder.customerNotes}</p>
+                ) : selectedOrder.shipment?.trackingNumber ? (
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-xs text-[#6B7280]">Paquetería</p>
+                      <p className="font-medium text-[#111827]">{selectedOrder.shipment.carrier || 'No especificada'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#6B7280]">Número de rastreo</p>
+                      <p className="font-mono font-medium text-[#111827] break-all">{selectedOrder.shipment.trackingNumber}</p>
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-sm text-[#9CA3AF]">Sin número de rastreo todavía</p>
                 )}
               </div>
-            </motion.div>
-          </div>
-          </div>
-        )}
-      </AnimatePresence>
+
+              {/* Customer & Address */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className={cn(SURFACE, 'p-4')}>
+                  <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
+                    <User className="w-4 h-4 text-[#6B7280]" />
+                    Cliente
+                  </h3>
+                  <div className="space-y-1.5 text-sm">
+                    <p className="text-[#111827] font-medium">{selectedOrder.customer.name}</p>
+                    <p className="text-[#6B7280] flex items-center gap-2 min-w-0">
+                      <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span className="truncate">{selectedOrder.email}</span>
+                    </p>
+                    {selectedOrder.phone && (
+                      <p className="text-[#6B7280] flex items-center gap-2">
+                        <Phone className="w-3.5 h-3.5 flex-shrink-0" />
+                        {selectedOrder.phone}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className={cn(SURFACE, 'p-4')}>
+                  <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#6B7280]" />
+                    Dirección de envío
+                  </h3>
+                  <div className="space-y-0.5 text-sm text-[#6B7280]">
+                    <p className="text-[#111827] font-medium">{selectedOrder.shippingAddress.fullName}</p>
+                    <p>{selectedOrder.shippingAddress.streetLine1}</p>
+                    {selectedOrder.shippingAddress.streetLine2 && <p>{selectedOrder.shippingAddress.streetLine2}</p>}
+                    {selectedOrder.shippingAddress.neighborhood && <p>{selectedOrder.shippingAddress.neighborhood}</p>}
+                    <p>
+                      {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}{' '}
+                      {selectedOrder.shippingAddress.postalCode}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Products */}
+              <div>
+                <h3 className="text-sm font-semibold text-[#111827] mb-3 flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4 text-[#6B7280]" />
+                  Productos ({selectedOrder.itemsCount})
+                </h3>
+                <div className="space-y-2">
+                  {selectedOrder.items.map((item) => (
+                    <div key={item.id} className={cn(SURFACE, 'flex items-center gap-3 p-3')}>
+                      <div className="relative w-14 h-14 flex-shrink-0 overflow-hidden rounded-xl border border-[#E5E7EB] bg-white dark:bg-white/[0.06]">
+                        {item.image ? (
+                          <Image src={item.image} alt={item.name} fill sizes="56px" className="object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-5 h-5 text-[#9CA3AF]" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#111827] truncate">{item.name}</p>
+                        <p className="text-xs text-[#6B7280]">
+                          {item.variant ? `Talla ${item.variant} · ` : ''}Cantidad {item.quantity}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold tabular-nums text-[#111827]">{formatPrice(item.total)}</p>
+                        {item.quantity > 1 && (
+                          <p className="text-[11px] tabular-nums text-[#9CA3AF]">{formatPrice(item.price)} c/u</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className={cn(SURFACE, 'p-4 space-y-2 text-sm')}>
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Subtotal</span>
+                  <span className="tabular-nums text-[#111827]">{formatPrice(selectedOrder.subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#6B7280]">Envío ({selectedOrder.shippingMethod || 'estándar'})</span>
+                  <span className="tabular-nums text-[#111827]">
+                    {selectedOrder.shippingTotal === 0 ? 'Gratis' : formatPrice(selectedOrder.shippingTotal)}
+                  </span>
+                </div>
+                {selectedOrder.discountTotal > 0 && (
+                  <div className={cn('flex justify-between', toneStyles.green.text)}>
+                    <span>Descuento {selectedOrder.discountCode && `(${selectedOrder.discountCode})`}</span>
+                    <span className="tabular-nums">-{formatPrice(selectedOrder.discountTotal)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2 border-t border-[#E5E7EB] font-semibold">
+                  <span className="text-[#111827]">Total</span>
+                  <span className="text-lg tabular-nums text-[#111827]">{formatPrice(selectedOrder.total)}</span>
+                </div>
+              </div>
+
+              {/* Internal notes */}
+              <div className={cn(SURFACE, 'p-4')}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-[#111827]">Notas internas</h3>
+                  {!editingNotes ? (
+                    <button
+                      onClick={() => setEditingNotes(true)}
+                      className="inline-flex items-center gap-1 rounded-full border border-[#E5E7EB] px-3 py-1 text-xs font-medium text-[#6B7280] hover:text-[#111827] hover:bg-white dark:hover:bg-white/10 transition-colors"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      Editar
+                    </button>
+                  ) : (
+                    <div className="flex gap-3 text-xs font-medium">
+                      <button
+                        onClick={handleSaveNotes}
+                        disabled={updating}
+                        className="inline-flex items-center gap-1 text-[#111827] hover:underline"
+                      >
+                        {updating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                        Guardar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingNotes(false)
+                          setInternalNotes(selectedOrder.internalNotes || '')
+                        }}
+                        className="text-[#6B7280] hover:underline"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {editingNotes ? (
+                  <textarea
+                    value={internalNotes}
+                    onChange={(e) => setInternalNotes(e.target.value)}
+                    rows={3}
+                    className={cn(FIELD, 'resize-none')}
+                    placeholder="Agregar notas internas sobre este pedido..."
+                  />
+                ) : (
+                  <p className="text-sm text-[#6B7280] break-all">{selectedOrder.internalNotes || 'Sin notas internas'}</p>
+                )}
+              </div>
+
+              {/* Customer notes */}
+              {selectedOrder.customerNotes && (
+                <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50">
+                  <h3 className="text-sm font-semibold text-amber-800 mb-1">Notas del cliente</h3>
+                  <p className="text-sm text-amber-700">{selectedOrder.customerNotes}</p>
+                </div>
+              )}
+            </div>
+          )
+        })()}
+      </DetailsDialog>
     </motion.div>
   )
 }
