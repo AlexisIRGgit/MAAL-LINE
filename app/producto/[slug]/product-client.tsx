@@ -258,7 +258,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
             </div>
 
             {/* Product Info */}
-            <div className="space-y-6 bg-white rounded-2xl p-6 lg:p-8 border border-gray-200">
+            <div className="space-y-6 bg-white rounded-2xl p-6 lg:p-8 border border-gray-200 lg:self-start lg:sticky lg:top-24">
               {/* Title & Price */}
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-[#111827] uppercase tracking-wide">
@@ -393,13 +393,13 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
                 <div className="text-center">
                   <Truck className="w-5 h-5 mx-auto text-[#C9A962] mb-2" />
-                  <span className="text-[10px] text-gray-500 tracking-wider block">ENVÍO EXPRESS</span>
-                  <span className="text-xs text-[#111827]">24-48h</span>
+                  <span className="text-[10px] text-gray-500 tracking-wider block">ENTREGA</span>
+                  <span className="text-xs text-[#111827]">Mismo día GDL</span>
                 </div>
                 <div className="text-center">
                   <RotateCcw className="w-5 h-5 mx-auto text-[#C9A962] mb-2" />
-                  <span className="text-[10px] text-gray-500 tracking-wider block">DEVOLUCIONES</span>
-                  <span className="text-xs text-[#111827]">30 días</span>
+                  <span className="text-[10px] text-gray-500 tracking-wider block">CAMBIOS</span>
+                  <span className="text-xs text-[#111827]">15 días</span>
                 </div>
                 <div className="text-center">
                   <Shield className="w-5 h-5 mx-auto text-[#C9A962] mb-2" />
@@ -408,17 +408,18 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                 </div>
               </div>
 
-              {/* Description */}
-              {description && (
-                <div className="pt-6 border-t border-gray-200">
-                  <h3 className="text-sm font-bold text-[#111827] tracking-wider mb-3">DESCRIPCIÓN</h3>
-                  <div className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
-                    {description}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Description: its own full-width card under the gallery and the buy box */}
+          {description && (
+            <div className="mt-8 lg:mt-12 bg-white rounded-2xl p-6 lg:p-10 border border-gray-200">
+              <h2 className="text-sm font-bold text-[#111827] tracking-wider mb-5">DESCRIPCIÓN</h2>
+              <div className="text-gray-600 text-sm md:text-[15px] leading-relaxed whitespace-pre-line max-w-4xl">
+                {description}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Related Products */}
