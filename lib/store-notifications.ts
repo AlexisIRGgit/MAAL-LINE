@@ -9,6 +9,7 @@ import {
   ownerNewOrderEmail,
 } from '@/lib/email-templates'
 import { sendNtfy } from '@/lib/ntfy'
+import { notifyStaff } from '@/lib/admin-notifications'
 import {
   GENERAL_SETTINGS_KEY,
   NOTIFICATION_SETTINGS_KEY,
@@ -44,7 +45,7 @@ function run(label: string, work: () => Promise<unknown>): Promise<void> {
 }
 
 /** Payment confirmed (Stripe / MercadoPago webhooks, first confirmation only) */
-export function notifyOrderPaid(orderId: string, provider: 'Stripe' | 'MercadoPago'): Promise<void> {
+function alertOrderPaid(orderId: string, provider: 'Stripe' | 'MercadoPago'): Promise<void> {
   return run('new_order', async () => {
     if (!(await isEnabled('newOrder'))) return
     const order = await prisma.order.findUnique({
@@ -142,7 +143,7 @@ export function notifyOrderShipped(orderId: string): Promise<void> {
  * After a sale decremented stock: alert for variants that just crossed their
  * low-stock threshold (so each one alerts once, not on every later sale).
  */
-export function notifyLowStock(sold: { variantId: string | null; quantity: number }[]): Promise<void> {
+function alertLowStock(sold: { variantId: string | null; quantity: number }[]): Promise<void> {
   return run('low_stock', async () => {
     const soldByVariant = new Map<string, number>()
     for (const item of sold) {
@@ -188,7 +189,7 @@ export function notifyLowStock(sold: { variantId: string | null; quantity: numbe
 }
 
 /** New customer signed up (email/password or first Google sign-in) */
-export function notifyNewAccount(userId: string): Promise<void> {
+function alertNewAccount(userId: string): Promise<void> {
   return run('new_account', async () => {
     if (!(await isEnabled('newAccount'))) return
     const user = await prisma.user.findUnique({
@@ -213,10 +214,100 @@ export function notifyNewAccount(userId: string): Promise<void> {
 }
 
 /** Someone joined the Drop 001 waitlist (first signup per email only); always on, email to the contact inbox */
-export function notifyDropWaitlist(email: string, source: string): Promise<void> {
+function alertDropWaitlist(email: string, source: string): Promise<void> {
   return run('drop_waitlist', async () => {
     const [to, total] = await Promise.all([ownerEmail(), prisma.dropWaitlist.count()])
     const content = ownerDropWaitlistEmail({ email, source, total })
     await sendEmail({ to, ...content, type: 'owner_drop_waitlist', replyTo: email })
   })
+}
+
+// ─── Public entry points: ntfy/email alerts (switchable) plus the admin bell (always on) ───
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+/** Payment confirmed (Stripe / MercadoPago webhooks, first confirmation only) */
+export function notifyOrderPaid(orderId: string, provider: 'Stripe' | 'MercadoPago'): Promise<void> {
+  const inApp = run('new_order_in_app', async () => {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, orderNumber: true, total: true, userId: true, shippingAddress: true, items: { select: { quantity: true } } },
+    })
+    if (!order) return
+    const fullName = (order.shippingAddress as { fullName?: unknown } | null)?.fullName
+    const units = order.items.reduce((sum, item) => sum + item.quantity, 0)
+    await notifyStaff({
+      type: 'new_order',
+      title: `Nuevo pedido ${order.orderNumber} · ${formatMXN(Number(order.total))}`,
+      message: [typeof fullName === 'string' ? fullName : null, plural(units, 'artículo', 'artículos'), provider, order.userId ? null : 'invitado']
+        .filter(Boolean)
+        .join(' · '),
+      actionUrl: `/admin/orders?search=${encodeURIComponent(order.orderNumber)}`,
+      referenceType: 'order',
+      referenceId: order.id,
+    })
+  })
+  return Promise.all([inApp, alertOrderPaid(orderId, provider)]).then(() => undefined)
+}
+
+/** Stock fell to or below the threshold after a sale */
+export function notifyLowStock(sold: { variantId: string | null; quantity: number }[]): Promise<void> {
+  const inApp = run('low_stock_in_app', async () => {
+    const soldByVariant = new Map<string, number>()
+    for (const item of sold) {
+      if (item.variantId) soldByVariant.set(item.variantId, (soldByVariant.get(item.variantId) ?? 0) + item.quantity)
+    }
+    if (soldByVariant.size === 0) return
+    const variants = await prisma.productVariant.findMany({
+      where: { id: { in: Array.from(soldByVariant.keys()) } },
+      select: { id: true, size: true, color: true, stockQuantity: true, lowStockThreshold: true, product: { select: { name: true } } },
+    })
+    const crossed = variants.filter((v) => {
+      const before = v.stockQuantity + (soldByVariant.get(v.id) ?? 0)
+      return before > v.lowStockThreshold && v.stockQuantity <= v.lowStockThreshold
+    })
+    for (const v of crossed) {
+      const name = [v.product.name, [v.size, v.color].filter(Boolean).join(' / ')].filter(Boolean).join(' ')
+      await notifyStaff({
+        type: 'low_stock',
+        title: v.stockQuantity <= 0 ? `Agotado: ${name}` : `Stock bajo: ${name}`,
+        message: v.stockQuantity <= 0 ? 'Ya no quedan piezas' : `Quedan ${plural(v.stockQuantity, 'pieza', 'piezas')}`,
+        actionUrl: '/admin/inventory',
+        referenceType: 'variant',
+        referenceId: v.id,
+      })
+    }
+  })
+  return Promise.all([inApp, alertLowStock(sold)]).then(() => undefined)
+}
+
+/** New customer signed up (email/password or first Google sign-in) */
+export function notifyNewAccount(userId: string): Promise<void> {
+  const inApp = run('new_account_in_app', async () => {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, firstName: true, lastName: true, authProvider: true } })
+    if (!user) return
+    const name = [user.firstName, user.lastName].filter(Boolean).join(' ')
+    await notifyStaff({
+      type: 'new_account',
+      title: `Nueva cuenta: ${name || user.email}`,
+      message: `${user.email}${user.authProvider === 'google' ? ' · con Google' : ''}`,
+      actionUrl: '/admin/customers',
+      referenceType: 'user',
+      referenceId: user.id,
+    })
+  })
+  return Promise.all([inApp, alertNewAccount(userId)]).then(() => undefined)
+}
+
+/** Someone joined the Drop 001 waitlist (first signup per email only) */
+export function notifyDropWaitlist(email: string, source: string): Promise<void> {
+  const inApp = run('drop_waitlist_in_app', async () => {
+    const total = await prisma.dropWaitlist.count()
+    await notifyStaff({
+      type: 'drop_waitlist',
+      title: `Nuevo interesado en el Drop 001 · ${total} en la lista`,
+      message: `${email} · desde ${source === 'drop' ? 'la página del Drop' : 'el inicio'}`,
+    })
+  })
+  return Promise.all([inApp, alertDropWaitlist(email, source)]).then(() => undefined)
 }

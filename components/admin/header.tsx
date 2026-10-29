@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Bell, Search, ChevronDown, User, Settings, LogOut, Menu } from 'lucide-react'
+import { Search, ChevronDown, User, Settings, LogOut, Menu } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { NotificationsBell } from '@/components/admin/notifications-bell'
 
 export function AdminHeader({
   onMenuClick,
@@ -18,7 +19,6 @@ export function AdminHeader({
 }) {
   const { data: session } = useSession()
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
 
   const userName = session?.user?.firstName || session?.user?.email?.split('@')[0] || 'Admin'
 
@@ -52,52 +52,8 @@ export function AdminHeader({
 
       {/* Right Side */}
       <div className="flex items-center gap-3">
-        {/* Notifications */}
-        <div className="relative">
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 hover:bg-[#F3F4F6] rounded-xl transition-colors"
-          >
-            <Bell className="w-5 h-5 text-[#6B7280]" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-[#10B981] rounded-full" />
-          </button>
-
-          {showNotifications && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-              <div className="absolute right-0 mt-2 w-80 bg-white border border-[#E5E7EB] rounded-2xl shadow-lg z-50 overflow-hidden">
-                <div className="p-4 border-b border-[#E5E7EB]">
-                  <h3 className="font-semibold text-[#111827]">Notificaciones</h3>
-                </div>
-                <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
-                  <div className="flex gap-3 p-2 hover:bg-[#F9FAFB] rounded-lg cursor-pointer">
-                    <div className="w-8 h-8 bg-[#10B981]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs">📦</span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-[#111827]">Nuevo pedido #ML-006</p>
-                      <p className="text-xs text-[#6B7280]">Hace 5 minutos</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 p-2 hover:bg-[#F9FAFB] rounded-lg cursor-pointer">
-                    <div className="w-8 h-8 bg-[#F59E0B]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs">⚠️</span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-[#111827]">Stock bajo: Hoodie Black M</p>
-                      <p className="text-xs text-[#6B7280]">Hace 2 horas</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-3 border-t border-[#E5E7EB]">
-                  <button className="w-full text-center text-sm text-[#10B981] hover:underline">
-                    Ver todas las notificaciones
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        {/* Notifications (polled live) */}
+        <NotificationsBell />
 
         {/* Theme */}
         <ThemeToggle
