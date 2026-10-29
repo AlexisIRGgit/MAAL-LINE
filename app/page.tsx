@@ -287,15 +287,15 @@ export default async function HomePage() {
         )}
 
         {/* PACKAGING */}
-        <section className="relative py-24 md:py-32 overflow-hidden bg-[#0B0B0D]">
+        <section className="relative py-24 md:py-32 overflow-hidden border-t border-black/[0.06] bg-[#F7F7F8] dark:border-white/10 dark:bg-[#0B0B0D]">
           <div className="relative container mx-auto px-4 text-center">
-            <span className="inline-block px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 text-xs font-bold tracking-[0.2em] rounded-full mb-6">
+            <span className="inline-block px-5 py-2 bg-white border border-black/10 text-[#374151] shadow-sm dark:bg-white/10 dark:backdrop-blur-sm dark:border-white/20 dark:text-white/80 dark:shadow-none text-xs font-bold tracking-[0.2em] rounded-full mb-6">
               UNBOXING PREMIUM
             </span>
-            <h2 className="text-3xl md:text-5xl font-body font-bold uppercase tracking-[0.04em] text-white mb-6">
+            <h2 className="text-3xl md:text-5xl font-body font-bold uppercase tracking-[0.04em] text-[#111827] dark:text-white mb-6">
               ARMADO PARA LLEGAR
             </h2>
-            <p className="text-white/60 max-w-xl mx-auto mb-12 text-lg leading-relaxed">
+            <p className="text-[#6B7280] dark:text-white/60 max-w-xl mx-auto mb-12 text-lg leading-relaxed">
               Cada pedido sale en bolsa CPE negro mate esmerilado y en cilindro de cartón negro con nuestro logo en
               serigrafía plata. Equipo de alto rendimiento, desde que lo abres.
             </p>
@@ -305,9 +305,9 @@ export default async function HomePage() {
                 { title: 'Cilindro de cartón', text: 'Negro, con logo en serigrafía plata.' },
                 { title: 'Desde Guadalajara', text: 'Stock propio, sale en 1–2 días hábiles.' },
               ].map((item) => (
-                <div key={item.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-                  <p className="text-sm font-bold tracking-wider text-white">{item.title}</p>
-                  <p className="mt-1 text-sm text-white/55">{item.text}</p>
+                <div key={item.title} className="rounded-2xl border border-black/[0.06] bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
+                  <p className="text-sm font-bold tracking-wider text-[#111827] dark:text-white">{item.title}</p>
+                  <p className="mt-1 text-sm text-[#6B7280] dark:text-white/55">{item.text}</p>
                 </div>
               ))}
             </div>
@@ -315,29 +315,29 @@ export default async function HomePage() {
         </section>
 
         {/* DROP 001 TEASER + WAITLIST */}
-        <section className="relative overflow-hidden border-t border-white/10 bg-[#0B0B0D] py-24 md:py-32">
-          <DotGrid />
+        <section className="relative overflow-hidden border-t border-black/[0.06] bg-white py-24 md:py-32 dark:border-white/10 dark:bg-[#0B0B0D]">
+          <DotGrid adaptive />
           <div
             aria-hidden
-            className="pointer-events-none absolute left-1/2 top-10 h-[360px] w-[620px] max-w-full -translate-x-1/2 rounded-full bg-white/[0.05] blur-3xl"
+            className="pointer-events-none absolute left-1/2 top-10 h-[360px] w-[620px] max-w-full -translate-x-1/2 rounded-full bg-[#F3F4F6] blur-3xl dark:bg-white/[0.05]"
           />
           <div className="relative container mx-auto px-4 text-center">
-            <span className="inline-block rounded-full border border-white/20 bg-white/10 px-5 py-2 text-xs font-bold tracking-[0.24em] text-white/80">
+            <span className="inline-block rounded-full border border-black/10 bg-white px-5 py-2 text-xs font-bold tracking-[0.24em] text-[#374151] shadow-sm dark:border-white/20 dark:bg-white/10 dark:text-white/80 dark:shadow-none">
               CAPÍTULO 02 · PRÓXIMAMENTE
             </span>
-            <InViewTitle text="DROP 001" className="mt-6 font-body font-bold uppercase tracking-[0.04em] text-5xl leading-none text-white md:text-7xl" />
+            <InViewTitle text="DROP 001" className="mt-6 font-body font-bold uppercase tracking-[0.04em] text-5xl leading-none text-[#111827] dark:text-white md:text-7xl" />
             <TextReveal
               as="p"
               whileInView
               stagger={0.035}
               delay={0.25}
               text="Entrena primero. Viste después. Nuestra primera colección de ropa viene en camino. Únete a la lista y compra antes que nadie."
-              className="mx-auto mt-6 mb-10 max-w-lg text-lg leading-relaxed text-white/60"
+              className="mx-auto mt-6 mb-10 max-w-lg text-lg leading-relaxed text-[#6B7280] dark:text-white/60"
             />
-            <WaitlistForm source="home" />
+            <WaitlistForm source="home" adaptive />
             <Link
               href="/drop"
-              className="mt-8 inline-block text-xs font-bold tracking-[0.2em] text-white/50 transition-colors hover:text-white"
+              className="mt-8 inline-block text-xs font-bold tracking-[0.2em] text-[#6B7280] transition-colors hover:text-[#111827] dark:text-white/50 dark:hover:text-white"
             >
               SABER MÁS DEL DROP →
             </Link>
