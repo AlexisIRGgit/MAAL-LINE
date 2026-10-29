@@ -4,6 +4,8 @@ import { getPublicStoreSettings } from '@/lib/public-store-settings'
 import { createPendingOrder, prepareCheckout, shippingLabel } from '@/lib/checkout/prepare-order'
 import { stripe, formatAmountForStripe } from '@/lib/stripe'
 
+const STRIPE_MIN_MXN = 10
+
 // Signed-in customers and guests both check out here; guests give their email on the Stripe page
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +17,10 @@ export async function POST(request: NextRequest) {
 
     const prepared = await prepareCheckout(await request.json().catch(() => null))
     if ('error' in prepared) return NextResponse.json({ error: prepared.error }, { status: prepared.status })
+    // Stripe rejects Checkout Sessions under $10 MXN (amount_too_small)
+    if (prepared.total < STRIPE_MIN_MXN) {
+      return NextResponse.json({ error: `Con tarjeta el total mínimo es de $${STRIPE_MIN_MXN} MXN. Elige otro método de pago o ajusta tu pedido.` }, { status: 400 })
+    }
 
     const lineItems = prepared.lines.map((line) => ({
       price_data: {
@@ -40,6 +46,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://maalline.com'
 
     let stripeSession
+    let couponId: string | null = null
     try {
       // The coupon is charged as a one-time Stripe coupon for the exact amount
       const coupon = prepared.discount
@@ -51,6 +58,7 @@ export async function POST(request: NextRequest) {
             name: `Cupón ${prepared.discount.code}`,
           })
         : null
+      couponId = coupon?.id ?? null
       stripeSession = await stripe.checkout.sessions.create({
         mode: 'payment',
         payment_method_types: ['card'],
@@ -65,6 +73,8 @@ export async function POST(request: NextRequest) {
       console.error('Stripe session creation error:', stripeError)
       // No payment session, so the order would never be paid
       await prisma.order.delete({ where: { id: order.id } })
+      // The one-time coupon was made for this session only
+      if (couponId) await stripe.coupons.del(couponId).catch(() => undefined)
       return NextResponse.json({ error: 'No pudimos abrir el pago. Intenta de nuevo.' }, { status: 502 })
     }
 
