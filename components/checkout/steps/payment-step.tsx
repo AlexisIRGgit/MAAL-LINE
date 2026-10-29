@@ -364,8 +364,11 @@ export function PaymentStep() {
             />
           )}
           <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-[#9CA3AF]">
-            <Shield className="h-3.5 w-3.5" />
-            Pago seguro y encriptado. El recibo te llega por correo.
+            {/* Same green as the finished steps, for trust */}
+            <Shield className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">Pago seguro y encriptado.</span> El recibo te llega por correo.
+            </span>
           </p>
         </div>
       </section>
