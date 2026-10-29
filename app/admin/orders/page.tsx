@@ -737,7 +737,8 @@ export default function AdminOrdersPage() {
                     <p className="text-[#111827] font-medium">{selectedOrder.customer.name}</p>
                     <p className="text-[#6B7280] flex items-center gap-2 min-w-0">
                       <Mail className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span className="truncate">{selectedOrder.email}</span>
+                      {/* Guests give their email on the payment page, so unpaid guest orders have none yet */}
+                      <span className="truncate">{selectedOrder.email || 'Invitado · sin correo todavía'}</span>
                     </p>
                     {selectedOrder.phone && (
                       <p className="text-[#6B7280] flex items-center gap-2">

@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { CheckCircle, Package, ArrowRight, Mail, Loader2 } from 'lucide-react'
@@ -9,6 +10,8 @@ import { CheckCircle, Package, ArrowRight, Mail, Loader2 } from 'lucide-react'
 function SuccessContent() {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order')
+  // Guests have no account page; they get the order by email instead
+  const { status } = useSession()
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4">
@@ -87,6 +90,7 @@ function SuccessContent() {
           transition={{ delay: 0.7 }}
           className="space-y-3"
         >
+          {status === 'authenticated' && (
           <Link
             href="/cuenta/pedidos"
             className="w-full py-4 bg-[#E8E4D9] text-[#0A0A0A] font-bold tracking-wider hover:bg-[#C9A962] transition-colors flex items-center justify-center gap-2"
@@ -94,6 +98,7 @@ function SuccessContent() {
             VER MIS PEDIDOS
             <ArrowRight className="w-4 h-4" />
           </Link>
+          )}
           <Link
             href="/"
             className="block w-full py-4 border border-[#E8E4D9]/30 text-[#E8E4D9] font-bold tracking-wider hover:bg-[#E8E4D9]/10 transition-colors"
@@ -110,7 +115,7 @@ function SuccessContent() {
           className="text-xs text-[#E8E4D9]/40 mt-8"
         >
           ¿Tienes preguntas?{' '}
-          <Link href="/contacto" className="text-[#C9A962] hover:underline">
+          <Link href="/faq" className="text-[#C9A962] hover:underline">
             Contáctanos
           </Link>
         </motion.p>

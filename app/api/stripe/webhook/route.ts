@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       }
       // Stripe retries webhooks; only the first confirmation should notify
       const wasAlreadyPaid = order.paymentStatus === 'paid'
+      const guestEmail = session.customer_details?.email || session.customer_email
 
       // Update order payment status
       await prisma.order.update({
@@ -81,6 +82,8 @@ export async function POST(request: NextRequest) {
           paymentStatus: 'paid',
           status: 'processing',
           confirmedAt: new Date(),
+          // Guest orders get their email from the Stripe checkout page
+          ...(!order.email && guestEmail && { email: guestEmail.slice(0, 255) }),
         },
       })
 
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
           completedAt: new Date(),
           metadata: {
             sessionId: session.id,
-            customerEmail: session.customer_email,
+            customerEmail: guestEmail || session.customer_email,
           },
         },
       })

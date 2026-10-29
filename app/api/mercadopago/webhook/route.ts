@@ -74,6 +74,8 @@ export async function POST(request: NextRequest) {
           status: newOrderStatus,
           paymentStatus: newPaymentStatus,
           ...(paymentStatus === 'approved' && { confirmedAt: new Date() }),
+          // Guest orders get their email from the MercadoPago payer
+          ...(!order.email && paymentData.payer?.email && { email: paymentData.payer.email.slice(0, 255) }),
         },
       })
 

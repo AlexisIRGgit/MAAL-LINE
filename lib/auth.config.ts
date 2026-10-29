@@ -40,9 +40,10 @@ export const authConfig: NextAuthConfig = {
       const isPublicLoginPage = nextUrl.pathname === '/login'
       const isRegisterPage = nextUrl.pathname === '/register'
 
-      const isProtectedRoute = protectedRoutes.some((route) =>
-        nextUrl.pathname.startsWith(route)
-      )
+      // Guests land on the confirmation page after paying, so it stays public
+      const isPublicCheckoutPage = nextUrl.pathname.startsWith('/checkout/success')
+      const isProtectedRoute =
+        !isPublicCheckoutPage && protectedRoutes.some((route) => nextUrl.pathname.startsWith(route))
 
       // Admin login page handling
       if (isAdminLoginPage) {

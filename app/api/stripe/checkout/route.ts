@@ -1,321 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
 import { getPublicStoreSettings } from '@/lib/public-store-settings'
-import { shippingCostFor } from '@/lib/store-settings'
+import { createPendingOrder, prepareCheckout, shippingLabel } from '@/lib/checkout/prepare-order'
 import { stripe, formatAmountForStripe } from '@/lib/stripe'
-import { nanoid } from 'nanoid'
 
-interface CheckoutItem {
-  productId: string
-  variantName: string
-  quantity: number
-  unitPrice: number
-}
-
-interface CheckoutRequest {
-  addressId: string
-  shippingMethod: string
-  items: CheckoutItem[]
-  discountCode?: string
-}
-
+// Signed-in customers and guests both check out here; guests give their email on the Stripe page
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth()
-
     // Admin > Configuración > Pagos can switch providers off
     const { payments } = await getPublicStoreSettings()
     if (!payments.stripe) {
       return NextResponse.json({ error: 'Este método de pago no está disponible' }, { status: 403 })
     }
-    const userId = session.user.id
 
-    const body: CheckoutRequest = await request.json()
-    const { addressId, shippingMethod, items, discountCode } = body
+    const prepared = await prepareCheckout(await request.json().catch(() => null))
+    if ('error' in prepared) return NextResponse.json({ error: prepared.error }, { status: prepared.status })
 
-    // Validate request
-    if (!addressId || !shippingMethod || !items || items.length === 0) {
-      return NextResponse.json(
-        { error: 'Datos incompletos' },
-        { status: 400 }
-      )
-    }
-
-    // Fetch shipping address
-    const address = await prisma.address.findFirst({
-      where: { id: addressId, userId },
-    })
-
-    if (!address) {
-      return NextResponse.json(
-        { error: 'Dirección no encontrada' },
-        { status: 404 }
-      )
-    }
-
-    // Validate products and get current prices
-    const productIds = items.map((item) => item.productId)
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds }, status: 'active' },
-      include: {
-        variants: true,
-        images: {
-          take: 1,
-          orderBy: { sortOrder: 'asc' },
-        },
-      },
-    })
-
-    if (products.length !== productIds.length) {
-      return NextResponse.json(
-        { error: 'Algunos productos no están disponibles' },
-        { status: 400 }
-      )
-    }
-
-    // Calculate totals and prepare line items for Stripe
-    let subtotal = 0
-    const stripeLineItems: {
+    const lineItems = prepared.lines.map((line) => ({
       price_data: {
-        currency: string
-        product_data: {
-          name: string
-          description?: string
-          images?: string[]
-        }
-        unit_amount: number
-      }
-      quantity: number
-    }[] = []
-
-    const orderItems: {
-      productId: string
-      variantId: string | null
-      productName: string
-      variantName: string | null
-      sku: string | null
-      imageUrl: string | null
-      quantity: number
-      unitPrice: number
-      total: number
-    }[] = []
-
-    for (const item of items) {
-      const product = products.find((p) => p.id === item.productId)
-      if (!product) continue
-
-      // Find matching variant
-      const variant = product.variants.find(
-        (v) => v.size === item.variantName || v.color === item.variantName
-      )
-
-      // Check stock if variant exists
-      if (variant && variant.stockQuantity < item.quantity) {
-        return NextResponse.json(
-          { error: `Stock insuficiente para ${product.name}` },
-          { status: 400 }
-        )
-      }
-
-      const price = parseFloat(product.price.toString())
-      const itemTotal = price * item.quantity
-      subtotal += itemTotal
-
-      // Stripe line item (without images to avoid URL length issues)
-      stripeLineItems.push({
-        price_data: {
-          currency: 'mxn',
-          product_data: {
-            name: product.name,
-            description: item.variantName ? `Talla: ${item.variantName}` : undefined,
-          },
-          unit_amount: formatAmountForStripe(price),
-        },
-        quantity: item.quantity,
-      })
-
-      orderItems.push({
-        productId: product.id,
-        variantId: variant?.id || null,
-        productName: product.name,
-        variantName: item.variantName,
-        sku: variant?.sku || null,
-        imageUrl: product.images[0]?.url || null,
-        quantity: item.quantity,
-        unitPrice: price,
-        total: itemTotal,
-      })
-    }
-
-    // Calculate shipping
-    // Costs, names and free-shipping rules come from Admin > Configuración > Envíos
-    const { shipping } = await getPublicStoreSettings()
-    const shippingTotal = shippingCostFor(shipping, shippingMethod, subtotal)
-    const shippingOption = shipping.methods.find((m) => m.id === shippingMethod)
-    if (shippingTotal === null || !shippingOption) {
-      return NextResponse.json({ error: 'Este método de envío no está disponible' }, { status: 400 })
-    }
-
-    // Handle discount code
-    let discountTotal = 0
-    let discountId: string | null = null
-    let stripeDiscountCoupon: string | undefined
-
-    if (discountCode) {
-      const discount = await prisma.discount.findUnique({
-        where: { code: discountCode.toUpperCase() },
-      })
-
-      if (discount && discount.isActive) {
-        const now = new Date()
-        const isValid = discount.startsAt <= now && (!discount.expiresAt || discount.expiresAt >= now)
-        const withinUsageLimit = !discount.usageLimit || discount.usageCount < discount.usageLimit
-
-        if (isValid && withinUsageLimit) {
-          if (discount.type === 'percentage') {
-            discountTotal = subtotal * (parseFloat(discount.value.toString()) / 100)
-            if (discount.maximumDiscount) {
-              discountTotal = Math.min(discountTotal, parseFloat(discount.maximumDiscount.toString()))
-            }
-          } else if (discount.type === 'fixed_amount') {
-            discountTotal = parseFloat(discount.value.toString())
-          } else if (discount.type === 'free_shipping') {
-            discountTotal = shippingTotal
-          }
-          discountId = discount.id
-        }
-      }
-    }
-
-    const total = subtotal + shippingTotal - discountTotal
-
-    // Generate order number
-    const orderNumber = `ML-${Date.now().toString(36).toUpperCase()}-${nanoid(4).toUpperCase()}`
-
-    // Create order with payment_pending status
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        userId,
-        email: session.user.email,
-        phone: address.phone,
-        status: 'pending',
-        paymentStatus: 'pending',
-        subtotal,
-        shippingTotal,
-        discountTotal,
-        total,
-        shippingAddress: {
-          fullName: address.fullName,
-          phone: address.phone,
-          streetLine1: address.streetLine1,
-          streetLine2: address.streetLine2,
-          neighborhood: address.neighborhood,
-          city: address.city,
-          state: address.state,
-          postalCode: address.postalCode,
-          country: address.country,
-        },
-        shippingMethod,
-        discountCode: discountCode?.toUpperCase() || null,
-        discountId,
-        source: 'web',
-        items: {
-          create: orderItems,
-        },
+        currency: 'mxn',
+        // No images: long image URLs can push the session over Stripe's limits
+        product_data: { name: line.productName, description: line.variantName ? `Talla: ${line.variantName}` : undefined },
+        unit_amount: formatAmountForStripe(line.unitPrice),
       },
-    })
-
-    // Add shipping as a line item if not free
-    if (shippingTotal > 0) {
-      stripeLineItems.push({
+      quantity: line.quantity,
+    }))
+    if (prepared.shippingTotal > 0) {
+      lineItems.push({
         price_data: {
           currency: 'mxn',
-          product_data: {
-            name: shippingOption.description ? `${shippingOption.name} (${shippingOption.description})` : shippingOption.name,
-          },
-          unit_amount: formatAmountForStripe(shippingTotal),
+          product_data: { name: shippingLabel(prepared.shippingOption), description: undefined },
+          unit_amount: formatAmountForStripe(prepared.shippingTotal),
         },
         quantity: 1,
       })
     }
 
-    // Create Stripe Checkout Session
+    const order = await createPendingOrder(prepared)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://maalline.com'
 
     let stripeSession
     try {
+      // The coupon is charged as a one-time Stripe coupon for the exact amount
+      const coupon = prepared.discount
+        ? await stripe.coupons.create({
+            amount_off: formatAmountForStripe(prepared.discount.amount),
+            currency: 'mxn',
+            duration: 'once',
+            max_redemptions: 1,
+            name: `Cupón ${prepared.discount.code}`,
+          })
+        : null
       stripeSession = await stripe.checkout.sessions.create({
         mode: 'payment',
         payment_method_types: ['card'],
-        line_items: stripeLineItems,
-        customer_email: session.user.email || undefined,
-        metadata: {
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          userId,
-        },
+        line_items: lineItems,
+        ...(coupon && { discounts: [{ coupon: coupon.id }] }),
+        customer_email: prepared.email || undefined,
+        metadata: { orderId: order.id, orderNumber: order.orderNumber, userId: prepared.userId ?? 'guest' },
         success_url: `${baseUrl}/checkout/success?order=${order.orderNumber}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/checkout?canceled=true`,
+        cancel_url: `${baseUrl}/?checkout=canceled`,
       })
     } catch (stripeError: unknown) {
       console.error('Stripe session creation error:', stripeError)
-      // Delete the order since payment session failed
+      // No payment session, so the order would never be paid
       await prisma.order.delete({ where: { id: order.id } })
-      const errorMessage = stripeError instanceof Error ? stripeError.message : 'Error al crear sesión de pago'
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'No pudimos abrir el pago. Intenta de nuevo.' }, { status: 502 })
     }
 
-    // Update order with Stripe session ID
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        internalNotes: `Stripe Session: ${stripeSession.id}`,
-      },
-    })
+    await Promise.all([
+      prisma.order.update({ where: { id: order.id }, data: { internalNotes: `Stripe Session: ${stripeSession.id}` } }),
+      prisma.orderStatusHistory.create({
+        data: { orderId: order.id, status: 'pending', notes: prepared.userId ? 'Pedido creado, esperando pago' : 'Pedido de invitado creado, esperando pago' },
+      }),
+    ])
 
-    // Create order status history
-    await prisma.orderStatusHistory.create({
-      data: {
-        orderId: order.id,
-        status: 'pending',
-        notes: 'Pedido creado, esperando pago',
-      },
-    })
-
-    return NextResponse.json({
-      sessionId: stripeSession.id,
-      sessionUrl: stripeSession.url,
-      orderNumber: order.orderNumber,
-    })
+    return NextResponse.json({ sessionId: stripeSession.id, sessionUrl: stripeSession.url, orderNumber: order.orderNumber })
   } catch (error: unknown) {
     console.error('Stripe checkout error:', error)
-
-    // Check if it's an auth error
-    if (error instanceof Error && error.message.includes('autenticado')) {
-      return handleAuthError(error)
-    }
-
-    // Return generic error with details in dev
-    const errorMessage = error instanceof Error ? error.message : 'Error interno del servidor'
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
-}
-
-// Helper to create a one-time Stripe coupon for discounts
-async function createStripeCoupon(amount: number): Promise<string> {
-  const coupon = await stripe.coupons.create({
-    amount_off: formatAmountForStripe(amount),
-    currency: 'mxn',
-    duration: 'once',
-    name: 'Descuento aplicado',
-  })
-  return coupon.id
 }

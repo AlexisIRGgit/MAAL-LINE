@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, MapPin, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { loadGoogleMaps, parsePlace, type ParsedPlace } from '@/lib/google-maps'
+import { FloatingField } from '@/components/checkout/floating-field'
 
 interface Suggestion {
   id: string
@@ -15,10 +16,26 @@ interface Suggestion {
 
 const DEBOUNCE_MS = 250
 
-/** Google Places (New) autocomplete with a custom, themed dropdown. */
-export function GoogleAddressSearch({ onSelect }: { onSelect: (place: ParsedPlace) => void }) {
+/**
+ * Google Places (New) autocomplete with a custom, themed dropdown.
+ * With `label` the input is the checkout's floating-label field; otherwise the compact account search.
+ */
+export function GoogleAddressSearch({
+  onSelect,
+  label,
+  initialQuery = '',
+  error: fieldError,
+  onUnavailable,
+}: {
+  onSelect: (place: ParsedPlace) => void
+  label?: string
+  initialQuery?: string
+  error?: string | null
+  /** Google could not be reached; the parent can offer manual fields instead */
+  onUnavailable?: () => void
+}) {
   const listId = useId()
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [activeIndex, setActiveIndex] = useState(-1)
   const [open, setOpen] = useState(false)
@@ -30,7 +47,7 @@ export function GoogleAddressSearch({ onSelect }: { onSelect: (place: ParsedPlac
   const placesRef = useRef<google.maps.PlacesLibrary | null>(null)
   const requestId = useRef(0)
   // Filling the input with the chosen address must not trigger a new search
-  const skipNextQuery = useRef(false)
+  const skipNextQuery = useRef(!!initialQuery)
 
   useEffect(() => {
     if (skipNextQuery.current) {
@@ -73,7 +90,10 @@ export function GoogleAddressSearch({ onSelect }: { onSelect: (place: ParsedPlac
         setOpen(true)
         setError(null)
       } catch {
-        if (id === requestId.current) setError('No pudimos buscar direcciones. Llena los campos abajo.')
+        if (id === requestId.current) {
+          setError(onUnavailable ? 'No pudimos buscar direcciones. Escríbela abajo.' : 'No pudimos buscar direcciones. Llena los campos abajo.')
+          onUnavailable?.()
+        }
       } finally {
         if (id === requestId.current) setLoading(false)
       }
@@ -120,8 +140,32 @@ export function GoogleAddressSearch({ onSelect }: { onSelect: (place: ParsedPlac
     }
   }
 
+  const comboboxProps = {
+    role: 'combobox',
+    'aria-expanded': open && suggestions.length > 0,
+    'aria-controls': listId,
+    'aria-autocomplete': 'list' as const,
+    'aria-activedescendant': activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined,
+    autoComplete: 'off',
+    value: query,
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => setQuery(event.target.value),
+    onFocus: () => suggestions.length > 0 && setOpen(true),
+    onBlur: () => setTimeout(() => setOpen(false), 150),
+    onKeyDown: handleKeyDown,
+  }
+
   return (
     <div className="relative">
+      {label ? (
+        <FloatingField
+          label={label}
+          enterKeyHint="search"
+          leading={<Search className="w-4 h-4" />}
+          trailing={(loading || resolving) && <Loader2 className="mr-2 w-4 h-4 animate-spin text-[#9CA3AF]" />}
+          error={fieldError}
+          {...comboboxProps}
+        />
+      ) : (
       <div className="relative">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
         <input
@@ -144,6 +188,7 @@ export function GoogleAddressSearch({ onSelect }: { onSelect: (place: ParsedPlac
           <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-[#9CA3AF]" />
         )}
       </div>
+      )}
 
       <AnimatePresence>
         {open && suggestions.length > 0 && (

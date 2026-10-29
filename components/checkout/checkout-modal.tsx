@@ -1,106 +1,117 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useCheckoutModalStore } from '@/lib/store/checkout-modal-store'
-import { useAuthModalStore } from '@/lib/store/auth-modal-store'
-import { CheckoutStepper } from './checkout-stepper'
+import { DEFAULT_PAYMENT_SETTINGS, DEFAULT_SHIPPING_SETTINGS, type PaymentSettings } from '@/lib/store-settings'
+import { CheckoutStepper, CheckoutSummaryCard } from './checkout-stepper'
 import { AddressStep } from './steps/address-step'
 import { ShippingStep } from './steps/shipping-step'
 import { PaymentStep } from './steps/payment-step'
 
 const stepVariants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 100 : -100,
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-  },
-  exit: (direction: number) => ({
-    x: direction > 0 ? -100 : 100,
-    opacity: 0,
-  }),
+  enter: (direction: number) => ({ x: direction > 0 ? 48 : -48, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (direction: number) => ({ x: direction > 0 ? -48 : 48, opacity: 0 }),
 }
 
+/**
+ * Checkout without an account: Dirección → Envío → Pago. Guests type the address, name and phone;
+ * signed-in customers can also pick a saved address. The order total stays pinned on top.
+ */
 export function CheckoutModal() {
-  const { isOpen, currentStep, closeCheckoutModal } = useCheckoutModalStore()
-  const { openAuthModal } = useAuthModalStore()
-  const { status: sessionStatus } = useSession()
+  const { isOpen, currentStep, closeCheckoutModal, setSettings } = useCheckoutModalStore()
+  const previousStep = useRef(currentStep)
+  const direction = currentStep >= previousStep.current ? 1 : -1
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Auth check: if not authenticated when modal opens, redirect to auth
   useEffect(() => {
-    if (isOpen && sessionStatus === 'unauthenticated') {
-      closeCheckoutModal()
-      openAuthModal('login')
+    previousStep.current = currentStep
+    scrollRef.current?.scrollTo({ top: 0 })
+  }, [currentStep])
+
+  // Shipping methods and payment switches from Admin > Configuración
+  useEffect(() => {
+    if (!isOpen) return
+    let cancelled = false
+    fetch('/api/store/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return
+        setSettings(
+          data?.shipping ?? { ...DEFAULT_SHIPPING_SETTINGS, methods: DEFAULT_SHIPPING_SETTINGS.methods.filter((m) => m.enabled) },
+          (data?.payments as PaymentSettings | undefined) ?? DEFAULT_PAYMENT_SETTINGS
+        )
+      })
+      .catch(() => !cancelled && setSettings({ ...DEFAULT_SHIPPING_SETTINGS }, DEFAULT_PAYMENT_SETTINGS))
+    return () => {
+      cancelled = true
     }
-  }, [isOpen, sessionStatus, closeCheckoutModal, openAuthModal])
+  }, [isOpen, setSettings])
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = isOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
   }, [isOpen])
 
-  // Close on escape key
   useEffect(() => {
+    if (!isOpen) return
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeCheckoutModal()
     }
     window.addEventListener('keydown', handleEscape)
     return () => window.removeEventListener('keydown', handleEscape)
-  }, [closeCheckoutModal])
-
-  // Track step direction for animation
-  const direction = 1 // always forward-feeling for simplicity; prevStep uses negative in variants
+  }, [isOpen, closeCheckoutModal])
 
   return (
     <AnimatePresence>
-      {isOpen && sessionStatus === 'authenticated' && (
+      {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeCheckoutModal}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            className="fixed inset-0 z-[400] bg-black/50 backdrop-blur-sm"
           />
 
-          {/* Modal Container */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          {/* Bottom sheet on phones, centered card from sm up */}
+          <div className="pointer-events-none fixed inset-0 z-[400] flex items-end justify-center sm:items-center sm:p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl pointer-events-auto mx-4"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Finalizar compra"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ type: 'spring', visualDuration: 0.35, bounce: 0.1 }}
+              className="pointer-events-auto relative flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl dark:bg-[#16181D] sm:max-h-[90vh] sm:rounded-[28px]"
             >
-              {/* Close Button */}
-              <button
-                onClick={closeCheckoutModal}
-                className="absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Stepper */}
-              <div className="border-b border-gray-200">
+              {/* Pinned header: close, order total, steps */}
+              <div className="flex-shrink-0 space-y-3 border-b border-[#E5E7EB] px-5 pb-3 pt-3 dark:border-white/10 sm:px-6 sm:pt-5">
+                <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-[#E5E7EB] dark:bg-white/15 sm:hidden" />
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <CheckoutSummaryCard />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeCheckoutModal}
+                    aria-label="Cerrar"
+                    className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full text-[#6B7280] transition-colors hover:bg-[#F3F4F6] hover:text-[#111827] dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
                 <CheckoutStepper />
               </div>
 
-              {/* Step Content */}
-              <div className="p-6 overflow-hidden">
-                <AnimatePresence mode="wait" custom={direction}>
+              <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-5 sm:px-6">
+                <AnimatePresence mode="wait" custom={direction} initial={false}>
                   <motion.div
                     key={currentStep}
                     custom={direction}
@@ -108,7 +119,7 @@ export function CheckoutModal() {
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                   >
                     {currentStep === 0 && <AddressStep />}
                     {currentStep === 1 && <ShippingStep />}
