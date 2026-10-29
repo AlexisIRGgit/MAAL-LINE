@@ -10,6 +10,7 @@ import { AddressStep } from './steps/address-step'
 import { ShippingStep } from './steps/shipping-step'
 import { PaymentStep } from './steps/payment-step'
 import { StepFooterSlot } from './step-footer'
+import { ScrollHint } from './scroll-hint'
 
 const stepVariants = {
   enter: (direction: number) => ({ x: direction > 0 ? 48 : -48, opacity: 0 }),
@@ -135,6 +136,7 @@ export function CheckoutModal() {
 
               {/* Only the step content scrolls; the header above and the buttons below stay put */}
               <StepFooterSlot.Provider value={footerSlot}>
+              <div className="relative flex min-h-0 flex-1 flex-col">
               <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5 py-5 sm:px-6">
                 <AnimatePresence mode="wait" custom={direction} initial={false}>
                   <motion.div
@@ -151,6 +153,8 @@ export function CheckoutModal() {
                     {currentStep === 2 && <PaymentStep />}
                   </motion.div>
                 </AnimatePresence>
+              </div>
+              <ScrollHint target={scrollRef} />
               </div>
               </StepFooterSlot.Provider>
               <div
