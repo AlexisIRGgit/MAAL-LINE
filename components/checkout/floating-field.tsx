@@ -39,7 +39,7 @@ export const FloatingField = forwardRef<HTMLInputElement, FloatingFieldProps>(fu
           aria-invalid={error ? true : undefined}
           aria-describedby={message ? messageId : undefined}
           className={cn(
-            'peer block h-14 w-full rounded-2xl border px-4 pb-2 pt-6 text-[15px] font-medium text-[#111827] outline-none transition-[border-color,box-shadow,background-color] duration-150',
+            'peer block h-14 w-full rounded-2xl border px-4 pb-1 pt-[28px] text-[15px] leading-5 font-medium text-[#111827] outline-none transition-[border-color,box-shadow,background-color] duration-150',
             'bg-[#F3F4F6] dark:bg-white/[0.05] dark:text-white',
             'focus:bg-white focus:shadow-[0_0_0_3px_rgba(17,24,39,0.06)] dark:focus:bg-white/[0.07] dark:focus:shadow-[0_0_0_3px_rgba(255,255,255,0.06)]',
             leading && 'pl-11',
@@ -58,8 +58,8 @@ export const FloatingField = forwardRef<HTMLInputElement, FloatingFieldProps>(fu
             'pointer-events-none absolute top-1/2 origin-left -translate-y-1/2 text-[15px] text-[#6B7280] transition-all duration-150 dark:text-white/50',
             leading ? 'left-11' : 'left-4',
             // Floats up and shrinks while focused or filled
-            'peer-focus:top-[15px] peer-focus:translate-y-0 peer-focus:text-xs',
-            'peer-[:not(:placeholder-shown)]:top-[15px] peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs',
+            'peer-focus:top-[7px] peer-focus:translate-y-0 peer-focus:text-xs',
+            'peer-[:not(:placeholder-shown)]:top-[7px] peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs',
             tone === 'success' && !error && 'text-emerald-700 dark:text-emerald-300'
           )}
         >

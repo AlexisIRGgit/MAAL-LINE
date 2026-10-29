@@ -94,10 +94,31 @@ export function CheckoutModal() {
               {/* Pinned header: close, order total, steps */}
               <div className="flex-shrink-0 space-y-3 border-b border-[#E5E7EB] px-5 pb-3 pt-3 dark:border-white/10 sm:px-6 sm:pt-5">
                 <div aria-hidden className="mx-auto h-1 w-10 rounded-full bg-[#E5E7EB] dark:bg-white/15 sm:hidden" />
-                <div className="flex items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <CheckoutSummaryCard />
-                  </div>
+                <div className="flex items-start gap-3">
+                  {/* On the payment step the totals are right there, so the card folds away */}
+                  <AnimatePresence initial={false}>
+                    {currentStep < 2 && (
+                      <motion.div
+                        key="summary"
+                        initial={{ opacity: 0, height: 0, filter: 'blur(4px)' }}
+                        animate={{ opacity: 1, height: 'auto', filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, height: 0, filter: 'blur(4px)' }}
+                        transition={{ type: 'spring', visualDuration: 0.35, bounce: 0 }}
+                        className="min-w-0 flex-1 overflow-hidden"
+                      >
+                        <CheckoutSummaryCard />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  {currentStep === 2 && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex h-10 min-w-0 flex-1 items-center text-base font-bold text-[#111827] dark:text-white"
+                    >
+                      Finalizar compra
+                    </motion.p>
+                  )}
                   <button
                     type="button"
                     onClick={closeCheckoutModal}

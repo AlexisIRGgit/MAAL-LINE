@@ -320,7 +320,11 @@ export function PaymentStep() {
       </section>
 
       <section className="space-y-5">
-        <CouponField subtotal={subtotal} phone={phone} />
+        <div>
+          {/* Same heading row as "Tu pedido", so the coupon lines up with the first item card */}
+          <h3 className="mb-3 text-lg font-bold text-[#111827] dark:text-white">Descuento</h3>
+          <CouponField subtotal={subtotal} phone={phone} />
+        </div>
 
         <dl className="space-y-2 rounded-[20px] bg-[#F9FAFB] p-4 text-sm dark:bg-white/[0.04]">
           <div className="flex justify-between">
