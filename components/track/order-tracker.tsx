@@ -9,7 +9,7 @@ import { CheckoutMap } from '@/components/checkout/checkout-map'
 import { SkeletonBlock } from '@/components/ui/skeleton'
 import { formatMXN } from '@/components/checkout/use-checkout-totals'
 
-interface TrackedOrder {
+export interface TrackedOrder {
   orderNumber: string
   status: string
   paymentStatus: string
@@ -105,7 +105,7 @@ function Timeline({ order }: { order: TrackedOrder }) {
   )
 }
 
-function ResultSkeleton() {
+export function ResultSkeleton() {
   return (
     <div role="status" aria-label="Buscando tu pedido" className="grid gap-5 lg:grid-cols-2">
       <div className="space-y-4 rounded-[24px] border border-[#E5E7EB] bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
@@ -128,7 +128,7 @@ function ResultSkeleton() {
   )
 }
 
-function OrderResult({ order }: { order: TrackedOrder }) {
+export function OrderResult({ order, inModal = false }: { order: TrackedOrder; inModal?: boolean }) {
   const a = order.address
   const addressLine = [a.streetLine1, a.streetLine2, a.neighborhood, [a.city, a.state].filter(Boolean).join(', '), a.postalCode && `CP ${a.postalCode}`]
     .filter(Boolean)
@@ -243,7 +243,12 @@ function OrderResult({ order }: { order: TrackedOrder }) {
       </div>
 
       {/* Delivery point */}
-      <div className="h-[320px] overflow-hidden rounded-[24px] border border-[#E5E7EB] dark:border-white/10 lg:sticky lg:top-28 lg:h-[520px]">
+      <div
+        className={cn(
+          'h-[320px] overflow-hidden rounded-[24px] border border-[#E5E7EB] dark:border-white/10',
+          inModal ? 'lg:sticky lg:top-0 lg:h-[520px]' : 'lg:sticky lg:top-28 lg:h-[520px]'
+        )}
+      >
         <CheckoutMap lat={a.latitude ?? undefined} lng={a.longitude ?? undefined} address={mapText || undefined} />
       </div>
     </div>

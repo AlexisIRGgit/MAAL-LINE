@@ -31,6 +31,7 @@ import {
 import { CenterMorphModal } from '@/components/ui/center-morph-modal'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { useMediaQuery } from '@/hooks/use-media-query'
+import { OrderResult, ResultSkeleton, type TrackedOrder } from '@/components/track/order-tracker'
 
 interface OrderItem {
   name: string
@@ -93,6 +94,25 @@ export default function OrdersPage() {
   const isMobile = useMediaQuery('(max-width: 767px)')
   const DetailsDialog = isMobile ? BottomSheet : CenterMorphModal
   const [copied, setCopied] = useState(false)
+  // "Rastrear pedido": the same view as /rastrear, without the search bar
+  const [trackingId, setTrackingId] = useState<string | null>(null)
+  const [tracked, setTracked] = useState<{ id: string; order: TrackedOrder | null; error: string | null } | null>(null)
+  const trackTriggerRef = useRef<HTMLButtonElement | null>(null)
+
+  const openTracking = (orderNumber: string, trigger: HTMLButtonElement) => {
+    trackTriggerRef.current = trigger
+    setSelectedOrder(null)
+    setTrackingId(orderNumber)
+    if (tracked?.id === orderNumber && tracked.order) return
+    setTracked({ id: orderNumber, order: null, error: null })
+    fetch(`/api/account/orders/${encodeURIComponent(orderNumber)}`)
+      .then(async (res) => {
+        const data = (await res.json().catch(() => ({}))) as { order?: TrackedOrder; error?: string }
+        if (!res.ok || !data.order) throw new Error(data.error || 'No pudimos cargar el pedido')
+        setTracked({ id: orderNumber, order: data.order, error: null })
+      })
+      .catch((err: Error) => setTracked({ id: orderNumber, order: null, error: err.message }))
+  }
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -337,12 +357,13 @@ export default function OrdersPage() {
                           Reordenar
                         </button>
                       )}
-                      {order.trackingNumber && (
-                        <button className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-xl hover:bg-[#F9FAFB] transition-colors">
-                          <Truck className="w-4 h-4" />
-                          Rastrear envío
-                        </button>
-                      )}
+                      <button
+                        onClick={(event) => openTracking(order.id, event.currentTarget)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF3D00] text-white text-sm font-semibold rounded-xl hover:bg-[#E63600] transition-colors"
+                      >
+                        <Truck className="w-4 h-4" />
+                        Rastrear pedido
+                      </button>
                     </div>
                   </motion.div>
                 )}
@@ -504,12 +525,13 @@ export default function OrdersPage() {
                   Reordenar
                 </button>
               )}
-              {modalOrder.trackingNumber && (
-                <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-full hover:bg-[#F9FAFB] dark:bg-white/[0.06] dark:border-white/10 dark:hover:bg-white/10 transition-colors">
-                  <Truck className="w-4 h-4" />
-                  Rastrear envío
-                </button>
-              )}
+              <button
+                onClick={(event) => openTracking(modalOrder.id, detailsTriggerRef.current ?? event.currentTarget)}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#FF3D00] text-white text-sm font-semibold rounded-full hover:bg-[#E63600] transition-colors"
+              >
+                <Truck className="w-4 h-4" />
+                Rastrear pedido
+              </button>
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-[#E5E7EB] text-[#374151] text-sm font-medium rounded-full hover:bg-[#F9FAFB] dark:bg-white/[0.06] dark:border-white/10 dark:hover:bg-white/10 transition-colors"
@@ -517,6 +539,35 @@ export default function OrdersPage() {
                 Cerrar
               </button>
             </div>
+          </div>
+        )}
+      </DetailsDialog>
+
+      {/* Track order: details on the left, delivery map on the right */}
+      <DetailsDialog
+        open={!!trackingId}
+        onClose={() => setTrackingId(null)}
+        labelledBy="track-order-title"
+        returnFocusRef={trackTriggerRef}
+        className={isMobile ? undefined : 'max-w-5xl'}
+      >
+        {tracked && (
+          <div className={cn('p-5 sm:p-6', isMobile && 'pt-1')}>
+            <div className="mb-5 pr-10">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#9CA3AF]">Rastrear pedido</p>
+              <h2 id="track-order-title" className="mt-1 text-lg font-bold text-[#111827] break-all">
+                {tracked.id}
+              </h2>
+            </div>
+            {tracked.error ? (
+              <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">{tracked.error}</p>
+            ) : tracked.order ? (
+              <motion.div initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} transition={{ duration: 0.3 }}>
+                <OrderResult order={tracked.order} inModal />
+              </motion.div>
+            ) : (
+              <ResultSkeleton />
+            )}
           </div>
         )}
       </DetailsDialog>
