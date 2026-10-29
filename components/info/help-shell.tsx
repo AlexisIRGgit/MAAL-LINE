@@ -1,6 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Package } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { HelpTabs } from '@/components/info/help-tabs'
 import { Skeleton, SkeletonBlock } from '@/components/ui/skeleton'
@@ -68,6 +70,15 @@ export function HelpShell({ children }: { children: React.ReactNode }) {
               <h1 className="mt-3 font-display text-3xl md:text-5xl font-bold tracking-tight text-[#111827]">{meta.title}</h1>
               <p className="mt-4 text-base md:text-lg leading-relaxed text-[#6B7280]">{meta.intro}</p>
               {meta.updated && <p className="mt-4 text-xs text-[#9CA3AF]">Última actualización: {meta.updated}</p>}
+              {pathname === '/envios' && (
+                <Link
+                  href="/rastrear"
+                  className="mt-6 inline-flex h-12 items-center gap-2 rounded-full bg-[#FF3D00] px-6 text-sm font-bold text-white transition-colors hover:bg-[#E63600]"
+                >
+                  <Package className="h-4 w-4" />
+                  Rastrear envío
+                </Link>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>

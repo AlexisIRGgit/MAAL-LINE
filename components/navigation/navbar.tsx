@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { LogOut, Heart, X, Loader2, Search } from 'lucide-react'
+import { LogOut, X, Loader2, Search, Package } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Logo } from '@/components/common/logo'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -15,8 +16,8 @@ import { useAuthModalStore } from '@/lib/store/auth-modal-store'
 import { cn } from '@/lib/utils/cn'
 
 // Chapter 01 is the gear on sale now; Drop 001 (clothing) is teased with a waitlist
-const NAV_LINKS: { href: string; label: string; highlight?: boolean; badge?: string }[] = [
-  { href: '/coleccion', label: 'EQUIPO', highlight: true },
+const NAV_LINKS: { href: string; label: string; badge?: string }[] = [
+  { href: '/coleccion', label: 'EQUIPO' },
   { href: '/coleccion?q=strap', label: 'STRAPS' },
   { href: '/coleccion?q=chaleco', label: 'CHALECOS' },
   { href: '/drop', label: 'DROP 001', badge: 'PRONTO' },
@@ -32,21 +33,52 @@ interface SearchResult {
   category: { name: string } | null
 }
 
-interface WishlistDropdownItem {
-  wishlistId: string
-  addedAt: string
-  product: {
-    id: string
-    name: string
-    slug: string
-    price: number
-    compareAtPrice: number | null
-    image: string | null
+
+/** Desktop links; the one for the current section is bright with an orange dot under it */
+function NavLinks() {
+  const pathname = usePathname()
+  const q = useSearchParams()?.get('q')?.toLowerCase() ?? ''
+  const isActive = (href: string) => {
+    const [path, query] = href.split('?')
+    if (pathname !== path) return false
+    const linkQ = new URLSearchParams(query ?? '').get('q') ?? ''
+    return linkQ ? q.includes(linkQ) : !q
   }
+  return (
+    <>
+      {NAV_LINKS.map(({ href, label, badge }) => {
+        const active = isActive(href)
+        return (
+          <Link
+            key={href}
+            href={href}
+            aria-current={active ? 'page' : undefined}
+            className={cn(
+              'relative inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase transition-colors duration-300',
+              active ? 'text-[#111827]' : 'text-[#9CA3AF] hover:text-[#111827]'
+            )}
+          >
+            {label}
+            {badge && (
+              <span className="rounded-full bg-[#FF3D00] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.12em] text-white">{badge}</span>
+            )}
+            {active && (
+              <motion.span
+                layoutId="nav-active-dot"
+                transition={{ type: 'spring', visualDuration: 0.3, bounce: 0.2 }}
+                className="absolute -bottom-2.5 left-[calc(50%-0.1em)] h-1 w-1 -translate-x-1/2 rounded-full bg-[#FF3D00]"
+              />
+            )}
+          </Link>
+        )
+      })}
+    </>
+  )
 }
 
 export function Navbar() {
   const { data: session } = useSession()
+  const pathname = usePathname() ?? ''
   const [freshAvatarUrl, setFreshAvatarUrl] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null)
@@ -175,54 +207,6 @@ export function Navbar() {
     }, 150)
   }, [])
 
-  // Wishlist dropdown hover state (desktop only)
-  const [wishlistDropdownOpen, setWishlistDropdownOpen] = useState(false)
-  const wishlistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [wishlistItems, setWishlistItems] = useState<WishlistDropdownItem[]>([])
-  const [wishlistLoading, setWishlistLoading] = useState(false)
-
-  const fetchWishlistItems = useCallback(async () => {
-    if (!session) return
-    setWishlistLoading(true)
-    try {
-      const response = await fetch('/api/wishlist')
-      if (response.ok) {
-        const data = await response.json() as { items: WishlistDropdownItem[] }
-        setWishlistItems(data.items)
-      }
-    } catch (error) {
-      console.error('Error fetching wishlist:', error)
-    } finally {
-      setWishlistLoading(false)
-    }
-  }, [session])
-
-  const openWishlistDropdown = useCallback(() => {
-    if (wishlistTimeoutRef.current) {
-      clearTimeout(wishlistTimeoutRef.current)
-      wishlistTimeoutRef.current = null
-    }
-    setWishlistDropdownOpen(true)
-    fetchWishlistItems()
-  }, [fetchWishlistItems])
-
-  const closeWishlistDropdown = useCallback(() => {
-    wishlistTimeoutRef.current = setTimeout(() => {
-      setWishlistDropdownOpen(false)
-    }, 150)
-  }, [])
-
-  const removeFromWishlist = useCallback(async (productId: string) => {
-    try {
-      const response = await fetch(`/api/wishlist/${productId}`, { method: 'DELETE' })
-      if (response.ok) {
-        setWishlistItems((prev) => prev.filter((item) => item.product.id !== productId))
-      }
-    } catch (error) {
-      console.error('Error removing from wishlist:', error)
-    }
-  }, [])
-
   const formatPrice = useCallback((value: number) => {
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
@@ -273,25 +257,16 @@ export function Navbar() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.1 }}
                 >
-                  {NAV_LINKS.map(({ href, label, highlight, badge }) => (
-                    <Link
-                      key={href}
-                      href={href}
-                      className={cn(
-                        'inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300',
-                        highlight
-                          ? 'text-[#111827] hover:text-[#6B7280]'
-                          : 'text-[#6B7280] hover:text-[#111827]'
-                      )}
-                    >
-                      {label}
-                      {badge && (
-                        <span className="rounded-full bg-[#FF3D00] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.12em] text-white">
-                          {badge}
-                        </span>
-                      )}
-                    </Link>
-                  ))}
+                  {/* useSearchParams needs a Suspense boundary; the fallback shows the links unmarked */}
+                  <Suspense
+                    fallback={NAV_LINKS.map(({ href, label }) => (
+                      <Link key={href} href={href} className="text-xs font-bold tracking-[0.2em] uppercase text-[#9CA3AF]">
+                        {label}
+                      </Link>
+                    ))}
+                  >
+                    <NavLinks />
+                  </Suspense>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -429,135 +404,33 @@ export function Navbar() {
               </svg>
             </button>
 
-            {/* Wishlist - Desktop dropdown */}
-            <div
-              className="relative hidden md:block"
-              onMouseEnter={openWishlistDropdown}
-              onMouseLeave={closeWishlistDropdown}
+            {/* Track an order: guests search by number, signed-in customers have it in their account */}
+            <Link
+              href={session ? '/cuenta/pedidos' : '/rastrear'}
+              className={cn('p-2 transition-colors', pathname.startsWith('/rastrear') ? 'text-[#111827]' : 'text-[#6B7280] hover:text-[#111827]')}
+              aria-label="Rastrear pedido"
             >
-              <button
-                className={cn(
-                  'p-2 transition-colors',
-                  wishlistDropdownOpen
-                    ? 'bg-white rounded-t-2xl rounded-b-none shadow-xl text-[#111827]'
-                    : 'text-[#6B7280] hover:text-[#111827] rounded-xl hover:bg-[#F3F4F6]'
-                )}
-                aria-label="Lista de deseos"
-              >
-                <Heart className="w-5 h-5" />
-              </button>
+              <Package className="w-5 h-5" strokeWidth={1.5} />
+            </Link>
 
-              <AnimatePresence>
-                {wishlistDropdownOpen && (
-                  <motion.div
-                    className="absolute top-full right-0 w-80 bg-white rounded-b-2xl rounded-tl-2xl shadow-xl z-50 overflow-hidden"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeIn' } }}
-                    transition={{
-                      type: 'spring',
-                      damping: 20,
-                      stiffness: 200,
-                      mass: 0.8,
-                      opacity: { duration: 0.15 },
-                    }}
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-900">Lista de deseos</span>
-                        {wishlistItems.length > 0 && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gray-100 text-gray-600 rounded-full">
-                            {wishlistItems.length}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+            {/* Theme */}
+            <ThemeToggle className="p-2 text-[#6B7280] hover:text-[#111827] transition-colors" />
 
-                    {/* Content */}
-                    {wishlistLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-                      </div>
-                    ) : !session ? (
-                      <div className="flex flex-col items-center py-8 px-4">
-                        <Heart className="w-8 h-8 text-gray-300 mb-2" />
-                        <p className="text-sm text-gray-500">Inicia sesion para ver tu lista</p>
-                      </div>
-                    ) : wishlistItems.length === 0 ? (
-                      <div className="flex flex-col items-center py-8 px-4">
-                        <Heart className="w-8 h-8 text-gray-300 mb-2" />
-                        <p className="text-sm text-gray-500">Tu lista esta vacia</p>
-                      </div>
-                    ) : (
-                      <div className="max-h-[300px] overflow-y-auto">
-                        {wishlistItems.map((item, index) => (
-                          <Link
-                            key={item.wishlistId}
-                            href={`/producto/${item.product.slug}`}
-                            className={cn(
-                              'flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors',
-                              index < wishlistItems.length - 1 && 'border-b border-gray-50'
-                            )}
-                          >
-                            {/* Thumbnail */}
-                            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                              {item.product.image ? (
-                                <Image
-                                  src={item.product.image}
-                                  alt={item.product.name}
-                                  fill
-                                  className="object-cover"
-                                  sizes="48px"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <Heart className="w-4 h-4 text-gray-300" />
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Info */}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {item.product.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {formatPrice(item.product.price)}
-                              </p>
-                            </div>
-
-                            {/* Remove button */}
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                removeFromWishlist(item.product.id)
-                              }}
-                              className="p-1 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                              aria-label="Eliminar de la lista"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Footer */}
-                    <div className="border-t border-gray-100">
-                      <Link
-                        href="/wishlist"
-                        className="block text-sm text-center text-[#FF3D00] hover:text-[#E63600] font-medium px-4 py-3 hover:bg-gray-50 transition-colors rounded-b-2xl"
-                      >
-                        Ver lista completa
-                      </Link>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
+            {/* Cart */}
+            <button
+              onClick={openCart}
+              className="relative p-2 text-[#6B7280] hover:text-[#111827] transition-colors"
+              aria-label="Carrito"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {mounted && itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#111827] text-white text-[10px] font-bold flex items-center justify-center rounded-full">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
+            </button>
             {/* Account */}
             {session ? (
               <div
@@ -654,24 +527,6 @@ export function Navbar() {
               </button>
             )}
 
-            {/* Theme */}
-            <ThemeToggle className="p-2 text-[#6B7280] hover:text-[#111827] transition-colors" />
-
-            {/* Cart */}
-            <button
-              onClick={openCart}
-              className="relative p-2 text-[#6B7280] hover:text-[#111827] transition-colors"
-              aria-label="Carrito"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              {mounted && itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#111827] text-white text-[10px] font-bold flex items-center justify-center rounded-full">
-                  {itemCount > 99 ? '99+' : itemCount}
-                </span>
-              )}
-            </button>
           </div>
         </nav>
 

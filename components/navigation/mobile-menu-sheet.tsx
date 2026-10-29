@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { X, LogOut, LogIn, Sparkles, Dumbbell, Footprints, LayoutGrid, Heart, User, type LucideIcon } from 'lucide-react'
+import { X, LogOut, LogIn, Sparkles, Dumbbell, Footprints, LayoutGrid, Heart, User, Package, type LucideIcon } from 'lucide-react'
 import { Logo } from '@/components/common/logo'
 import { cn } from '@/lib/utils/cn'
 import { useModalA11y } from '@/hooks/use-modal-a11y'
@@ -188,8 +188,13 @@ export function MobileMenuSheet({
                 <div className="border-t border-[#E5E7EB] pt-4">
                   <MenuLinks
                     links={[
-                      { href: '/wishlist', label: 'Lista de deseos', icon: Heart },
-                      ...(user ? [{ href: '/cuenta', label: 'Mi cuenta', icon: User }] : []),
+                      // The wishlist lives with the account; guests track orders by number instead
+                      ...(user
+                        ? [
+                            { href: '/wishlist', label: 'Lista de deseos', icon: Heart },
+                            { href: '/cuenta', label: 'Mi cuenta', icon: User },
+                          ]
+                        : [{ href: '/rastrear', label: 'Rastrear pedido', icon: Package }]),
                     ]}
                     pathname={pathname}
                     layoutPrefix="store-menu-account"
