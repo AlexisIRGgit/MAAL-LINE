@@ -137,8 +137,8 @@ function OrderResult({ order }: { order: TrackedOrder }) {
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      {/* Purchase and contact details */}
-      <div className="space-y-5 rounded-[24px] border border-[#E5E7EB] bg-white p-5 dark:border-white/10 dark:bg-white/[0.03] sm:p-6">
+      {/* Purchase and contact details, on the same glass surface as the search bar */}
+      <div className="space-y-5 rounded-[24px] border border-[#E5E7EB] bg-white/80 p-5 shadow-[0_24px_60px_-30px_rgba(17,24,39,0.35)] backdrop-blur-xl dark:border-white/10 dark:bg-[#1A1C22]/80 dark:shadow-[0_24px_60px_-24px_rgba(0,0,0,0.8)] sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <p className="font-mono text-lg font-bold text-[#111827] dark:text-white">{order.orderNumber}</p>
           <p className="text-xs text-[#6B7280] dark:text-white/50">{formatDate(order.createdAt)}</p>
