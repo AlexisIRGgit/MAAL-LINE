@@ -370,8 +370,7 @@ export function PaymentStep() {
         </div>
       </section>
 
-      <div className="md:col-span-2">
-        <StepFooter>
+      <StepFooter>
           <button type="button" onClick={prevStep} disabled={processing} className={SECONDARY_BUTTON}>
             Atrás
           </button>
@@ -392,8 +391,7 @@ export function PaymentStep() {
               `Pagar ${formatMXN(total)}`
             )}
           </button>
-        </StepFooter>
-      </div>
+      </StepFooter>
     </div>
   )
 }

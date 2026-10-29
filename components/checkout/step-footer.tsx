@@ -1,12 +1,19 @@
-import type { ReactNode } from 'react'
+'use client'
 
-/** Bottom bar of each checkout step; sticks to the bottom of the scrolling modal */
+import { createContext, useContext, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+
+/** The modal's fixed bottom bar; each step renders its buttons into it */
+export const StepFooterSlot = createContext<HTMLElement | null>(null)
+
+/**
+ * Bottom bar of each checkout step. It renders outside the scrolling content (into the modal's footer slot),
+ * so Atrás / Pagar stay visible however long the step is.
+ */
 export function StepFooter({ children }: { children: ReactNode }) {
-  return (
-    <div className="sticky bottom-0 z-10 -mx-5 mt-6 flex items-center gap-3 border-t border-[#E5E7EB] bg-white/90 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-md dark:border-white/10 dark:bg-[#16181D]/90 sm:-mx-6 sm:px-6">
-      {children}
-    </div>
-  )
+  const slot = useContext(StepFooterSlot)
+  if (!slot) return null
+  return createPortal(<div className="flex items-center gap-3">{children}</div>, slot)
 }
 
 export const PRIMARY_BUTTON =

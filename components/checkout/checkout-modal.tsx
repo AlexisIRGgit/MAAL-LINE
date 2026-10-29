@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useCheckoutModalStore } from '@/lib/store/checkout-modal-store'
@@ -9,6 +9,7 @@ import { CheckoutStepper, CheckoutSummaryCard } from './checkout-stepper'
 import { AddressStep } from './steps/address-step'
 import { ShippingStep } from './steps/shipping-step'
 import { PaymentStep } from './steps/payment-step'
+import { StepFooterSlot } from './step-footer'
 
 const stepVariants = {
   enter: (direction: number) => ({ x: direction > 0 ? 48 : -48, opacity: 0 }),
@@ -25,6 +26,7 @@ export function CheckoutModal() {
   const previousStep = useRef(currentStep)
   const direction = currentStep >= previousStep.current ? 1 : -1
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [footerSlot, setFooterSlot] = useState<HTMLDivElement | null>(null)
 
   useEffect(() => {
     previousStep.current = currentStep
@@ -131,7 +133,9 @@ export function CheckoutModal() {
                 <CheckoutStepper />
               </div>
 
-              <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-5 pt-5 sm:px-6">
+              {/* Only the step content scrolls; the header above and the buttons below stay put */}
+              <StepFooterSlot.Provider value={footerSlot}>
+              <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5 py-5 sm:px-6">
                 <AnimatePresence mode="wait" custom={direction} initial={false}>
                   <motion.div
                     key={currentStep}
@@ -148,6 +152,11 @@ export function CheckoutModal() {
                   </motion.div>
                 </AnimatePresence>
               </div>
+              </StepFooterSlot.Provider>
+              <div
+                ref={setFooterSlot}
+                className="flex-shrink-0 border-t border-[#E5E7EB] bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 dark:border-white/10 dark:bg-[#16181D] sm:px-6 sm:pb-5"
+              />
             </motion.div>
           </div>
         </>
