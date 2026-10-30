@@ -211,7 +211,8 @@ export async function prepareCheckout(body: unknown): Promise<PreparedCheckout |
       productName: product.name,
       variantName: item.variantName || null,
       sku: variant?.sku ?? null,
-      imageUrl: product.images[0]?.url ?? null,
+      // Only real URLs are copied onto the order; inline base64 images would bloat every order query
+      imageUrl: product.images[0]?.url?.startsWith('data:') ? null : (product.images[0]?.url ?? null),
       quantity: item.quantity,
       unitPrice,
       total,

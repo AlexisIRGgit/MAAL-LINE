@@ -98,22 +98,10 @@ export async function GET(request: NextRequest) {
       prisma.order.count({ where }),
     ])
 
-    // Get stats
-    const [
-      totalOrders,
-      pendingOrders,
-      processingOrders,
-      shippedOrders,
-      deliveredOrders,
-      cancelledOrders,
-    ] = await Promise.all([
-      prisma.order.count(),
-      prisma.order.count({ where: { status: 'pending' } }),
-      prisma.order.count({ where: { status: 'processing' } }),
-      prisma.order.count({ where: { status: 'shipped' } }),
-      prisma.order.count({ where: { status: 'delivered' } }),
-      prisma.order.count({ where: { status: 'cancelled' } }),
-    ])
+    // One grouped query instead of a count per status
+    const byStatus = await prisma.order.groupBy({ by: ['status'], _count: { _all: true } })
+    const countOf = (value: OrderStatus) => byStatus.find((row) => row.status === value)?._count._all ?? 0
+    const totalOrders = byStatus.reduce((sum, row) => sum + row._count._all, 0)
 
     // Format orders
     const formattedOrders = orders.map((order) => ({
@@ -147,7 +135,8 @@ export async function GET(request: NextRequest) {
         quantity: item.quantity,
         price: parseFloat(item.unitPrice.toString()),
         total: parseFloat(item.total.toString()),
-        image: item.imageUrl,
+        // Inline (base64) images from before Blob uploads would add megabytes per order
+        image: item.imageUrl?.startsWith('data:') ? null : item.imageUrl,
       })),
       shippingAddress: order.shippingAddress,
       shippingMethod: order.shippingMethod,
@@ -172,11 +161,11 @@ export async function GET(request: NextRequest) {
       },
       stats: {
         total: totalOrders,
-        pending: pendingOrders,
-        processing: processingOrders,
-        shipped: shippedOrders,
-        delivered: deliveredOrders,
-        cancelled: cancelledOrders,
+        pending: countOf('pending'),
+        processing: countOf('processing'),
+        shipped: countOf('shipped'),
+        delivered: countOf('delivered'),
+        cancelled: countOf('cancelled'),
       },
     })
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
+import { upload } from '@vercel/blob/client'
 import { Plus, X, GripVertical, Link as LinkIcon, Upload, ImageIcon, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -23,25 +24,26 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Convert file to base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = (error) => reject(error)
+  // Uploads to Vercel Blob (signed by /api/upload) so only the URL is stored, never the file itself
+  const uploadImage = async (file: File): Promise<string> => {
+    const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-')
+    const blob = await upload(`productos/imagenes/${safeName}`, file, {
+      access: 'public',
+      handleUploadUrl: '/api/upload',
+      contentType: file.type,
     })
+    return blob.url
   }
 
   // Validate file
   const validateFile = (file: File): string | null => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
     if (!allowedTypes.includes(file.type)) {
-      return 'Solo se permiten imágenes JPG, PNG, WebP o GIF'
+      return 'Solo se permiten imágenes JPG, PNG, WebP, AVIF o GIF'
     }
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    const maxSize = 10 * 1024 * 1024 // 10MB
     if (file.size > maxSize) {
-      return 'La imagen no puede superar 5MB'
+      return 'La imagen no puede superar 10MB'
     }
     return null
   }
@@ -62,10 +64,10 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
       }
 
       try {
-        const base64 = await fileToBase64(file)
-        newImages.push({ url: base64, altText: file.name })
-      } catch {
-        setUploadError('Error al procesar la imagen')
+        const url = await uploadImage(file)
+        newImages.push({ url, altText: '' })
+      } catch (err) {
+        setUploadError(err instanceof Error ? err.message : 'No se pudo subir la imagen')
       }
     }
 
@@ -209,7 +211,7 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
                 {isDraggingFile ? 'Suelta las imágenes aquí' : 'Arrastra imágenes o haz clic para seleccionar'}
               </p>
               <p className="text-xs text-[#9CA3AF] mt-1">
-                JPG, PNG, WebP o GIF • Máximo 5MB por imagen
+                JPG, PNG, WebP o AVIF • Máximo 10MB por imagen
               </p>
             </div>
           </div>
@@ -264,7 +266,7 @@ export function ImageUploader({ images, onChange }: ImageUploaderProps) {
                 )}
               >
                 {image.url.startsWith('data:') ? (
-                  // Base64 image
+                  // Older images saved inline (before Blob uploads)
                   <img
                     src={image.url}
                     alt={image.altText || `Imagen ${index + 1}`}

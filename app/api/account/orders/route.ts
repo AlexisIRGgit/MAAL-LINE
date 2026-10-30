@@ -111,7 +111,8 @@ export async function GET(request: NextRequest) {
           size: item.variantName || 'Única',
           quantity: item.quantity,
           price: parseFloat(item.unitPrice.toString()),
-          image: item.product?.images[0]?.url || null,
+          // Skip inline (base64) images saved before Blob uploads
+          image: item.product?.images[0]?.url?.startsWith('data:') ? null : item.product?.images[0]?.url || null,
         })),
         shippingAddress: addressParts.join(', ') || 'Sin dirección',
         trackingNumber: latestShipment?.trackingNumber || null,

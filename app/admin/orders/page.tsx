@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import {
@@ -189,7 +189,7 @@ export default function AdminOrdersPage() {
       if (search) params.set('search', search)
       if (statusFilter) params.set('status', statusFilter)
 
-      const response = await fetch(`/api/admin/orders?${params}`)
+      const response = await fetch(`/api/admin/orders?${params}`, { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
         setOrders(data.orders)
@@ -217,6 +217,24 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     fetchOrders(currentPage)
   }, [currentPage])
+
+  // Live list: quietly reload every 15s while the tab is visible and right away on return,
+  // so paid orders show up without refreshing (Vercel functions can't hold sockets open)
+  const refreshRef = useRef(fetchOrders)
+  refreshRef.current = fetchOrders
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') refreshRef.current()
+    }
+    const timer = setInterval(refresh, 15_000)
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('focus', refresh)
+    }
+  }, [])
 
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('es-MX', {
