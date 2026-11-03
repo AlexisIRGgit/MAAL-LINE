@@ -287,7 +287,6 @@ export function Navbar() {
                   >
                     <NavLinks brand={brand} />
                   </Suspense>
-                  <BrandSwitch to={brand === 'mercadito' ? 'maal' : 'mercadito'} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -401,6 +400,9 @@ export function Navbar() {
 
           {/* Right - Actions */}
           <div className="flex items-center gap-4 z-20">
+            {/* The other store; on phones it lives in the menu sheet */}
+            <BrandSwitch to={brand === 'mercadito' ? 'maal' : 'mercadito'} className="hidden lg:ml-4 lg:inline-flex" />
+
             {/* Search */}
             <button
               className={cn(
