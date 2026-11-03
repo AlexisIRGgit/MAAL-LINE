@@ -5,8 +5,11 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { X, LogOut, LogIn, Sparkles, Dumbbell, Footprints, LayoutGrid, Heart, User, Package, type LucideIcon } from 'lucide-react'
+import { X, LogOut, LogIn, Sparkles, Dumbbell, Footprints, LayoutGrid, Heart, User, Package, Home, Shirt, type LucideIcon } from 'lucide-react'
 import { Logo } from '@/components/common/logo'
+import { BrandSwitch } from '@/components/navigation/brand-switch'
+import { useBrand } from '@/components/providers/brand-provider'
+import { brandHome, MERCADITO_PATH, MERCADITO_TYPES } from '@/lib/brand'
 import { cn } from '@/lib/utils/cn'
 import { useModalA11y } from '@/hooks/use-modal-a11y'
 
@@ -22,6 +25,11 @@ const STORE_LINKS: MenuLink[] = [
   { href: '/coleccion?q=strap', label: 'Lifting Straps', icon: Dumbbell },
   { href: '/coleccion?q=chaleco', label: 'Chalecos de running', icon: Footprints },
   { href: '/drop', label: 'Drop 001 · Pronto', icon: Sparkles },
+]
+
+const MERCADITO_LINKS: MenuLink[] = [
+  { href: MERCADITO_PATH, label: 'Inicio', icon: Home },
+  ...MERCADITO_TYPES.map(({ tag, label }) => ({ href: `${MERCADITO_PATH}?tipo=${tag}`, label, icon: Shirt })),
 ]
 
 const pillSpring = { type: 'spring', stiffness: 360, damping: 32 } as const
@@ -106,6 +114,7 @@ export function MobileMenuSheet({
   onSignIn: () => void
   onSignOut: () => void
 }) {
+  const brand = useBrand()
   const reduceMotion = useReducedMotion() ?? false
   const pathname = usePathname() ?? ''
   const panelRef = useRef<HTMLDivElement>(null)
@@ -151,7 +160,7 @@ export function MobileMenuSheet({
             <div className="flex h-full flex-col">
               {/* Header */}
               <div className="h-16 px-4 border-b border-[#E5E7EB] flex items-center justify-between">
-                <Link href="/" onClick={onClose} aria-label="Inicio">
+                <Link href={brandHome(brand)} onClick={onClose} aria-label="Inicio">
                   <Logo size="xs" />
                 </Link>
                 <button
@@ -176,7 +185,7 @@ export function MobileMenuSheet({
                   </Link>
                 ) : (
                   <div>
-                    <p className="font-semibold text-[#111827]">Bienvenido a MAAL</p>
+                    <p className="font-semibold text-[#111827]">{brand === 'mercadito' ? 'Bienvenido al Mercadito' : 'Bienvenido a MAAL'}</p>
                     <p className="text-sm text-[#6B7280]">Inicia sesión para ver tus pedidos</p>
                   </div>
                 )}
@@ -184,7 +193,10 @@ export function MobileMenuSheet({
 
               {/* Navigation */}
               <nav className="flex-1 overflow-y-auto p-4 space-y-4">
-                <MenuLinks links={STORE_LINKS} pathname={pathname} layoutPrefix="store-menu" reduceMotion={reduceMotion} onNavigate={onClose} />
+                <MenuLinks links={brand === 'mercadito' ? MERCADITO_LINKS : STORE_LINKS} pathname={pathname} layoutPrefix="store-menu" reduceMotion={reduceMotion} onNavigate={onClose} />
+                <div className="px-1">
+                  <BrandSwitch to={brand === 'mercadito' ? 'maal' : 'mercadito'} onNavigate={onClose} />
+                </div>
                 <div className="border-t border-[#E5E7EB] pt-4">
                   <MenuLinks
                     links={[

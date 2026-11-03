@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { useBrand } from '@/components/providers/brand-provider'
+import { brandHome } from '@/lib/brand'
 import { ArrowRight, Check, Copy, Info, Loader2, Package, ShoppingBag } from 'lucide-react'
 
 // beui action-swap (blur): the label and icon morph in place
@@ -76,6 +78,7 @@ function SuccessContent() {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order')
   const { status } = useSession()
+  const brand = useBrand()
   const isGuest = status === 'unauthenticated'
 
   const rise = (delay: number) => ({
@@ -136,7 +139,7 @@ function SuccessContent() {
         <motion.div {...rise(0.56)} className="flex flex-wrap items-center justify-center gap-2">
           {orderNumber && <CopyButton value={orderNumber} />}
           <Link
-            href="/"
+            href={brandHome(brand)}
             className="inline-flex h-11 items-center gap-2 rounded-full bg-[#111827] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#1F2937] dark:bg-white dark:text-[#111827] dark:hover:bg-[#F3F4F6]"
           >
             <ShoppingBag className="h-4 w-4" />

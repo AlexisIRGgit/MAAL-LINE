@@ -10,6 +10,7 @@ import { discountLabel, type DiscountRule } from '@/lib/discounts'
 import { cn } from '@/lib/utils/cn'
 import { toast } from '@/lib/toast'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useBrand } from '@/components/providers/brand-provider'
 import { RadioCards } from '@/components/ui/radio-cards'
 import { FloatingField } from '../floating-field'
 import { formatMXN, useCheckoutTotals } from '../use-checkout-totals'
@@ -163,6 +164,7 @@ function CouponField({ subtotal, phone }: { subtotal: number; phone: string | nu
 }
 
 export function PaymentStep() {
+  const brand = useBrand()
   const {
     selectedAddressId,
     selectedAddress,
@@ -220,6 +222,7 @@ export function PaymentStep() {
       shippingMethod,
       discountCode: discount && discountTotal > 0 ? discount.code : undefined,
       items: items.map((item) => ({ productId: item.productId, variantName: item.size, quantity: item.quantity })),
+      store: brand,
     }
 
     try {

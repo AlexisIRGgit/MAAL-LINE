@@ -1,5 +1,7 @@
 'use client'
 
+import { useBrand } from '@/components/providers/brand-provider'
+import { brandHome } from '@/lib/brand'
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -64,6 +66,7 @@ const itemVariants = {
 }
 
 export default function AccountPage() {
+  const brand = useBrand()
   const { data: session } = useSession()
   const [data, setData] = useState<SummaryData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -247,7 +250,7 @@ export default function AccountPage() {
             <p className="text-[#6B7280] font-medium">No tienes pedidos aún</p>
             <p className="text-sm text-[#9CA3AF] mt-1">Cuando hagas tu primer pedido, aparecerá aquí</p>
             <Link
-              href="/"
+              href={brandHome(brand)}
               className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors"
             >
               <ShoppingBag className="w-4 h-4" />

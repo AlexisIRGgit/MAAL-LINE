@@ -6,6 +6,8 @@ import { useSession, signOut } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LayoutDashboard, Package, User, MapPin, LogOut, Menu, ChevronLeft } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { useBrand } from '@/components/providers/brand-provider'
+import { brandHome } from '@/lib/brand'
 import { FloatingHomeButton } from '@/components/account/floating-home-button'
 import {
   DesktopSidebar,
@@ -31,6 +33,9 @@ export default function AccountLayout({
   children: React.ReactNode
 }) {
   const { data: session } = useSession()
+  const brand = useBrand()
+  const home = brandHome(brand)
+  const storeName = brand === 'mercadito' ? <span className="font-cute text-[#D6357D]">El Mercadito</span> : 'MAAL LINE'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -70,15 +75,15 @@ export default function AccountLayout({
 
   const sidebarConfig: SidebarConfig = useMemo(
     () => ({
-      brand: 'MAAL LINE',
-      brandHref: '/',
+      brand: storeName,
+      brandHref: home,
       items: menuItems,
       isActive: isItemActive,
       user: { name: userName, subtitle: userEmail, avatarUrl, seed: userEmail || session?.user?.id || userName, href: '/cuenta/perfil' },
-      footerLinks: [{ href: '/', label: 'Volver a la tienda', icon: ChevronLeft }],
-      onSignOut: () => signOut({ callbackUrl: '/' }),
+      footerLinks: [{ href: home, label: 'Volver a la tienda', icon: ChevronLeft }],
+      onSignOut: () => signOut({ callbackUrl: home }),
     }),
-    [userName, userEmail, avatarUrl, session?.user?.id]
+    [userName, userEmail, avatarUrl, session?.user?.id, brand]
   )
 
   return (
@@ -95,8 +100,8 @@ export default function AccountLayout({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <Link href="/" className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-[#111827]">
-            MAAL LINE
+          <Link href={home} className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-[#111827]">
+            {storeName}
           </Link>
 
           {/* Theme toggle + User Menu */}
@@ -136,7 +141,7 @@ export default function AccountLayout({
                       Mi Perfil
                     </Link>
                     <button
-                      onClick={() => signOut({ callbackUrl: '/' })}
+                      onClick={() => signOut({ callbackUrl: home })}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       <LogOut className="w-4 h-4" />

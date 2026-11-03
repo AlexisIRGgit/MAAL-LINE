@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion, type Transition } from 'framer-motion'
+import { useBrand } from '@/components/providers/brand-provider'
 import { LogOut, X, PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { useThemeToggle, ThemeToggleIcon } from '@/components/ui/theme-toggle'
@@ -173,23 +174,27 @@ function DesktopFooter({
   onSignOut: () => void
 }) {
   const { isDark, toggleTheme } = useThemeToggle()
+  const brand = useBrand()
   const themeLabel = isDark ? 'Modo claro' : 'Modo oscuro'
   const rowClass = 'w-full flex items-center gap-3 h-11 px-3 text-sm text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#111827] rounded-xl transition-colors'
 
   return (
     <div className="px-3 py-4 border-t border-[#E5E7EB] space-y-1">
-      <button
-        type="button"
-        onClick={(event) => toggleTheme(event.currentTarget)}
-        title={collapsed ? themeLabel : undefined}
-        aria-label={themeLabel}
-        className={rowClass}
-      >
-        <ThemeToggleIcon isDark={isDark} className="w-5 h-5 flex-shrink-0" />
-        <SidebarLabel show={!collapsed} reduceMotion={reduceMotion}>
-          {themeLabel}
-        </SidebarLabel>
-      </button>
+      {/* El Mercadito is always white */}
+      {brand !== 'mercadito' && (
+        <button
+          type="button"
+          onClick={(event) => toggleTheme(event.currentTarget)}
+          title={collapsed ? themeLabel : undefined}
+          aria-label={themeLabel}
+          className={rowClass}
+        >
+          <ThemeToggleIcon isDark={isDark} className="w-5 h-5 flex-shrink-0" />
+          <SidebarLabel show={!collapsed} reduceMotion={reduceMotion}>
+            {themeLabel}
+          </SidebarLabel>
+        </button>
+      )}
       {footerLinks.map((link) => (
         <Link
           key={link.href}

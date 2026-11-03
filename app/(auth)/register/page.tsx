@@ -1,5 +1,6 @@
 'use client'
 
+import { Logo } from '@/components/common/logo'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -100,14 +101,7 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="text-center mb-4">
           <Link href="/">
-            <Image
-              src="/images/logo-maal-negro.png"
-              alt="MAAL Line"
-              width={80}
-              height={32}
-              className="mx-auto invert"
-              priority
-            />
+            <Logo size="md" className="mx-auto invert h-auto w-[80px]" />
           </Link>
         </div>
 

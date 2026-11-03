@@ -1,3 +1,4 @@
+import { brandHome } from '@/lib/brand'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getPublicStoreSettings } from '@/lib/public-store-settings'
@@ -22,7 +23,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Este método de pago no está disponible' }, { status: 403 })
     }
 
-    const prepared = await prepareCheckout(await request.json().catch(() => null))
+    const body = await request.json().catch(() => null)
+    const prepared = await prepareCheckout(body)
+    // A canceled payment goes back to the store the customer was buying from
+    const storeHome = brandHome(body?.store === 'mercadito' ? 'mercadito' : 'maal')
     if ('error' in prepared) return NextResponse.json({ error: prepared.error }, { status: prepared.status })
 
     const order = await createPendingOrder(prepared)
@@ -66,7 +70,7 @@ export async function POST(request: NextRequest) {
           },
           back_urls: {
             success: `${baseUrl}/checkout/success?order=${order.orderNumber}&source=mercadopago`,
-            failure: `${baseUrl}/?checkout=failed`,
+            failure: `${baseUrl}${storeHome}?checkout=failed`,
             pending: `${baseUrl}/checkout/pending?order=${order.orderNumber}`,
           },
           auto_return: 'approved',

@@ -1,7 +1,11 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { Logo } from '@/components/common/logo'
+import { useBrand } from '@/components/providers/brand-provider'
 import { CONTACT_EMAIL, SOCIAL_LINKS } from '@/lib/site'
+import { brandHome, MERCADITO_PATH, MERCADITO_TYPES } from '@/lib/brand'
 
 // Minimal footer (after uiarc's site-footer "Minimal"): one card, links on top, status and socials below
 const FOOTER_LINKS = [
@@ -14,21 +18,32 @@ const FOOTER_LINKS = [
   { href: '/privacidad', label: 'Privacidad' },
 ]
 
+const MERCADITO_FOOTER_LINKS = [
+  ...MERCADITO_TYPES.map(({ tag, label }) => ({ href: `${MERCADITO_PATH}?tipo=${tag}`, label })),
+  { href: '/coleccion', label: 'MAAL LINE' },
+  { href: '/envios', label: 'Envíos' },
+  { href: '/faq', label: 'FAQ' },
+  { href: '/terminos', label: 'Términos' },
+  { href: '/privacidad', label: 'Privacidad' },
+]
+
 const EXTERNAL_LINKS = [
   { href: SOCIAL_LINKS.instagram, label: 'Instagram' },
   { href: SOCIAL_LINKS.tiktok, label: 'TikTok' },
 ]
 
 export function Footer() {
+  const brand = useBrand()
+  const mercadito = brand === 'mercadito'
   return (
     <footer className="bg-[#F9FAFB] px-4 pb-6 pt-10">
       <div className="container mx-auto rounded-[1.75rem] border border-[#E5E7EB] bg-white px-6 py-6 md:px-8">
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <Link href="/" aria-label="MAAL LINE, inicio" className="inline-flex w-fit">
+          <Link href={brandHome(brand)} aria-label={mercadito ? 'El Mercadito, inicio' : 'MAAL LINE, inicio'} className="inline-flex w-fit">
             <Logo size="xs" />
           </Link>
           <nav aria-label="Pie de página" className="flex flex-wrap gap-x-5 gap-y-2">
-            {FOOTER_LINKS.map(({ href, label }) => (
+            {(mercadito ? MERCADITO_FOOTER_LINKS : FOOTER_LINKS).map(({ href, label }) => (
               <Link key={href} href={href} className="text-sm text-[#6B7280] transition-colors hover:text-[#111827]">
                 {label}
               </Link>
@@ -38,7 +53,7 @@ export function Footer() {
 
         <div className="mt-5 flex flex-col gap-4 border-t border-[#E5E7EB] pt-5 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-[#9CA3AF]">
-            © {new Date().getFullYear()} MAAL LINE. Performance gear desde Guadalajara.
+            © {new Date().getFullYear()} {mercadito ? 'El Mercadito by MAAL. Ropa desde Guadalajara.' : 'MAAL LINE. Performance gear desde Guadalajara.'}
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
             <span className="inline-flex items-center gap-2 text-[#374151]">

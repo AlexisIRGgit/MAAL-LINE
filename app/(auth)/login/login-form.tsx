@@ -1,5 +1,6 @@
 'use client'
 
+import { Logo } from '@/components/common/logo'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -63,14 +64,7 @@ export default function LoginForm() {
         {/* Logo */}
         <div className="text-center mb-6">
           <Link href="/">
-            <Image
-              src="/images/logo-maal-negro.png"
-              alt="MAAL Line"
-              width={100}
-              height={40}
-              className="mx-auto invert"
-              priority
-            />
+            <Logo size="md" className="mx-auto invert h-auto w-[100px]" />
           </Link>
         </div>
 

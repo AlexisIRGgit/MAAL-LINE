@@ -8,12 +8,15 @@ import { useSession, signOut } from 'next-auth/react'
 import { LogOut, X, Loader2, Search, Package } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Logo } from '@/components/common/logo'
+import { BrandSwitch } from '@/components/navigation/brand-switch'
+import { useBrand } from '@/components/providers/brand-provider'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { MobileMenuSheet } from '@/components/navigation/mobile-menu-sheet'
 import { UserAvatar } from '@/components/ui/user-avatar'
 import { useCartStore, selectCartItems } from '@/lib/store/cart-store'
 import { useAuthModalStore } from '@/lib/store/auth-modal-store'
 import { cn } from '@/lib/utils/cn'
+import { brandHome, MERCADITO_PATH, MERCADITO_TYPES, productPath, type Brand } from '@/lib/brand'
 
 // Chapter 01 is the gear on sale now; Drop 001 (clothing) is teased with a waitlist
 const NAV_LINKS: { href: string; label: string; badge?: string }[] = [
@@ -22,6 +25,17 @@ const NAV_LINKS: { href: string; label: string; badge?: string }[] = [
   { href: '/coleccion?q=chaleco', label: 'CHALECOS' },
   { href: '/drop', label: 'DROP 001', badge: 'PRONTO' },
 ]
+
+const MERCADITO_LINKS: { href: string; label: string; badge?: string }[] = [
+  { href: MERCADITO_PATH, label: 'Inicio' },
+  ...MERCADITO_TYPES.map(({ tag, label }) => ({ href: `${MERCADITO_PATH}?tipo=${tag}`, label })),
+]
+
+const navLinksFor = (brand: Brand) => (brand === 'mercadito' ? MERCADITO_LINKS : NAV_LINKS)
+const NAV_LINK_CLASS = {
+  maal: 'text-xs font-bold tracking-[0.2em] uppercase',
+  mercadito: 'font-cute text-[15px] font-semibold',
+}
 
 interface SearchResult {
   id: string
@@ -35,18 +49,22 @@ interface SearchResult {
 
 
 /** Desktop links; the one for the current section is bright with an orange dot under it */
-function NavLinks() {
+function NavLinks({ brand }: { brand: Brand }) {
   const pathname = usePathname()
-  const q = useSearchParams()?.get('q')?.toLowerCase() ?? ''
+  const searchParams = useSearchParams()
+  const q = searchParams?.get('q')?.toLowerCase() ?? ''
+  const tipo = searchParams?.get('tipo') ?? ''
   const isActive = (href: string) => {
     const [path, query] = href.split('?')
     if (pathname !== path) return false
-    const linkQ = new URLSearchParams(query ?? '').get('q') ?? ''
+    const params = new URLSearchParams(query ?? '')
+    if (brand === 'mercadito') return (params.get('tipo') ?? '') === tipo
+    const linkQ = params.get('q') ?? ''
     return linkQ ? q.includes(linkQ) : !q
   }
   return (
     <>
-      {NAV_LINKS.map(({ href, label, badge }) => {
+      {navLinksFor(brand).map(({ href, label, badge }) => {
         const active = isActive(href)
         return (
           <Link
@@ -54,7 +72,8 @@ function NavLinks() {
             href={href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'relative inline-flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase transition-colors duration-300',
+              'relative inline-flex items-center gap-2 transition-colors duration-300',
+              NAV_LINK_CLASS[brand],
               active ? 'text-[#111827]' : 'text-[#9CA3AF] hover:text-[#111827]'
             )}
           >
@@ -77,6 +96,7 @@ function NavLinks() {
 }
 
 export function Navbar() {
+  const brand = useBrand()
   const { data: session } = useSession()
   const pathname = usePathname() ?? ''
   const [freshAvatarUrl, setFreshAvatarUrl] = useState<string | null>(null)
@@ -172,7 +192,7 @@ export function Navbar() {
     setSearchLoading(true)
     const timeout = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`)
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}${brand === 'mercadito' ? '&store=mercadito' : ''}`)
         if (res.ok) {
           const data = await res.json() as { products: SearchResult[] }
           setSearchResults(data.products)
@@ -186,7 +206,7 @@ export function Navbar() {
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [searchQuery])
+  }, [searchQuery, brand])
 
   // Profile dropdown hover state (desktop only)
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
@@ -240,7 +260,7 @@ export function Navbar() {
             </button>
 
             {/* Logo */}
-            <Link href="/" className="flex-shrink-0">
+            <Link href={brandHome(brand)} className="flex-shrink-0">
               <Logo size="xs" />
             </Link>
           </div>
@@ -259,14 +279,15 @@ export function Navbar() {
                 >
                   {/* useSearchParams needs a Suspense boundary; the fallback shows the links unmarked */}
                   <Suspense
-                    fallback={NAV_LINKS.map(({ href, label }) => (
-                      <Link key={href} href={href} className="text-xs font-bold tracking-[0.2em] uppercase text-[#9CA3AF]">
+                    fallback={navLinksFor(brand).map(({ href, label }) => (
+                      <Link key={href} href={href} className={cn(NAV_LINK_CLASS[brand], 'text-[#9CA3AF]')}>
                         {label}
                       </Link>
                     ))}
                   >
-                    <NavLinks />
+                    <NavLinks brand={brand} />
                   </Suspense>
+                  <BrandSwitch to={brand === 'mercadito' ? 'maal' : 'mercadito'} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -321,7 +342,7 @@ export function Navbar() {
                             {searchResults.map((product, index) => (
                               <Link
                                 key={product.id}
-                                href={`/producto/${product.slug}`}
+                                href={productPath(product.slug, brand)}
                                 onClick={closeSearch}
                                 className={cn(
                                   'flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer',

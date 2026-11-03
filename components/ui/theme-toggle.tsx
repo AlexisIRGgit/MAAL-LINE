@@ -5,6 +5,7 @@ import { useTheme } from 'next-themes'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
+import { useBrand } from '@/components/providers/brand-provider'
 
 type Theme = 'light' | 'dark'
 
@@ -90,7 +91,11 @@ export function ThemeToggleIcon({ isDark, className }: { isDark: boolean; classN
 
 export function ThemeToggle({ className, iconClassName = 'w-5 h-5' }: { className?: string; iconClassName?: string }) {
   const { isDark, toggleTheme } = useThemeToggle()
+  const brand = useBrand()
   const label = isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
+
+  // El Mercadito is always white
+  if (brand === 'mercadito') return null
 
   return (
     <button

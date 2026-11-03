@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { Home } from 'lucide-react'
+import { useBrand } from '@/components/providers/brand-provider'
+import { brandHome } from '@/lib/brand'
 
 /** True while any modal dialog (side sheet, modals) is in the DOM. */
 function useModalOpen() {
@@ -24,6 +26,7 @@ function useModalOpen() {
 export function FloatingHomeButton() {
   const reduceMotion = useReducedMotion()
   const isModalOpen = useModalOpen()
+  const brand = useBrand()
 
   return (
     <AnimatePresence>
@@ -41,7 +44,7 @@ export function FloatingHomeButton() {
           <span aria-hidden className="maal-halo maal-halo--offset" />
           <motion.div whileTap={reduceMotion ? undefined : { scale: 0.92 }}>
             <Link
-              href="/"
+              href={brandHome(brand)}
               aria-label="Ir a la tienda"
               className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-[#FF3D00] text-white shadow-[0_8px_24px_-6px_rgba(255,61,0,0.55)] ring-1 ring-[#FF3D00]/40 ring-offset-2 ring-offset-[#F5F5F7] dark:ring-offset-[#0E0F13] outline-none focus-visible:ring-2 focus-visible:ring-white"
             >

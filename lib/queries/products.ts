@@ -1,5 +1,10 @@
 import { prisma } from '@/lib/db'
 import { ProductStatus } from '@prisma/client'
+import { MERCADITO_TAG, type Brand } from '@/lib/brand'
+
+// MAAL LINE and El Mercadito share the products table; the tag decides which store shows a product
+const inStore = (store: Brand) =>
+  store === 'mercadito' ? { tags: { has: MERCADITO_TAG } } : { NOT: { tags: { has: MERCADITO_TAG } } }
 
 // Base include for product queries - includes images and variants
 const productInclude = {
@@ -20,6 +25,7 @@ export async function getNewArrivals(limit = 4) {
     where: {
       status: ProductStatus.active,
       deletedAt: null,
+      ...inStore('maal'),
     },
     include: productInclude,
     orderBy: { publishedAt: 'desc' },
@@ -35,7 +41,7 @@ export async function getBestSellers(limit = 4) {
     where: {
       status: ProductStatus.active,
       deletedAt: null,
-      tags: { has: 'bestseller' },
+      AND: [{ tags: { has: 'bestseller' } }, inStore('maal')],
     },
     include: productInclude,
     take: limit,
@@ -51,6 +57,7 @@ export async function getFeaturedProducts(limit = 8) {
       status: ProductStatus.active,
       deletedAt: null,
       isFeatured: true,
+      ...inStore('maal'),
     },
     include: productInclude,
     take: limit,
@@ -64,6 +71,7 @@ export async function getAllProducts(page = 1, limit = 12) {
   const where = {
     status: ProductStatus.active,
     deletedAt: null,
+    ...inStore('maal'),
   }
 
   const [products, total] = await Promise.all([
@@ -116,6 +124,7 @@ export async function getProductsByCategory(categorySlug: string, page = 1, limi
     categoryId: category.id,
     status: ProductStatus.active,
     deletedAt: null,
+    ...inStore('maal'),
   }
 
   const [products, total] = await Promise.all([
@@ -162,7 +171,7 @@ export async function getProductsByCollection(collectionSlug: string, page = 1, 
 
   const products = collectionProducts
     .map(cp => cp.product)
-    .filter(p => p.status === ProductStatus.active && !p.deletedAt)
+    .filter(p => p.status === ProductStatus.active && !p.deletedAt && !p.tags.includes(MERCADITO_TAG))
 
   const total = await prisma.collectionProduct.count({
     where: { collectionId: collection.id },
@@ -184,6 +193,7 @@ export async function searchProducts(query: string, page = 1, limit = 12) {
   const where = {
     status: ProductStatus.active,
     deletedAt: null,
+    ...inStore('maal'),
     OR: [
       { name: { contains: query, mode: 'insensitive' as const } },
       { description: { contains: query, mode: 'insensitive' as const } },
@@ -211,9 +221,38 @@ export async function searchProducts(query: string, page = 1, limit = 12) {
 }
 
 /**
- * Get related products (same category, excluding current product)
+ * Products for the El Mercadito page, optionally narrowed to a type (see MERCADITO_TYPES)
  */
-export async function getRelatedProducts(productId: string, categoryId: string | null, limit = 4) {
+export async function getMercaditoProducts(page = 1, limit = 12, type?: string) {
+  const where = {
+    status: ProductStatus.active,
+    deletedAt: null,
+    AND: [inStore('mercadito'), ...(type ? [{ tags: { has: type } }] : [])],
+  }
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: productInclude,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { publishedAt: 'desc' },
+    }),
+    prisma.product.count({ where }),
+  ])
+
+  return {
+    products,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  }
+}
+
+/**
+ * Get related products (same category and store, excluding current product)
+ */
+export async function getRelatedProducts(productId: string, categoryId: string | null, limit = 4, store: Brand = 'maal') {
   if (!categoryId) return []
 
   return prisma.product.findMany({
@@ -222,6 +261,7 @@ export async function getRelatedProducts(productId: string, categoryId: string |
       status: ProductStatus.active,
       deletedAt: null,
       id: { not: productId },
+      ...inStore(store),
     },
     include: productInclude,
     take: limit,

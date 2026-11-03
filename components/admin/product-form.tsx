@@ -7,6 +7,7 @@ import { ImageUploader } from './image-uploader'
 import { VideoUploader } from './video-uploader'
 import { toast } from '@/lib/toast'
 import { VariantManager } from './variant-manager'
+import { isMercaditoProduct, MERCADITO_TAG, MERCADITO_TYPES } from '@/lib/brand'
 
 interface Category {
   id: string
@@ -71,7 +72,14 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
     variants: initialData?.variants || [],
   })
 
-  const [tagsInput, setTagsInput] = useState(formData.tags.join(', '))
+  // The store and type are tags too, but they get their own fields instead of the free-text one
+  const typeTags: string[] = MERCADITO_TYPES.map(({ tag }) => tag)
+  const [inMercadito, setInMercadito] = useState(isMercaditoProduct(formData.tags))
+  const isStoreTag = (tag: string) => tag === MERCADITO_TAG || (inMercadito && typeTags.includes(tag))
+  const [mercaditoType, setMercaditoType] = useState<string>(
+    MERCADITO_TYPES.find(({ tag }) => formData.tags.includes(tag))?.tag ?? MERCADITO_TYPES[0].tag
+  )
+  const [tagsInput, setTagsInput] = useState(formData.tags.filter((tag) => !isStoreTag(tag)).join(', '))
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -96,11 +104,11 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
       const tags = tagsInput
         .split(',')
         .map((tag) => tag.trim().toLowerCase())
-        .filter((tag) => tag.length > 0)
+        .filter((tag) => tag.length > 0 && !isStoreTag(tag))
 
       const dataToSubmit = {
         ...formData,
-        tags,
+        tags: inMercadito ? [MERCADITO_TAG, mercaditoType, ...tags] : tags,
       }
 
       const url = mode === 'create'
@@ -320,6 +328,53 @@ export function ProductForm({ initialData, categories, mode }: ProductFormProps)
             <h3 className="text-base font-semibold text-[#111827] mb-4">Organización</h3>
 
             <div className="space-y-4">
+              <fieldset>
+                <legend className="block text-sm font-medium text-[#374151] mb-2">Tienda</legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: false, label: 'MAAL LINE' },
+                    { value: true, label: 'El Mercadito' },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setInMercadito(value)}
+                      aria-pressed={inMercadito === value}
+                      className={
+                        inMercadito === value
+                          ? value
+                            ? 'rounded-xl border border-[#D6357D] bg-[#D6357D] px-3 py-2.5 text-sm font-semibold text-white'
+                            : 'rounded-xl border border-[#111827] bg-[#111827] px-3 py-2.5 text-sm font-semibold text-white'
+                          : 'rounded-xl border border-[#E5E7EB] bg-white px-3 py-2.5 text-sm text-[#6B7280] transition-colors hover:text-[#111827]'
+                      }
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-[#6B7280]">
+                  {inMercadito ? 'Solo aparece en maalline.com/elmercadito.' : 'Solo aparece en la tienda de MAAL LINE.'}
+                </p>
+              </fieldset>
+
+              {inMercadito && (
+                <div>
+                  <label htmlFor="mercaditoType" className="block text-sm font-medium text-[#374151] mb-2">
+                    Tipo de prenda
+                  </label>
+                  <select
+                    id="mercaditoType"
+                    value={mercaditoType}
+                    onChange={(e) => setMercaditoType(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all"
+                  >
+                    {MERCADITO_TYPES.map(({ tag, label }) => (
+                      <option key={tag} value={tag}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label htmlFor="categoryId" className="block text-sm font-medium text-[#374151] mb-2">
                   Categoría

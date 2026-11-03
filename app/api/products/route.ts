@@ -3,6 +3,7 @@ import { parseVideoUrl } from '@/lib/utils/video-url'
 import { prisma } from '@/lib/db'
 import { requireAdmin, handleAuthError } from '@/lib/auth-utils'
 import { ProductStatus } from '@prisma/client'
+import { isMercaditoProduct, MERCADITO_TAG } from '@/lib/brand'
 
 // GET /api/products - List all products (admin)
 export async function GET(request: NextRequest) {
@@ -14,10 +15,13 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20')
     const status = searchParams.get('status') as ProductStatus | null
     const search = searchParams.get('search') || undefined
+    const store = searchParams.get('store')
 
     const where = {
       deletedAt: null,
       ...(status && { status }),
+      ...(store === 'mercadito' && { tags: { has: MERCADITO_TAG } }),
+      ...(store === 'maal' && { NOT: { tags: { has: MERCADITO_TAG } } }),
       ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' as const } },
@@ -49,6 +53,7 @@ export async function GET(request: NextRequest) {
       price: Number(product.price),
       compareAtPrice: product.compareAtPrice ? Number(product.compareAtPrice) : null,
       status: product.status,
+      store: isMercaditoProduct(product.tags) ? 'mercadito' : 'maal',
       category: product.category?.name || null,
       categoryId: product.categoryId,
       image: product.images[0]?.url || null,

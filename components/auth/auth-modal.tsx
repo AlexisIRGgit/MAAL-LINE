@@ -3,6 +3,7 @@
 // Styled after uiarc.dev/components/blocks/login (centered login): a quiet ring backdrop that drifts with the
 // pointer, a card whose height glides between steps, steps that rise out of a small blur, and a mode switch
 // whose labels cross-fade in place. Auth itself is unchanged: credentials + Google through NextAuth.
+import { Logo } from '@/components/common/logo'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -393,7 +394,7 @@ export function AuthModal() {
           >
             {/* Top bar: logo and the mode switch */}
             <div className="flex items-center justify-between gap-3 border-b border-[#E5E7EB] px-5 py-3.5">
-              <Image src="/images/logo-maal-negro.png" alt="MAAL Line" width={64} height={26} className="object-contain" priority />
+              <Logo size="xs" />
               <div className="flex items-center gap-1">
                 {step !== 'done' && (
                   <p className="flex items-center gap-1 text-sm text-[#6B7280]">

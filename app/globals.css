@@ -1104,3 +1104,90 @@ html.dark .hover\:text-gray-800:hover { color: #E5E7EB; }
   .in-view-title-part { opacity: 1 !important; transform: none !important; }
   .in-view-title-pending .in-view-title-part { animation: none; }
 }
+
+/* ============================================
+   EL MERCADITO BY MAAL
+   White and cute: same components as MAAL LINE, repainted while html[data-brand='mercadito'] is set
+   ============================================ */
+html[data-brand='mercadito'] {
+  --mc-pink: #f88ebc; /* the logo */
+  --mc-strong: #d6357d; /* readable on white, with white text on it */
+  --mc-strong-hover: #bd2a6b;
+  --mc-tint: #fff1f7;
+  --mc-line: #f9e3ed;
+  --mc-ink: #2d1f28;
+  --mc-muted: #7a6672;
+  --mc-faint: #b09aa7;
+}
+html[data-brand='mercadito'] ::selection { background: var(--mc-pink); color: #fff; }
+html[data-brand='mercadito'] body,
+html[data-brand='mercadito'] .bg-\[\#F9FAFB\],
+html[data-brand='mercadito'] .bg-\[\#F5F5F7\],
+html[data-brand='mercadito'] .bg-\[\#F7F7F8\],
+html[data-brand='mercadito'] .bg-fabric-white,
+html[data-brand='mercadito'] .bg-\[\#0A0A0A\],
+html[data-brand='mercadito'] .bg-\[\#111111\] { background-color: #fff; background-image: none; }
+html[data-brand='mercadito'] body { color: var(--mc-ink); }
+
+/* Text */
+html[data-brand='mercadito'] .text-\[\#111827\],
+html[data-brand='mercadito'] .text-gray-900,
+html[data-brand='mercadito'] .text-\[\#E8E4D9\] { color: var(--mc-ink); }
+html[data-brand='mercadito'] .text-\[\#374151\],
+html[data-brand='mercadito'] .text-\[\#6B7280\],
+html[data-brand='mercadito'] .text-gray-500,
+html[data-brand='mercadito'] .text-\[\#E8E4D9\]\/60,
+html[data-brand='mercadito'] .text-\[\#666666\],
+html[data-brand='mercadito'] .text-\[\#888888\] { color: var(--mc-muted); }
+html[data-brand='mercadito'] .text-\[\#9CA3AF\],
+html[data-brand='mercadito'] .text-gray-400,
+html[data-brand='mercadito'] .text-\[\#E8E4D9\]\/50 { color: var(--mc-faint); }
+html[data-brand='mercadito'] .text-\[\#FF3D00\],
+html[data-brand='mercadito'] .text-\[\#FF6B35\],
+html[data-brand='mercadito'] .text-\[\#C9A962\] { color: var(--mc-strong); }
+html[data-brand='mercadito'] .hover\:text-\[\#111827\]:hover,
+html[data-brand='mercadito'] .hover\:text-\[\#E8E4D9\]:hover,
+html[data-brand='mercadito'] .hover\:text-gray-900:hover { color: var(--mc-strong); }
+
+/* Filled buttons, badges and pills */
+html[data-brand='mercadito'] .bg-\[\#111827\],
+html[data-brand='mercadito'] .bg-\[\#FF3D00\],
+html[data-brand='mercadito'] .bg-\[\#E8E4D9\] { background-color: var(--mc-strong); }
+html[data-brand='mercadito'] .bg-\[\#E8E4D9\].text-\[\#0A0A0A\] { color: #fff; }
+html[data-brand='mercadito'] .hover\:bg-\[\#1F2937\]:hover,
+html[data-brand='mercadito'] .hover\:bg-\[\#E63600\]:hover,
+html[data-brand='mercadito'] .hover\:bg-\[\#C9A962\]:hover { background-color: var(--mc-strong-hover); }
+html[data-brand='mercadito'] .from-\[\#111827\] { --tw-gradient-from: var(--mc-strong) var(--tw-gradient-from-position); --tw-gradient-to: var(--mc-pink) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+html[data-brand='mercadito'] .bg-\[\#FF3D00\]\/10,
+html[data-brand='mercadito'] .bg-\[\#FF3D00\]\/15 { background-color: var(--mc-tint); }
+
+/* Soft surfaces and hairlines */
+html[data-brand='mercadito'] .bg-\[\#F3F4F6\],
+html[data-brand='mercadito'] .bg-gray-100,
+html[data-brand='mercadito'] .hover\:bg-\[\#F3F4F6\]:hover,
+html[data-brand='mercadito'] .hover\:bg-\[\#F9FAFB\]:hover,
+html[data-brand='mercadito'] .hover\:bg-gray-50:hover { background-color: var(--mc-tint); }
+html[data-brand='mercadito'] .bg-\[\#E5E7EB\] { background-color: var(--mc-line); }
+html[data-brand='mercadito'] .border-\[\#E5E7EB\],
+html[data-brand='mercadito'] .border-\[\#D1D5DB\],
+html[data-brand='mercadito'] .border-gray-100,
+html[data-brand='mercadito'] .border-gray-200,
+html[data-brand='mercadito'] .border-\[\#333333\],
+html[data-brand='mercadito'] .border-\[\#222222\],
+html[data-brand='mercadito'] .border-\[\#E8E4D9\]\/30 { border-color: var(--mc-line); }
+html[data-brand='mercadito'] .border-\[\#111827\],
+html[data-brand='mercadito'] .hover\:border-\[\#111827\]:hover,
+html[data-brand='mercadito'] .hover\:border-\[\#1F2937\]:hover,
+html[data-brand='mercadito'] .focus\:border-\[\#111827\]:focus,
+html[data-brand='mercadito'] .focus\:border-\[\#C9A962\]:focus,
+html[data-brand='mercadito'] .focus\:border-\[\#E8E4D9\]:focus { border-color: var(--mc-strong); }
+html[data-brand='mercadito'] .focus\:ring-\[\#111827\]:focus,
+html[data-brand='mercadito'] .focus-visible\:ring-\[\#111827\]:focus-visible,
+html[data-brand='mercadito'] .ring-\[\#FF3D00\]\/40,
+html[data-brand='mercadito'] .focus-visible\:ring-\[\#FF3D00\]\/60:focus-visible { --tw-ring-color: var(--mc-pink); }
+
+/* Things that keep their own identity inside El Mercadito */
+html[data-brand='mercadito'] .maal-switch { background-color: #111827; border-color: #111827; }
+html[data-brand='mercadito'] .maal-switch:hover { background-color: #1f2937; }
+html[data-brand='mercadito'] .invert { filter: none; }
+html[data-brand='mercadito'] .maal-halo { background: radial-gradient(circle, rgb(248 142 188 / 0.45), transparent 70%); }

@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
-import { Space_Grotesk, Inter } from 'next/font/google'
+import { Space_Grotesk, Inter, Fredoka } from 'next/font/google'
 import { SessionProvider } from '@/components/providers/session-provider'
 import { ToastProvider } from '@/components/providers/toast-provider'
 import { ThemeProvider } from '@/components/providers/theme-provider'
+import { BrandProvider } from '@/components/providers/brand-provider'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import { QuickViewModal } from '@/components/product/quick-view-modal'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { CheckoutModal } from '@/components/checkout/checkout-modal'
 import { getPublicStoreSettings } from '@/lib/public-store-settings'
+import { BRAND_INIT_SCRIPT } from '@/lib/brand'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -20,6 +22,14 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-body',
+})
+
+// Closest match to El Mercadito's rounded logo lettering; only used for logo-like words
+const fredoka = Fredoka({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  display: 'swap',
+  variable: '--font-cute',
 })
 
 const baseMetadata: Metadata = {
@@ -47,18 +57,22 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es-MX" className={`${spaceGrotesk.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="es-MX" className={`${spaceGrotesk.variable} ${inter.variable} ${fredoka.variable}`} suppressHydrationWarning>
       <body className="bg-[#F9FAFB] text-[#111827] antialiased">
-        <ThemeProvider>
-          <SessionProvider>
-            {children}
-            <CartDrawer />
-            <QuickViewModal />
-            <AuthModal />
-            <CheckoutModal />
-            <ToastProvider />
-          </SessionProvider>
-        </ThemeProvider>
+        <BrandProvider>
+          <ThemeProvider>
+            {/* After next-themes' own script, so El Mercadito wins over a saved dark theme */}
+            <script dangerouslySetInnerHTML={{ __html: BRAND_INIT_SCRIPT }} />
+            <SessionProvider>
+              {children}
+              <CartDrawer />
+              <QuickViewModal />
+              <AuthModal />
+              <CheckoutModal />
+              <ToastProvider />
+            </SessionProvider>
+          </ThemeProvider>
+        </BrandProvider>
       </body>
     </html>
   )

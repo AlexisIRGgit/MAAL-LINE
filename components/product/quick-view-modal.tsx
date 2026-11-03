@@ -1,5 +1,7 @@
 'use client'
 
+import { useBrand } from '@/components/providers/brand-provider'
+import { productPath } from '@/lib/brand'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -10,6 +12,7 @@ import { useCartStore } from '@/lib/store/cart-store'
 import { toast } from '@/lib/toast'
 
 export function QuickViewModal() {
+  const brand = useBrand()
   const { isOpen, product, closeQuickView } = useQuickViewStore()
   const addToCart = useCartStore((state) => state.addItem)
 
@@ -256,7 +259,7 @@ export function QuickViewModal() {
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-2">
                     <Link
-                      href={`/producto/${product.slug}`}
+                      href={productPath(product.slug, brand)}
                       onClick={closeQuickView}
                       className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#E5E7EB] bg-white px-3.5 text-xs font-semibold text-[#111827] transition-colors hover:bg-[#F3F4F6] dark:border-white/15 dark:bg-white/[0.06] dark:hover:bg-white/[0.12]"
                     >

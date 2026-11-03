@@ -1,5 +1,7 @@
 'use client'
 
+import { useBrand } from '@/components/providers/brand-provider'
+import { brandHome } from '@/lib/brand'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -78,6 +80,7 @@ const itemVariants = {
 }
 
 export default function OrdersPage() {
+  const brand = useBrand()
   const [orders, setOrders] = useState<Order[]>([])
   const [stats, setStats] = useState<OrderStats>({ total: 0, processing: 0, shipped: 0, delivered: 0 })
   const [loading, setLoading] = useState(true)
@@ -385,7 +388,7 @@ export default function OrdersPage() {
             </p>
             {!searchQuery && statusFilter === 'all' && (
               <Link
-                href="/"
+                href={brandHome(brand)}
                 className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#111827] text-white text-sm font-semibold rounded-xl hover:bg-[#1F2937] transition-colors"
               >
                 <ShoppingBag className="w-4 h-4" />

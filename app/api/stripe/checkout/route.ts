@@ -1,3 +1,4 @@
+import { brandHome } from '@/lib/brand'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getPublicStoreSettings } from '@/lib/public-store-settings'
@@ -15,7 +16,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Este método de pago no está disponible' }, { status: 403 })
     }
 
-    const prepared = await prepareCheckout(await request.json().catch(() => null))
+    const body = await request.json().catch(() => null)
+    const prepared = await prepareCheckout(body)
+    // A canceled payment goes back to the store the customer was buying from
+    const storeHome = brandHome(body?.store === 'mercadito' ? 'mercadito' : 'maal')
     if ('error' in prepared) return NextResponse.json({ error: prepared.error }, { status: prepared.status })
     // Stripe rejects Checkout Sessions under $10 MXN (amount_too_small)
     if (prepared.total < STRIPE_MIN_MXN) {
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
         customer_email: prepared.email || undefined,
         metadata: { orderId: order.id, orderNumber: order.orderNumber, userId: prepared.userId ?? 'guest' },
         success_url: `${baseUrl}/checkout/success?order=${order.orderNumber}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/?checkout=canceled`,
+        cancel_url: `${baseUrl}${storeHome}?checkout=canceled`,
       })
     } catch (stripeError: unknown) {
       console.error('Stripe session creation error:', stripeError)

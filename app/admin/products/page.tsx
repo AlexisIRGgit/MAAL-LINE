@@ -34,6 +34,7 @@ interface Product {
   price: number
   compareAtPrice: number | null
   status: 'active' | 'draft' | 'archived'
+  store: 'maal' | 'mercadito'
   inventory: number
   category: string | null
   image: string | null
@@ -71,6 +72,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [openRow, setOpenRow] = useState<{ id: string; side: SwipeSide } | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [filterStore, setFilterStore] = useState<string>('all')
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true)
@@ -79,6 +81,7 @@ export default function ProductsPage() {
         page: pagination.page.toString(),
         limit: ITEMS_PER_PAGE.toString(),
         ...(filterStatus !== 'all' && { status: filterStatus }),
+        ...(filterStore !== 'all' && { store: filterStore }),
         ...(searchQuery && { search: searchQuery }),
       })
 
@@ -97,7 +100,7 @@ export default function ProductsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [pagination.page, filterStatus, searchQuery])
+  }, [pagination.page, filterStatus, filterStore, searchQuery])
 
   useEffect(() => {
     fetchProducts()
@@ -109,7 +112,7 @@ export default function ProductsPage() {
       setPagination((prev) => ({ ...prev, page: 1 }))
     }, 300)
     return () => clearTimeout(timer)
-  }, [searchQuery, filterStatus])
+  }, [searchQuery, filterStatus, filterStore])
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar este producto?')) return
@@ -164,6 +167,21 @@ export default function ProductsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all text-sm"
           />
+        </div>
+
+        {/* Store Filter */}
+        <div className="relative">
+          <select
+            value={filterStore}
+            onChange={(e) => setFilterStore(e.target.value)}
+            aria-label="Filtrar por tienda"
+            className="appearance-none px-4 py-2.5 pr-10 bg-white border border-[#E5E7EB] rounded-xl text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#111827] focus:border-transparent transition-all cursor-pointer text-sm"
+          >
+            <option value="all">Todas las tiendas</option>
+            <option value="maal">MAAL LINE</option>
+            <option value="mercadito">El Mercadito</option>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" />
         </div>
 
         {/* Status Filter */}
@@ -266,6 +284,12 @@ export default function ProductsPage() {
                           {product.inventory} en stock
                         </span>
                         {product.category && ` · ${product.category}`}
+                        {product.store === 'mercadito' && (
+                          <>
+                            {' · '}
+                            <span className="font-medium text-[#D6357D]">Mercadito</span>
+                          </>
+                        )}
                       </p>
                     </div>
                     <div className="flex-shrink-0 text-right">

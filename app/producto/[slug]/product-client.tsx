@@ -17,6 +17,8 @@ import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { ProductDetailData, ProductCardData } from '@/lib/transformers/product'
 import { toast } from '@/lib/toast'
+import { useBrand } from '@/components/providers/brand-provider'
+import { brandHome } from '@/lib/brand'
 
 interface ProductPageClientProps {
   product: ProductDetailData
@@ -24,6 +26,7 @@ interface ProductPageClientProps {
 }
 
 export function ProductPageClient({ product, relatedProducts }: ProductPageClientProps) {
+  const brand = useBrand()
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [media, setMedia] = useState<'image' | 'video'>('image')
@@ -169,9 +172,9 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
         {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-4">
           <nav className="text-xs text-gray-400">
-            <Link href="/" className="hover:text-gray-900">Inicio</Link>
+            <Link href={brandHome(brand)} className="hover:text-gray-900">{brand === 'mercadito' ? 'El Mercadito' : 'Inicio'}</Link>
             <span className="mx-2">/</span>
-            {category && (
+            {category && brand === 'maal' && (
               <>
                 <Link href={`/categoria/${category.slug}`} className="hover:text-gray-900">
                   {category.name}
