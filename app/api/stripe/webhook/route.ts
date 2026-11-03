@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/db'
 import Stripe from 'stripe'
 import { notifyLowStock, notifyOrderPaid } from '@/lib/store-notifications'
+import { refreshHome } from '@/lib/refresh-home'
 
 // Disable body parsing for webhook
 export const runtime = 'nodejs'
@@ -144,6 +145,7 @@ export async function POST(request: NextRequest) {
       })
 
       console.log(`Order ${orderNumber} successfully updated to paid/processing`)
+      refreshHome()
       if (!wasAlreadyPaid) {
         await Promise.all([notifyOrderPaid(order.id, 'Stripe'), notifyLowStock(order.items)])
       }

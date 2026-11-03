@@ -3,6 +3,7 @@ import { requireAuth, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
 import { getPublicStoreSettings } from '@/lib/public-store-settings'
 import { shippingCostFor } from '@/lib/store-settings'
+import { refreshHome } from '@/lib/refresh-home'
 import { nanoid } from 'nanoid'
 
 interface CheckoutItem {
@@ -207,6 +208,8 @@ export async function POST(request: NextRequest) {
         })
       }
     }
+
+    refreshHome()
 
     // Update discount usage
     if (discountId) {

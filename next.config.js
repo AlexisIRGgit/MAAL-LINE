@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    // An open tab keeps static pages for 5 minutes by default, which hides homepage updates
+    staleTimes: { dynamic: 30, static: 30 },
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [

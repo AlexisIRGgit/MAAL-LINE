@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireAdmin, handleAuthError } from '@/lib/auth-utils'
 import { ProductStatus } from '@prisma/client'
 import { isMercaditoProduct, MERCADITO_TAG } from '@/lib/brand'
+import { refreshHome } from '@/lib/refresh-home'
 
 // GET /api/products - List all products (admin)
 export async function GET(request: NextRequest) {
@@ -168,6 +169,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    refreshHome()
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
     return handleAuthError(error)

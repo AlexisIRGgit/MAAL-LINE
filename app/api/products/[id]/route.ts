@@ -3,6 +3,7 @@ import { parseVideoUrl } from '@/lib/utils/video-url'
 import { prisma } from '@/lib/db'
 import { requireAdmin, handleAuthError } from '@/lib/auth-utils'
 import { ProductStatus } from '@prisma/client'
+import { refreshHome } from '@/lib/refresh-home'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -203,6 +204,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       },
     })
 
+    refreshHome()
     return NextResponse.json(updatedProduct)
   } catch (error) {
     return handleAuthError(error)
@@ -237,6 +239,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       },
     })
 
+    refreshHome()
     return NextResponse.json({ success: true })
   } catch (error) {
     return handleAuthError(error)
