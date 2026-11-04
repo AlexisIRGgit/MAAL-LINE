@@ -12,6 +12,7 @@ import { WaitlistForm } from '@/components/drop/waitlist-form'
 import { DotGrid } from '@/components/ui/dot-grid'
 import { InViewTitle } from '@/components/ui/in-view-title'
 import { TextReveal } from '@/components/ui/text-reveal'
+import { PackagingBags } from '@/components/home/packaging-bags'
 import { getNewArrivals, getBestSellers } from '@/lib/queries/products'
 import { getActiveCategories } from '@/lib/queries/categories'
 import { transformProductsForCards } from '@/lib/transformers/product'
@@ -288,18 +289,23 @@ export default async function HomePage() {
 
         {/* PACKAGING */}
         <section className="relative py-24 md:py-32 overflow-hidden border-t border-black/[0.06] bg-[#F7F7F8] dark:border-white/10 dark:bg-[#0B0B0D]">
-          <div className="relative container mx-auto px-4 text-center">
-            <span className="inline-block px-5 py-2 bg-white border border-black/10 text-[#374151] shadow-sm dark:bg-white/10 dark:backdrop-blur-sm dark:border-white/20 dark:text-white/80 dark:shadow-none text-xs font-bold tracking-[0.2em] rounded-full mb-6">
-              UNBOXING PREMIUM
-            </span>
-            <h2 className="text-3xl md:text-5xl font-body font-bold uppercase tracking-[0.04em] text-[#111827] dark:text-white mb-6">
-              ARMADO PARA LLEGAR
-            </h2>
-            <p className="text-[#6B7280] dark:text-white/60 max-w-xl mx-auto mb-12 text-lg leading-relaxed">
-              Cada pedido sale en bolsa CPE negro mate esmerilado y en cilindro de cartón negro con nuestro logo en
-              serigrafía plata. Equipo de alto rendimiento, desde que lo abres.
-            </p>
-            <div className="grid gap-3 sm:grid-cols-3 max-w-3xl mx-auto text-left">
+          <div className="relative container mx-auto px-4">
+            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+              <div className="text-center lg:text-left">
+                <span className="inline-block px-5 py-2 bg-white border border-black/10 text-[#374151] shadow-sm dark:bg-white/10 dark:backdrop-blur-sm dark:border-white/20 dark:text-white/80 dark:shadow-none text-xs font-bold tracking-[0.2em] rounded-full mb-6">
+                  UNBOXING PREMIUM
+                </span>
+                <h2 className="text-3xl md:text-5xl font-body font-bold uppercase tracking-[0.04em] text-[#111827] dark:text-white mb-6">
+                  ARMADO PARA LLEGAR
+                </h2>
+                <p className="text-[#6B7280] dark:text-white/60 max-w-xl mx-auto lg:mx-0 text-lg leading-relaxed">
+                  Cada pedido sale en bolsa CPE negro mate esmerilado y en cilindro de cartón negro con nuestro logo en
+                  serigrafía plata. Equipo de alto rendimiento, desde que lo abres.
+                </p>
+              </div>
+              <PackagingBags />
+            </div>
+            <div className="mt-10 grid gap-3 sm:grid-cols-3 max-w-5xl mx-auto text-left lg:mt-14">
               {[
                 { title: 'Bolsa CPE mate', text: 'Negro esmerilado, resistente y sellada.' },
                 { title: 'Cilindro de cartón', text: 'Negro, con logo en serigrafía plata.' },
