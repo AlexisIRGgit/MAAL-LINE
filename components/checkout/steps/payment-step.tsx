@@ -243,7 +243,7 @@ export function PaymentStep() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
       {/* Items: choose what to buy now, change quantities or remove */}
       <section>
         <h3 className="mb-3 text-lg font-bold text-[#111827] dark:text-white">Tu pedido</h3>
@@ -275,7 +275,7 @@ export function PaymentStep() {
                         <Image src={item.product.image} alt={item.product.name} fill sizes="56px" className="object-cover" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-[#111827] dark:text-white">{item.product.name}</p>
+                        <p className="line-clamp-3 text-sm font-semibold leading-snug text-[#111827] dark:text-white">{item.product.name}</p>
                         <p className="text-xs text-[#6B7280] dark:text-white/50">Talla {item.size}</p>
                         <div className="mt-1.5 flex items-center justify-between gap-2">
                           <div className="inline-flex h-8 items-center rounded-full border border-[#E5E7EB] dark:border-white/10">
@@ -359,7 +359,7 @@ export function PaymentStep() {
           ) : (
             <RadioCards
               layout="grid"
-              minColumnWidth={150}
+              minColumnWidth={180}
               aria-label="Método de pago"
               value={paymentMethod}
               onValueChange={(value) => setPaymentMethod(value as 'stripe' | 'mercadopago')}

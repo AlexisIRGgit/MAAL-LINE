@@ -103,7 +103,7 @@ export function CheckoutStepper() {
                   step.id + 1
                 )}
               </span>
-              <span className="relative">{step.label}</span>
+              <span className={cn('relative', !isActive && 'max-[359px]:sr-only')}>{step.label}</span>
             </button>
             {index < steps.length - 1 && (
               <span

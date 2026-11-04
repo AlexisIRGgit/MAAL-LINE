@@ -135,7 +135,7 @@ export function AddressStep() {
 
   return (
     <div>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-3">
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="text-lg font-bold text-[#111827] dark:text-white">¿A dónde lo enviamos?</h3>
