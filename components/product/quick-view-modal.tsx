@@ -3,9 +3,9 @@
 import { useBrand } from '@/components/providers/brand-provider'
 import { productPath } from '@/lib/brand'
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ImageDots, ImageSwiper } from '@/components/product/image-swiper'
 import { X, ShoppingBag, ChevronLeft, ChevronRight, Heart, ExternalLink } from 'lucide-react'
 import { useQuickViewStore } from '@/lib/store/quick-view-store'
 import { useCartStore } from '@/lib/store/cart-store'
@@ -20,13 +20,16 @@ export function QuickViewModal() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isAdding, setIsAdding] = useState(false)
 
-  // Reset state when modal opens with new product
-  useEffect(() => {
-    if (isOpen && product) {
+  // Reset while rendering, so the image row mounts on the first image instead of scrolling back to it
+  const openedProductId = isOpen ? product?.id ?? null : null
+  const [lastOpenedId, setLastOpenedId] = useState(openedProductId)
+  if (openedProductId !== lastOpenedId) {
+    setLastOpenedId(openedProductId)
+    if (openedProductId) {
       setSelectedSize(null)
       setCurrentImageIndex(0)
     }
-  }, [isOpen, product?.id])
+  }
 
   // Close on escape key
   useEffect(() => {
@@ -140,12 +143,14 @@ export function QuickViewModal() {
               <div className="relative aspect-[5/4] md:aspect-auto md:h-full bg-[#F3F4F6]">
                 {/* Main Image */}
                 <div className="relative w-full h-full md:min-h-[500px]">
-                  <Image
-                    src={product.images[currentImageIndex] || '/images/placeholder.png'}
+                  <ImageSwiper
+                    images={product.images}
                     alt={product.name}
-                    fill
-                    className="object-cover"
-                    priority
+                    index={currentImageIndex}
+                    onIndexChange={setCurrentImageIndex}
+                    sizes="(max-width: 768px) 100vw, 384px"
+                    hrefFor={(i) => `${productPath(product.slug, brand)}${i > 0 ? `?foto=${i}` : ''}`}
+                    onNavigate={closeQuickView}
                   />
                 </div>
 
@@ -166,19 +171,12 @@ export function QuickViewModal() {
                     </button>
 
                     {/* Image Dots */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                      {product.images.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentImageIndex(idx)}
-                          className={`w-2 h-2 rounded-full transition-colors ${
-                            idx === currentImageIndex
-                              ? 'bg-[#111827]'
-                              : 'bg-white/70 hover:bg-white'
-                          }`}
-                        />
-                      ))}
-                    </div>
+                    <ImageDots
+                      count={product.images.length}
+                      index={currentImageIndex}
+                      onSelect={setCurrentImageIndex}
+                      className="absolute bottom-4 left-1/2 -translate-x-1/2"
+                    />
                   </>
                 )}
 

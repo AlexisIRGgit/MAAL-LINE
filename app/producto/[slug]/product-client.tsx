@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Navbar } from '@/components/navigation/navbar'
 import { PromoBar } from '@/components/navigation/promo-bar'
 import { Footer } from '@/components/navigation/footer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ProductCard } from '@/components/product/product-card'
+import { ImageDots, ImageSwiper } from '@/components/product/image-swiper'
 import { useCartStore } from '@/lib/store/cart-store'
 import { cn } from '@/lib/utils/cn'
 import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, RotateCcw, Shield, Check, Loader2, Image as ImageIcon, Play } from 'lucide-react'
@@ -28,7 +29,12 @@ interface ProductPageClientProps {
 export function ProductPageClient({ product, relatedProducts }: ProductPageClientProps) {
   const brand = useBrand()
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const searchParams = useSearchParams()
+  // ?foto=2 comes from tapping that image in the quick view
+  const [selectedImageIndex, setSelectedImageIndex] = useState(() => {
+    const requested = Number(searchParams.get('foto'))
+    return Number.isInteger(requested) && requested >= 0 && requested < product.images.length ? requested : 0
+  })
   const [media, setMedia] = useState<'image' | 'video'>('image')
   const [quantity, setQuantity] = useState(1)
   const [isAdding, setIsAdding] = useState(false)
@@ -188,17 +194,17 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
 
         {/* Product Section */}
         <section className="container mx-auto px-4 pb-16">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Image Gallery */}
             <div className="space-y-4">
               {/* Main Image */}
               <div className="relative aspect-[3/4] bg-gray-100 overflow-hidden group rounded-2xl border border-gray-200">
-                <Image
-                  src={images[selectedImageIndex] || '/images/placeholder.png'}
+                <ImageSwiper
+                  images={images}
                   alt={name}
-                  fill
-                  priority
-                  className="object-cover"
+                  index={selectedImageIndex}
+                  onIndexChange={setSelectedImageIndex}
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                 />
                 {videoUrl && media === 'video' && (
                   <video
@@ -260,12 +266,19 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                     >
                       <ChevronRight className="w-5 h-5" />
                     </button>
+                    {/* Desktop has the thumbnails in view; on phones this also says there are more to swipe */}
+                    <ImageDots
+                      count={images.length}
+                      index={selectedImageIndex}
+                      onSelect={setSelectedImageIndex}
+                      className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 lg:hidden"
+                    />
                   </>
                 )}
 
-                {/* Sold Out Overlay */}
+                {/* Sold Out Overlay: touches pass through, so the images can still be swiped */}
                 {isSoldOut && (
-                  <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+                  <div className="pointer-events-none absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-2xl">
                     <span className="text-gray-400 font-bold text-xl tracking-[0.2em]">
                       AGOTADO
                     </span>
