@@ -18,10 +18,12 @@ interface ImageSwiperProps {
   /** Makes each image a link, so a tap opens this page */
   hrefFor?: (index: number) => string
   onNavigate?: () => void
+  /** Loads every image up front, for rows that change by themselves */
+  eager?: boolean
 }
 
 /** Product images side by side in a native scroll-snap row: they follow the finger and leave vertical page scroll alone */
-export function ImageSwiper({ images, alt, index, onIndexChange, sizes, hrefFor, onNavigate }: ImageSwiperProps) {
+export function ImageSwiper({ images, alt, index, onIndexChange, sizes, hrefFor, onNavigate, eager }: ImageSwiperProps) {
   const reduced = useReducedMotion()
   const rowRef = useRef<HTMLDivElement>(null)
   /** The index this row already knows about, so a swipe it reported doesn't scroll it again */
@@ -80,6 +82,7 @@ export function ImageSwiper({ images, alt, index, onIndexChange, sizes, hrefFor,
             fill
             sizes={sizes}
             priority={i === 0}
+            loading={eager && i > 0 ? 'eager' : undefined}
             draggable={false}
             className="select-none object-cover"
           />

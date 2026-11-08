@@ -3,6 +3,7 @@ export const revalidate = 300
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { ArrowRight, Check } from 'lucide-react'
 import { Navbar } from '@/components/navigation/navbar'
 import { PromoBar } from '@/components/navigation/promo-bar'
 import { Footer } from '@/components/navigation/footer'
@@ -12,16 +13,17 @@ import { WaitlistForm } from '@/components/drop/waitlist-form'
 import { DotGrid } from '@/components/ui/dot-grid'
 import { InViewTitle } from '@/components/ui/in-view-title'
 import { TextReveal } from '@/components/ui/text-reveal'
+import { HeroCarousel } from '@/components/home/hero-carousel'
 import { PackagingBags } from '@/components/home/packaging-bags'
 import { getNewArrivals, getBestSellers } from '@/lib/queries/products'
 import { getActiveCategories } from '@/lib/queries/categories'
 import { transformProductsForCards } from '@/lib/transformers/product'
 
-// What sets the brand apart, shown under the hero
+// What sets the brand apart, shown in the hero
 const VALUE_PROPS = [
-  { value: 'Mismo día', label: 'Entrega en GDL' },
-  { value: '2–5 días', label: 'Resto de México' },
-  { value: 'Stock', label: 'Propio' },
+  ['Envío mismo día', 'Guadalajara'],
+  ['2–5 días', 'Resto de México'],
+  ['Stock propio', 'Calidad premium'],
 ]
 
 export default async function HomePage() {
@@ -51,90 +53,57 @@ export default async function HomePage() {
       <Navbar />
 
       <main className="overflow-hidden bg-[#F9FAFB]">
-        {/* HERO SECTION - Modern Rounded */}
-        <section className="relative min-h-[100svh] flex items-center">
-          <div className="container mx-auto px-4 py-20 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Left - Content */}
-              <div className="text-center lg:text-left">
-                <span className="inline-block px-4 py-2 bg-white border border-[#E5E7EB] text-[#111827] text-xs font-bold tracking-wider rounded-full mb-8 shadow-sm">
-                  PERFORMANCE GEAR · GUADALAJARA
-                </span>
+        {/* HERO - Photos always dark, so its colors stay fixed in every theme */}
+        <section className="relative flex min-h-[calc(100svh-81px)] items-end">
+          <HeroCarousel />
 
-                {/* Title */}
-                <h1 className="mb-8">
-                  <span className="block text-6xl md:text-8xl lg:text-9xl font-body font-bold text-[#111827] leading-none tracking-[0.04em]">
-                    MAAL
-                  </span>
-                  <span className="block text-lg sm:text-2xl md:text-3xl font-bold text-[#6B7280] tracking-[0.2em] sm:tracking-[0.3em] mt-2">
-                    PERFORMANCE GEAR
-                  </span>
-                </h1>
+          {/* Doesn't catch touches, so the photo underneath can still be swiped */}
+          <div className="container pointer-events-none relative z-10 mx-auto px-4 pb-14 pt-32 md:pb-16">
+            <h1
+              className="text-[clamp(1.75rem,8.6vw,4.5rem)] font-bold leading-[1.1] tracking-normal"
+              style={{ color: '#fff' }}
+            >
+              <span className="block">MAAL</span>
+              <span className="block">PERFORMANCE GEAR</span>
+            </h1>
 
-                <p className="text-lg md:text-xl text-[#6B7280] mb-10 max-w-md mx-auto lg:mx-0 leading-relaxed">
-                  Lifting straps y chalecos de running hechos para entrenar duro. Equipo de alto rendimiento con stock propio y envío desde Guadalajara.
-                </p>
+            <p className="mt-4 max-w-xl text-base md:text-xl" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+              Ropa urbana de alto rendimiento. Diseñada para entrenar, pensada para tu estilo.
+            </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Link href="/coleccion">
-                    <Button variant="primary" size="xl">
-                      VER EQUIPO
-                    </Button>
-                  </Link>
-                  <Link href="/envios">
-                    <Button variant="secondary" size="xl">
-                      ENVÍOS
-                    </Button>
-                  </Link>
-                </div>
-
-                {/* Stats */}
-                <div className="flex gap-3 sm:gap-6 mt-16 justify-center lg:justify-start">
-                  {VALUE_PROPS.map((stat) => (
-                    <div key={stat.label} className="text-center lg:text-left px-4 py-3 bg-white rounded-2xl border border-[#E5E7EB] shadow-sm">
-                      <p className="text-lg sm:text-2xl font-black text-[#111827] whitespace-nowrap">{stat.value}</p>
-                      <p className="text-[10px] text-[#9CA3AF] tracking-wider uppercase">{stat.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right - Hero Image with rounded frame */}
-              <div className="relative">
-                <div className="relative aspect-[3/4] max-w-md mx-auto">
-                  {/* Rounded frame */}
-                  <div className="absolute -inset-3 bg-gradient-to-br from-[#E5E7EB] to-[#D1D5DB] rounded-3xl" />
-                  <div className="absolute -inset-2 bg-white rounded-2xl shadow-lg" />
-
-                  <div className="relative h-full overflow-hidden rounded-2xl">
-                    <Image
-                      src={heroImage}
-                      alt="MAAL Line Performance Gear"
-                      fill
-                      priority
-                      className="object-contain bg-[#F3F4F6]"
-                    />
-                    {/* Light overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-40" />
-                  </div>
-                </div>
-
-                {/* Floating badges */}
-                <div className="absolute -left-4 top-1/4 px-4 py-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-[#E5E7EB] shadow-md">
-                  <p className="text-sm font-bold text-[#111827] tracking-wider">✦ STOCK EN GDL</p>
-                </div>
-                <div className="absolute -right-4 bottom-1/4 px-4 py-3 bg-[#111827] backdrop-blur-sm rounded-2xl shadow-md">
-                  <p className="text-sm font-bold text-white tracking-wider">ENVÍO MISMO DÍA</p>
-                </div>
-              </div>
+            <div className="pointer-events-auto mt-7 flex w-fit max-w-full flex-wrap gap-3">
+              <Link
+                href="/coleccion"
+                className="inline-flex h-12 items-center gap-2 rounded-lg px-4 text-xs font-bold tracking-[0.08em] md:h-14 md:px-7 md:text-sm transition-opacity hover:opacity-85"
+                style={{ backgroundColor: '#fff', color: '#0A0A0A' }}
+              >
+                COMPRAR AHORA
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/coleccion"
+                className="inline-flex h-12 items-center rounded-lg border px-4 text-xs font-bold tracking-[0.08em] md:h-14 md:px-7 md:text-sm transition-colors hover:bg-[rgba(255,255,255,0.1)]"
+                style={{ borderColor: 'rgba(255, 255, 255, 0.7)', color: '#fff' }}
+              >
+                VER COLECCIÓN
+              </Link>
             </div>
-          </div>
 
-          {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block">
-            <div className="w-8 h-12 border-2 border-[#D1D5DB] rounded-full flex justify-center">
-              <div className="w-1.5 h-3 bg-[#111827] mt-2 rounded-full animate-bounce" />
-            </div>
+            <ul className="mt-6 grid grid-cols-3 gap-2 md:flex md:w-fit md:gap-3">
+              {VALUE_PROPS.map(([title, detail]) => (
+                <li
+                  key={title}
+                  className="flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[11px] font-medium leading-snug backdrop-blur-sm md:gap-3 md:px-4 md:py-2.5 md:text-sm"
+                  style={{ backgroundColor: 'rgba(10, 14, 22, 0.6)', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#fff' }}
+                >
+                  <Check className="hidden h-4 w-4 flex-shrink-0 sm:block" />
+                  <span>
+                    <span className="block">{title}<span className="hidden md:inline"> •</span></span>
+                    <span className="block">{detail}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
