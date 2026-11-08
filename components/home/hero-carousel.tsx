@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { ImageSwiper } from '@/components/product/image-swiper'
 
-const SLIDES = ['/images/hero/hero-calle.webp', '/images/hero/hero-running.webp']
+const SLIDES = [
+  '/images/hero/hero-calle.webp',
+  '/images/hero/hero-running.webp',
+  '/images/hero/hero-gym.webp',
+  '/images/hero/hero-trail.webp',
+]
 const SLIDE_MS = 6000
 
 /** Full-bleed photos that change by themselves and can be swiped; the hero copy sits on top without blocking the swipe */
