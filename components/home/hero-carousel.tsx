@@ -8,7 +8,7 @@ const SLIDES = [
   '/images/hero/hero-calle.webp',
   '/images/hero/hero-running.webp',
   '/images/hero/hero-gym.webp',
-  '/images/hero/hero-trail.webp',
+  '/images/hero/hero-corredor.webp',
 ]
 const SLIDE_MS = 6000
 
