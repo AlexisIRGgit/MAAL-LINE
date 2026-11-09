@@ -7,7 +7,7 @@ import { ImageSwiper } from '@/components/product/image-swiper'
 const SLIDES = [
   '/images/hero/hero-calle.webp',
   '/images/hero/hero-running.webp',
-  '/images/hero/hero-gym.webp',
+  '/images/hero/hero-playera.webp',
   '/images/hero/hero-corredor.webp',
 ]
 const SLIDE_MS = 6000
