@@ -21,14 +21,23 @@ export function createAnthropicProvider(options: { model?: string } = {}): Agent
       for (let step = 0; step < maxSteps; step++) {
         const response = await client.messages.create({
           model,
-          // Room for thinking plus a short chat reply
-          max_tokens: 4096,
-          // Chat answers don't need deep reasoning; low keeps replies quick and cheap
+          // A chat reply is short; this is only a ceiling
+          max_tokens: 2048,
+          // Chat answers don't need reasoning: no thinking tokens, low effort, quick and cheap
+          thinking: { type: 'disabled' },
           output_config: { effort: 'low' },
+          // Caches system + tools + the conversation so far: the next step of the tool loop and the
+          // customer's next message (within 5 minutes) re-read it at a tenth of the price
+          cache_control: { type: 'ephemeral' },
           system,
           tools: toolDefs,
           messages,
         })
+
+        const usage = response.usage
+        console.log(
+          `Agent step ${step + 1}: in ${usage.input_tokens} (cache read ${usage.cache_read_input_tokens ?? 0}, write ${usage.cache_creation_input_tokens ?? 0}), out ${usage.output_tokens}`
+        )
 
         if (response.stop_reason === 'refusal') return { kind: 'refused' }
         if (response.stop_reason === 'max_tokens') throw new AgentError('Reply was cut off (max_tokens)')
@@ -43,7 +52,6 @@ export function createAnthropicProvider(options: { model?: string } = {}): Agent
           return { kind: 'reply', text }
         }
 
-        // Thinking blocks go back unchanged along with the tool calls
         messages.push({ role: 'assistant', content: response.content })
         const calls = response.content.filter((block): block is Anthropic.ToolUseBlock => block.type === 'tool_use')
         const results = await Promise.all(

@@ -39,7 +39,7 @@ export type BotBusiness = {
 }
 
 /** Only the latest messages go to the model, which keeps every reply cheap */
-const HISTORY_LIMIT = 20
+const HISTORY_LIMIT = 12
 const MAX_AGENT_STEPS = 6
 
 const isUniqueViolation = (error: unknown) =>
