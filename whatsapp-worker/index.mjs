@@ -61,6 +61,7 @@ client.on('ready', () => {
   latestQr = null
   console.log('WhatsApp connected and ready')
 })
+client.on('change_state', (state) => console.log('WhatsApp state:', state))
 client.on('disconnected', (reason) => {
   console.error('Disconnected:', reason)
   // Railway restarts the service, which reconnects (or shows a new QR if the session was closed)
@@ -135,6 +136,8 @@ async function handleMessage(message) {
 // One queue per chat, so a customer's quick messages are answered in order
 const queues = new Map()
 client.on('message', (message) => {
+  // Type and chat kind only, never the content or the number
+  console.log('Message event:', message.type, message.fromMe ? 'from me' : message.from.split('@')[1] ?? '?')
   const previous = queues.get(message.from) ?? Promise.resolve()
   const next = previous
     .then(() => handleMessage(message))
@@ -238,10 +241,12 @@ client.initialize().catch((error) => {
   process.exit(1)
 })
 
+// On redeploy Railway stops the old container; closing Chrome cleanly releases the
+// WhatsApp session so the new container doesn't come up linked but deaf
 for (const signal of ['SIGTERM', 'SIGINT']) {
-  process.on(signal, async () => {
+  process.once(signal, async () => {
     console.log(`${signal}: closing WhatsApp`)
-    await client.destroy().catch(() => {})
+    await Promise.race([client.destroy().catch(() => {}), sleep(10_000)])
     process.exit(0)
   })
 }
