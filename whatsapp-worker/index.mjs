@@ -40,6 +40,8 @@ for (const dir of [path.join(DATA_DIR, 'session'), path.join(DATA_DIR, 'session'
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: DATA_DIR }),
+  // WhatsApp Web can take well over the default 30 s to load on a small container
+  authTimeoutMs: 120_000,
   puppeteer: {
     headless: true,
     executablePath: process.env.CHROME_PATH || undefined,
@@ -164,6 +166,22 @@ const server = http.createServer(async (req, res) => {
 
   if (!authorized(req, url)) return send(res, 401, { error: 'Unauthorized' })
 
+  // For the admin's WhatsApp page: connection state, the QR to scan, and the linked number
+  if (req.method === 'GET' && url.pathname === '/status') {
+    return send(res, 200, {
+      ready,
+      qr: !ready && latestQr ? await QRCode.toDataURL(latestQr, { width: 320, margin: 2 }) : null,
+      number: ready ? client.info?.wid?.user ?? null : null,
+    })
+  }
+
+  // Unlinks the number; the restart then shows a fresh QR for another phone
+  if (req.method === 'POST' && url.pathname === '/logout') {
+    send(res, 200, { ok: true })
+    await client.logout().catch((error) => console.error('Logout failed:', error))
+    process.exit(1)
+  }
+
   if (req.method === 'GET' && url.pathname === '/qr') {
     const body = ready
       ? '<h1>Conectado ✅</h1><p>WhatsApp ya está vinculado. Puedes cerrar esta página.</p>'
@@ -207,7 +225,11 @@ const server = http.createServer(async (req, res) => {
 })
 
 server.listen(PORT, () => console.log(`Worker listening on ${PORT}`))
-client.initialize()
+client.initialize().catch((error) => {
+  // Railway restarts the service, which tries again
+  console.error('WhatsApp failed to start:', error)
+  process.exit(1)
+})
 
 for (const signal of ['SIGTERM', 'SIGINT']) {
   process.on(signal, async () => {

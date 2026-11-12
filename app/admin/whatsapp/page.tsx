@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Bot, Loader2, MessageCircle, Send, UserRound } from 'lucide-react'
 import { ListRowsSkeleton } from '@/components/ui/skeleton'
 import { usePermissions } from '@/hooks/use-permissions'
+import { WhatsAppConnection } from '@/components/admin/whatsapp-connection'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils/cn'
 
@@ -101,6 +102,8 @@ export default function AdminWhatsAppPage() {
           actualiza sola
         </p>
       </div>
+
+      {can('settings:edit') && <WhatsAppConnection />}
 
       {!loaded ? (
         <ListRowsSkeleton rows={4} label="Cargando chats" />

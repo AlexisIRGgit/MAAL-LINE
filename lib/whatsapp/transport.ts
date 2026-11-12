@@ -38,3 +38,20 @@ export async function sendStaffMessage(chatKey: string, text: string): Promise<s
   if (!res.ok) throw new Error(`WhatsApp worker ${res.status}: ${data.error ?? 'unknown error'}`)
   return typeof data.id === 'string' ? data.id : null
 }
+
+export type WorkerStatus = { ready: boolean; qr: string | null; number: string | null }
+
+/** Calls the worker's admin endpoints (/status, /logout) with the shared secret */
+export async function callWorker(path: '/status' | '/logout'): Promise<WorkerStatus | { ok: boolean }> {
+  const url = process.env.WHATSAPP_WORKER_URL
+  const secret = process.env.WHATSAPP_WORKER_SECRET
+  if (!url || !secret) throw new Error('WhatsApp worker is not configured (WHATSAPP_WORKER_URL / WHATSAPP_WORKER_SECRET)')
+  const res = await fetch(`${url.replace(/\/$/, '')}${path}`, {
+    method: path === '/status' ? 'GET' : 'POST',
+    headers: { Authorization: `Bearer ${secret}` },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) throw new Error(`WhatsApp worker ${res.status}`)
+  return res.json()
+}
