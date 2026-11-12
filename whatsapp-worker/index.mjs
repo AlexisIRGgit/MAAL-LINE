@@ -18,8 +18,8 @@ import wwebjs from 'whatsapp-web.js'
 
 const { Client, LocalAuth } = wwebjs
 
-const APP_URL = (process.env.APP_URL || '').replace(/\/$/, '')
-const SECRET = process.env.WORKER_SECRET || ''
+const APP_URL = (process.env.APP_URL || '').trim().replace(/\/+$/, '')
+const SECRET = (process.env.WORKER_SECRET || '').trim()
 const PORT = Number(process.env.PORT) || 3000
 const DATA_DIR = process.env.DATA_DIR || './data'
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, handleAuthError } from '@/lib/auth-utils'
-import { callWorker, whatsappTransport } from '@/lib/whatsapp/transport'
+import { callWorker, whatsappTransport, workerHost } from '@/lib/whatsapp/transport'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +16,10 @@ export async function GET() {
       const message = error instanceof Error ? error.message : ''
       // 401 means the worker answered but the secrets differ; anything else means it wasn't reached
       const reason = message.includes('worker 401') ? 'secret' : message.includes('not configured') ? 'config' : 'network'
-      return NextResponse.json({ transport: 'webjs', unreachable: true, reason })
+      // The low-level cause (e.g. "fetch failed: ENOTFOUND") makes setup mistakes obvious; it holds no secrets
+      const cause = error instanceof Error && error.cause instanceof Error ? `: ${error.cause.message}` : ''
+      const detail = `${message}${cause}`.slice(0, 160)
+      return NextResponse.json({ transport: 'webjs', unreachable: true, reason, detail, host: workerHost() })
     }
   } catch (error) {
     return handleAuthError(error)

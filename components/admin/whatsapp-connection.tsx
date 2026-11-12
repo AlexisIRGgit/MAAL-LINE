@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast'
 
 type Connection =
   | { transport: 'cloud' }
-  | { transport: 'webjs'; unreachable: true; reason?: 'secret' | 'config' | 'network' }
+  | { transport: 'webjs'; unreachable: true; reason?: 'secret' | 'config' | 'network'; detail?: string; host?: string | null }
   | { transport: 'webjs'; unreachable?: false; ready: boolean; qr: string | null; number: string | null }
 
 /** Link panel for the trial whatsapp-web.js connection: QR while unlinked, the number once linked */
@@ -62,6 +62,13 @@ export function WhatsAppConnection() {
                 ? 'Faltan WHATSAPP_WORKER_URL o WHATSAPP_WORKER_SECRET en Vercel (y un Redeploy después de agregarlas).'
                 : 'No se pudo llegar al servidor: revisa que WHATSAPP_WORKER_URL sea la dirección completa de Railway, con https:// y sin / al final, y que el servicio esté encendido.'}
           </p>
+          {(connection.host || connection.detail) && (
+            <p className="mt-1 break-all font-mono text-xs text-[#9CA3AF]">
+              {connection.host && `Servidor: ${connection.host}`}
+              {connection.host && connection.detail && ' · '}
+              {connection.detail}
+            </p>
+          )}
         </div>
       </div>
     )
