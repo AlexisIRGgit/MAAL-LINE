@@ -13,7 +13,10 @@ export async function GET() {
       return NextResponse.json({ transport: 'webjs', ...(await callWorker('/status')) })
     } catch (error) {
       console.error('WhatsApp worker status failed:', error)
-      return NextResponse.json({ transport: 'webjs', unreachable: true })
+      const message = error instanceof Error ? error.message : ''
+      // 401 means the worker answered but the secrets differ; anything else means it wasn't reached
+      const reason = message.includes('worker 401') ? 'secret' : message.includes('not configured') ? 'config' : 'network'
+      return NextResponse.json({ transport: 'webjs', unreachable: true, reason })
     }
   } catch (error) {
     return handleAuthError(error)
