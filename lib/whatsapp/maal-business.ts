@@ -3,7 +3,7 @@ import { productPath } from '@/lib/brand'
 import { CONTACT_EMAIL } from '@/lib/site'
 import { sendNtfy } from '@/lib/ntfy'
 import { notifyStaff } from '@/lib/admin-notifications'
-import { getAllProducts, searchProducts } from '@/lib/queries/products'
+import { getAllProducts } from '@/lib/queries/products'
 import { getPublicStoreSettings } from '@/lib/public-store-settings'
 import { TRACKED_ORDER_SELECT, serializeTrackedOrder } from '@/lib/orders/tracked-order'
 import { getOrderStatus } from '@/components/account/order-status'
@@ -68,6 +68,9 @@ const DELIVERY_TIMES = {
 
 type ProductRow = Awaited<ReturnType<typeof getAllProducts>>['products'][number]
 
+/** Enough for the whole store; the model reads every product on each catalog question */
+const CATALOG_LIMIT = 40
+
 function describeProduct(product: ProductRow) {
   const price = Number(product.price)
   const sizes = product.variants.filter((v) => v.isActive)
@@ -118,17 +121,14 @@ async function ordersForPhone(phone: string, orderNumber: string | null) {
 function buildTools(ctx: CustomerContext): AgentTool[] {
   return [
     {
-      name: 'buscarProductos',
+      name: 'verCatalogo',
       description:
-        'Busca productos activos de la tienda por nombre o palabra clave (por ejemplo "strap", "chaleco", "playera"). Devuelve precio, tallas disponibles y agotadas, y el enlace. Sin texto de búsqueda devuelve el catálogo más reciente.',
-      inputSchema: {
-        type: 'object',
-        properties: { busqueda: { type: 'string', description: 'Palabra clave; vacío para ver el catálogo' } },
-        additionalProperties: false,
-      },
-      async run(input) {
-        const query = typeof input.busqueda === 'string' ? input.busqueda.trim().slice(0, 80) : ''
-        const { products, total } = query ? await searchProducts(query, 1, 5) : await getAllProducts(1, 8)
+        'Devuelve el catálogo completo de productos activos de la tienda: nombre, categoría, precio, tallas disponibles y agotadas, descripción y enlace. Úsala siempre que el cliente pregunte por productos, precios, tallas o disponibilidad. Los nombres están en inglés (Straps, Hooks y Grip son para levantamiento; Vest es chaleco), así que revisa el catálogo completo para no dejar fuera ninguna opción.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      async run() {
+        // The catalog is small, so the model gets all of it instead of a keyword search that
+        // misses Spanish words against English names ("chaleco" vs "Vest")
+        const { products, total } = await getAllProducts(1, CATALOG_LIMIT)
         return JSON.stringify({ total, productos: products.map(describeProduct) })
       },
     },
