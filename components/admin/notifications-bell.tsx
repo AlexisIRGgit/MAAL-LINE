@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion'
-import { AlertTriangle, Bell, CheckCheck, Package, Sparkles, UserPlus, type LucideIcon } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCheck, MessageCircle, Package, Sparkles, UserPlus, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { toast } from '@/lib/toast'
 
@@ -26,6 +26,7 @@ export const NOTIFICATION_STYLES: Record<string, { icon: LucideIcon; tile: strin
   low_stock: { icon: AlertTriangle, tile: 'bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400' },
   new_account: { icon: UserPlus, tile: 'bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400' },
   drop_waitlist: { icon: Sparkles, tile: 'bg-[#FF3D00]/10 text-[#FF3D00]' },
+  whatsapp_handoff: { icon: MessageCircle, tile: 'bg-green-50 text-green-600 dark:bg-green-400/10 dark:text-green-400' },
 }
 const FALLBACK_STYLE = { icon: Bell, tile: 'bg-[#F3F4F6] text-[#6B7280] dark:bg-white/10 dark:text-white/60' }
 

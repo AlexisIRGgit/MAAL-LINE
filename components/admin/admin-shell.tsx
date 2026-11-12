@@ -13,6 +13,7 @@ import {
   Settings,
   UserCog,
   Store,
+  MessageCircle,
 } from 'lucide-react'
 import type { UserRole } from '@prisma/client'
 import { hasPermission, type Permission } from '@/lib/permissions'
@@ -30,6 +31,7 @@ const menuItems: (SidebarItem & { permission: Permission })[] = [
   { label: 'Pedidos', href: '/admin/orders', icon: ShoppingCart, permission: 'orders:view' },
   { label: 'Inventario', href: '/admin/inventory', icon: Warehouse, permission: 'inventory:view' },
   { label: 'Clientes', href: '/admin/customers', icon: Users, permission: 'customers:view' },
+  { label: 'WhatsApp', href: '/admin/whatsapp', icon: MessageCircle, permission: 'customers:view' },
   { label: 'Descuentos', href: '/admin/discounts', icon: Percent, permission: 'discounts:view' },
   { label: 'Usuarios', href: '/admin/users', icon: UserCog, permission: 'users:view' },
   { label: 'Configuración', href: '/admin/settings', icon: Settings, permission: 'settings:view' },

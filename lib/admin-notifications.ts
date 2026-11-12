@@ -8,7 +8,7 @@ import { prisma } from '@/lib/db'
 // 'viewer' is left out on purpose: the production UserRole enum doesn't have it
 const STAFF_ROLES = ['employee', 'manager', 'admin', 'owner'] as const
 
-export type AdminNotificationType = 'new_order' | 'low_stock' | 'new_account' | 'drop_waitlist'
+export type AdminNotificationType = 'new_order' | 'low_stock' | 'new_account' | 'drop_waitlist' | 'whatsapp_handoff'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
