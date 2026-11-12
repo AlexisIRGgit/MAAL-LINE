@@ -21,10 +21,10 @@ export function createAnthropicProvider(options: { model?: string } = {}): Agent
       for (let step = 0; step < maxSteps; step++) {
         const response = await client.messages.create({
           model,
-          // A chat reply is short; this is only a ceiling
-          max_tokens: 2048,
-          // Chat answers don't need reasoning: no thinking tokens, low effort, quick and cheap
-          thinking: { type: 'disabled' },
+          // Room for a little thinking plus a short chat reply; only a ceiling
+          max_tokens: 4096,
+          // A bit of reasoning helps pick the right product and link; low effort keeps it short and cheap
+          thinking: { type: 'adaptive' },
           output_config: { effort: 'low' },
           // Caches system + tools + the conversation so far: the next step of the tool loop and the
           // customer's next message (within 5 minutes) re-read it at a tenth of the price
@@ -52,6 +52,7 @@ export function createAnthropicProvider(options: { model?: string } = {}): Agent
           return { kind: 'reply', text }
         }
 
+        // Thinking blocks go back unchanged along with the tool calls
         messages.push({ role: 'assistant', content: response.content })
         const calls = response.content.filter((block): block is Anthropic.ToolUseBlock => block.type === 'tool_use')
         const results = await Promise.all(

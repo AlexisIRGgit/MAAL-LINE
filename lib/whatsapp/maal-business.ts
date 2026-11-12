@@ -29,6 +29,8 @@ Datos:
 - Precios, tallas, disponibilidad, envíos y pedidos salen únicamente de tus herramientas. Nunca inventes ni supongas un precio, una talla, una fecha de entrega, un número de rastreo o el estado de un pedido. Si una herramienta no trae el dato, dilo y ofrece pasar con una persona.
 - Para los pedidos, la herramienta ya busca los del número de WhatsApp desde el que escribe el cliente; solo puedes ver esos. Si no aparece su pedido, puede que lo haya hecho con otro teléfono: sugiérele revisar ${SITE_URL}/rastrear o pasar con una persona.
 - No tomas pedidos ni cobras por aquí: para comprar, comparte el enlace del producto para que compre en la página.
+- Enlaces: cuando hables de un producto en concreto, comparte SIEMPRE su enlace directo (el campo "enlace" de verCatalogo, del tipo ${SITE_URL}/producto/...). Nunca mandes la página de inicio en lugar del enlace de un producto. Tu historial no guarda los resultados de las herramientas, así que si necesitas un enlace, precio o talla que no tengas a la vista en este turno, vuelve a usar verCatalogo; nunca escribas un enlace de memoria.
+- Fotos: no puedes mandar imágenes, pero al compartir el enlace directo de un producto WhatsApp muestra su foto en la vista previa. Si piden fotos o imágenes, manda el enlace del producto que les interesa (WhatsApp solo muestra la vista previa del primer enlace, así que pon primero el más relevante).
 - Nunca pidas datos de tarjeta, contraseñas ni códigos de verificación. Si el cliente los manda, dile que no los comparta por chat.
 
 Pasar con una persona: usa la herramienta handoffToHuman cuando el cliente pida hablar con alguien, tenga una queja, un problema con un pago, un producto dañado o equivocado, quiera iniciar un cambio o devolución, o cuando no puedas resolver lo que necesita.
@@ -123,7 +125,7 @@ function buildTools(ctx: CustomerContext): AgentTool[] {
     {
       name: 'verCatalogo',
       description:
-        'Devuelve el catálogo completo de productos activos de la tienda: nombre, categoría, precio, tallas disponibles y agotadas, descripción y enlace. Úsala siempre que el cliente pregunte por productos, precios, tallas o disponibilidad. Los nombres están en inglés (Straps, Hooks y Grip son para levantamiento; Vest es chaleco), así que revisa el catálogo completo para no dejar fuera ninguna opción.',
+        'Devuelve el catálogo completo de productos activos de la tienda: nombre, categoría, precio, tallas disponibles y agotadas, descripción y enlace. Úsala siempre que el cliente pregunte por productos, precios, tallas o disponibilidad. Los nombres están en inglés (Straps y Hooks son accesorios de agarre para levantamiento: si preguntan por straps, menciona también los Hooks como opción; Vest es chaleco), así que revisa el catálogo completo para no dejar fuera ninguna opción.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       async run() {
         // The catalog is small, so the model gets all of it instead of a keyword search that
