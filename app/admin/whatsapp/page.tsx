@@ -22,6 +22,9 @@ type Conversation = {
 const POLL_MS = 10_000
 const WINDOW_MS = 24 * 60 * 60 * 1000
 
+/** Chats keyed by WhatsApp's private id (`lid…`) have no visible number */
+const numberLabel = (key: string) => (key.startsWith('lid') ? 'Número oculto' : `+${key}`)
+
 const time = (iso: string) =>
   new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(iso))
 
@@ -30,6 +33,7 @@ export default function AdminWhatsAppPage() {
   const { can } = usePermissions()
   const canAct = can('orders:process')
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [replyWindow, setReplyWindow] = useState(true)
   const [loaded, setLoaded] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
@@ -40,8 +44,9 @@ export default function AdminWhatsAppPage() {
     try {
       const res = await fetch('/api/admin/whatsapp', { cache: 'no-store' })
       if (!res.ok) return
-      const data = (await res.json()) as { conversations: Conversation[] }
+      const data = (await res.json()) as { conversations: Conversation[]; replyWindow: boolean }
       setConversations(data.conversations)
+      setReplyWindow(data.replyWindow)
     } finally {
       setLoaded(true)
     }
@@ -84,7 +89,7 @@ export default function AdminWhatsAppPage() {
     }
   }
 
-  const windowOpen = !!selected?.lastInboundAt && Date.now() - new Date(selected.lastInboundAt).getTime() < WINDOW_MS
+  const windowOpen = !replyWindow || (!!selected?.lastInboundAt && Date.now() - new Date(selected.lastInboundAt).getTime() < WINDOW_MS)
   const waiting = conversations.filter((c) => c.status === 'human').length
 
   return (
@@ -130,7 +135,7 @@ export default function AdminWhatsAppPage() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className="truncate text-sm font-semibold text-[#111827]">{c.contactName || `+${c.phone}`}</span>
+                      <span className="truncate text-sm font-semibold text-[#111827]">{c.contactName || numberLabel(c.phone)}</span>
                       <span className="flex-shrink-0 text-[11px] text-[#9CA3AF]">{time(c.updatedAt)}</span>
                     </span>
                     <span className="block truncate text-xs text-[#6B7280]">
@@ -149,9 +154,9 @@ export default function AdminWhatsAppPage() {
                   <button type="button" onClick={() => setSelectedId(null)} className="mb-1 text-xs text-[#6B7280] lg:hidden">
                     ← Chats
                   </button>
-                  <p className="truncate font-semibold text-[#111827]">{selected.contactName || `+${selected.phone}`}</p>
+                  <p className="truncate font-semibold text-[#111827]">{selected.contactName || numberLabel(selected.phone)}</p>
                   <p className="text-xs text-[#6B7280]">
-                    +{selected.phone} · {selected.status === 'human' ? 'Lo atiende el equipo; el bot no responde' : 'Lo atiende el bot'}
+                    {numberLabel(selected.phone)} · {selected.status === 'human' ? 'Lo atiende el equipo; el bot no responde' : 'Lo atiende el bot'}
                   </p>
                 </div>
                 {canAct && (

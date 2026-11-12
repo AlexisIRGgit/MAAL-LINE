@@ -24,8 +24,13 @@ export function isValidSignature(rawBody: string, header: string | null): boolea
 export type InboundMessage = {
   /** WhatsApp message id, used to drop retried webhooks */
   id: string
-  /** Sender in E.164 digits without the plus */
+  /**
+   * Key of the chat: the sender's E.164 digits without the plus, or `lid…` when an
+   * unofficial client only knows WhatsApp's private id for the sender
+   */
   from: string
+  /** Sender's verified phone (E.164 digits), or null when it isn't known */
+  phone: string | null
   contactName: string | null
   /** The text, or null for media and other types the bot can't read */
   text: string | null
@@ -66,7 +71,7 @@ export function parseInboundMessages(payload: unknown): InboundMessage[] {
           str(obj(interactive?.button_reply)?.title) ??
           str(obj(interactive?.list_reply)?.title) ??
           str(obj(m.button)?.text)
-        messages.push({ id, from, contactName: names.get(from) ?? null, text, type })
+        messages.push({ id, from, phone: from, contactName: names.get(from) ?? null, text, type })
       }
     }
   }
@@ -109,3 +114,6 @@ export async function markAsRead(messageId: string): Promise<void> {
     console.warn('WhatsApp mark-as-read failed:', error instanceof Error ? error.message : error)
   )
 }
+
+/** Sends through the Cloud API; used by the webhook and by staff replies */
+export const cloudChannel = { send: sendText, markRead: markAsRead }

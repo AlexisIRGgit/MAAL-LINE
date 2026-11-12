@@ -138,6 +138,12 @@ function buildTools(ctx: CustomerContext): AgentTool[] {
       async run(input) {
         const raw = typeof input.numeroPedido === 'string' ? input.numeroPedido.trim().toUpperCase() : ''
         const orderNumber = /^ML-[A-Z0-9]{4,12}-[A-Z0-9_-]{4}$/.test(raw) ? raw : null
+        if (!ctx.phone) {
+          return JSON.stringify({
+            pedidos: [],
+            nota: `No se pudo confirmar el teléfono de este chat, así que no se pueden mostrar pedidos por aquí. El cliente puede revisarlos en ${SITE_URL}/rastrear o pasar con una persona.`,
+          })
+        }
         const orders = await ordersForPhone(ctx.phone, orderNumber)
         if (orders.length === 0) {
           return JSON.stringify({ pedidos: [], nota: 'No hay pedidos con este número de WhatsApp' + (orderNumber ? ` y el número ${orderNumber}` : '') })
@@ -181,7 +187,8 @@ function buildTools(ctx: CustomerContext): AgentTool[] {
 }
 
 async function onHandoff(ctx: CustomerContext, reason: string) {
-  const who = ctx.contactName ? `${ctx.contactName} (+${ctx.phone})` : `+${ctx.phone}`
+  const number = ctx.phone ? `+${ctx.phone}` : 'número oculto'
+  const who = ctx.contactName ? `${ctx.contactName} (${number})` : number
   await Promise.all([
     sendNtfy({
       title: 'WhatsApp: un cliente necesita atención',

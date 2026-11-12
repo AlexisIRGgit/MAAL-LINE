@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requirePermission, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
-import { sendText } from '@/lib/whatsapp/cloud-api'
+import { hasReplyWindow, sendStaffMessage } from '@/lib/whatsapp/transport'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,14 +37,15 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (action === 'reply') {
       const text = typeof body?.text === 'string' ? body.text.trim() : ''
       if (!text || text.length > 4000) return NextResponse.json({ error: 'Escribe un mensaje de hasta 4000 caracteres' }, { status: 400 })
-      if (!conversation.lastInboundAt || Date.now() - conversation.lastInboundAt.getTime() > REPLY_WINDOW_MS) {
+      const windowClosed = !conversation.lastInboundAt || Date.now() - conversation.lastInboundAt.getTime() > REPLY_WINDOW_MS
+      if (hasReplyWindow() && windowClosed) {
         return NextResponse.json(
           { error: 'Pasaron más de 24 horas desde el último mensaje del cliente; WhatsApp ya no permite responder con texto libre.' },
           { status: 409 }
         )
       }
 
-      const waMessageId = await sendText(conversation.phone, text)
+      const waMessageId = await sendStaffMessage(conversation.phone, text)
       const [message] = await prisma.$transaction([
         prisma.whatsAppMessage.create({
           data: { conversationId: conversation.id, waMessageId, author: 'staff', body: text },

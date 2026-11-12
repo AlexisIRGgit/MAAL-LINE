@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { waitUntil } from '@vercel/functions'
-import { isValidSignature, parseInboundMessages } from '@/lib/whatsapp/cloud-api'
+import { cloudChannel, isValidSignature, parseInboundMessages } from '@/lib/whatsapp/cloud-api'
 import { handleInboundMessage } from '@/lib/whatsapp/bot'
 import { maalWhatsAppBusiness } from '@/lib/whatsapp/maal-business'
 import { createAnthropicProvider } from '@/lib/agent/anthropic-provider'
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       (async () => {
         // One at a time, so a customer's quick messages are answered in order
         for (const message of messages) {
-          await handleInboundMessage(message, maalWhatsAppBusiness, provider).catch((error) =>
+          await handleInboundMessage(message, maalWhatsAppBusiness, provider, cloudChannel).catch((error) =>
             console.error('WhatsApp message handling failed:', error)
           )
         }

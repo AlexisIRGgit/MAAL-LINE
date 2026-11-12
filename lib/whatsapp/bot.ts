@@ -1,17 +1,24 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { AgentError, type AgentProvider, type AgentTool, type ChatTurn } from '@/lib/agent/types'
-import { markAsRead, sendText, type InboundMessage } from '@/lib/whatsapp/cloud-api'
+import type { InboundMessage } from '@/lib/whatsapp/cloud-api'
 
 /**
  * Business-neutral WhatsApp bot: stores the chat, drops retried webhooks, runs the agent
  * and answers. Everything specific to a business comes in through `BotBusiness`.
  */
 
+/** How replies leave: the Cloud API, or a whatsapp-web.js worker that sends them itself */
+export type Channel = {
+  /** Sends to the chat key; returns WhatsApp's message id when known */
+  send: (to: string, text: string) => Promise<string | null>
+  markRead: (messageId: string) => Promise<void>
+}
+
 /** Who is writing; tools bind to this, never to ids the model sends */
 export type CustomerContext = {
-  /** E.164 digits without the plus, as verified by WhatsApp */
-  phone: string
+  /** E.164 digits without the plus, as verified by WhatsApp; null when the channel couldn't tell */
+  phone: string | null
   contactName: string | null
   conversationId: string
 }
@@ -50,8 +57,8 @@ async function findOrCreateConversation(message: InboundMessage) {
   return upsert().catch((error) => (isUniqueViolation(error) ? upsert() : Promise.reject(error)))
 }
 
-async function reply(conversationId: string, to: string, text: string) {
-  const waMessageId = await sendText(to, text)
+async function reply(channel: Channel, conversationId: string, to: string, text: string) {
+  const waMessageId = await channel.send(to, text)
   await prisma.whatsAppMessage.create({ data: { conversationId, waMessageId, author: 'bot', body: text } })
 }
 
@@ -100,7 +107,12 @@ async function loadHistory(conversationId: string): Promise<ChatTurn[]> {
 }
 
 /** Handles one customer message end to end; safe to call again for a webhook Meta retries */
-export async function handleInboundMessage(message: InboundMessage, business: BotBusiness, provider: AgentProvider): Promise<void> {
+export async function handleInboundMessage(
+  message: InboundMessage,
+  business: BotBusiness,
+  provider: AgentProvider,
+  channel: Channel
+): Promise<void> {
   const conversation = await findOrCreateConversation(message)
 
   try {
@@ -117,13 +129,13 @@ export async function handleInboundMessage(message: InboundMessage, business: Bo
     throw error
   }
 
-  await markAsRead(message.id)
+  await channel.markRead(message.id)
   if (conversation.status === 'human') return
 
-  const ctx: CustomerContext = { phone: message.from, contactName: conversation.contactName, conversationId: conversation.id }
+  const ctx: CustomerContext = { phone: message.phone, contactName: conversation.contactName, conversationId: conversation.id }
 
   if (!message.text) {
-    await reply(conversation.id, message.from, business.replies.unsupported)
+    await reply(channel, conversation.id, message.from, business.replies.unsupported)
     return
   }
 
@@ -136,12 +148,12 @@ export async function handleInboundMessage(message: InboundMessage, business: Bo
       tools,
       maxSteps: MAX_AGENT_STEPS,
     })
-    await reply(conversation.id, message.from, result.kind === 'reply' ? result.text : business.replies.refused)
+    await reply(channel, conversation.id, message.from, result.kind === 'reply' ? result.text : business.replies.refused)
   } catch (error) {
     console.error('WhatsApp agent failed:', error)
     const reason = error instanceof AgentError ? error.message : 'Error interno del bot'
     if (!handedOff) await handOff(business, ctx, `El bot falló al responder (${reason})`).catch((e) => console.error(e))
-    await reply(conversation.id, message.from, business.replies.failure).catch((e) =>
+    await reply(channel, conversation.id, message.from, business.replies.failure).catch((e) =>
       console.error('WhatsApp failure reply failed:', e)
     )
   }

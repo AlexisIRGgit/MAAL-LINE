@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requirePermission, handleAuthError } from '@/lib/auth-utils'
 import { prisma } from '@/lib/db'
+import { hasReplyWindow } from '@/lib/whatsapp/transport'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +19,7 @@ export async function GET() {
     })
 
     return NextResponse.json({
+      replyWindow: hasReplyWindow(),
       conversations: conversations.map(({ messages, ...conversation }) => ({
         ...conversation,
         messages: messages.reverse(),
