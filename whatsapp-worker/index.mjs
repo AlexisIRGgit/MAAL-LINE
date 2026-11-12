@@ -96,9 +96,16 @@ async function forward(payload) {
   return Array.isArray(data?.replies) ? data.replies.filter((r) => typeof r === 'string' && r) : []
 }
 
+/**
+ * What a customer can actually send. WhatsApp also emits system events through the same
+ * 'message' event (e2e_notification, notification_template, call_log, revoked…) that must be ignored.
+ */
+const CUSTOMER_TYPES = new Set(['chat', 'image', 'video', 'audio', 'ptt', 'document', 'sticker', 'location', 'vcard', 'multi_vcard'])
+
 async function handleMessage(message) {
   const from = message.from
   if (message.fromMe || message.isStatus || !(from.endsWith('@c.us') || from.endsWith('@lid'))) return
+  if (!CUSTOMER_TYPES.has(message.type)) return
 
   const phone = await resolvePhone(from)
   const chatKey = phone ?? `lid${digits(from.split('@')[0])}`
