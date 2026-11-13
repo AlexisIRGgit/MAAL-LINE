@@ -135,9 +135,16 @@ async function handleMessage(message) {
 
 // One queue per chat, so a customer's quick messages are answered in order
 const queues = new Map()
-client.on('message', (message) => {
+// Ids already queued here, so the event and the unread sweep don't both handle a message
+const seen = new Set()
+
+function enqueue(message, source) {
+  const id = message.id?._serialized
+  if (!id || seen.has(id)) return
+  seen.add(id)
+  if (seen.size > 5000) seen.delete(seen.values().next().value)
   // Type and chat kind only, never the content or the number
-  console.log('Message event:', message.type, message.fromMe ? 'from me' : message.from.split('@')[1] ?? '?')
+  console.log(`Message (${source}):`, message.type, message.fromMe ? 'from me' : message.from.split('@')[1] ?? '?')
   const previous = queues.get(message.from) ?? Promise.resolve()
   const next = previous
     .then(() => handleMessage(message))
@@ -146,7 +153,36 @@ client.on('message', (message) => {
   next.finally(() => {
     if (queues.get(message.from) === next) queues.delete(message.from)
   })
-})
+}
+
+client.on('message', (message) => enqueue(message, 'event'))
+
+/**
+ * After a restart WhatsApp Web sometimes comes up "ready" but never fires 'message', and
+ * messages that arrive while the worker is down never fire it either. Every so often, pick up
+ * unread customer messages from individual chats. Handling a message marks the chat as read,
+ * and the app drops ids it already stored, so nothing is answered twice.
+ */
+const SWEEP_MS = 20_000
+const MAX_AGE_S = 6 * 60 * 60 // older unread messages are left for a person
+
+async function sweepUnread() {
+  if (!ready) return
+  const chats = await client.getChats()
+  for (const chat of chats) {
+    if (chat.isGroup || chat.unreadCount <= 0) continue
+    const recent = await chat.fetchMessages({ limit: Math.min(chat.unreadCount, 10) })
+    const now = Date.now() / 1000
+    for (const message of recent) {
+      if (message.fromMe || now - message.timestamp > MAX_AGE_S) continue
+      enqueue(message, 'sweep')
+    }
+  }
+}
+
+setInterval(() => {
+  sweepUnread().catch((error) => console.error('Unread sweep failed:', error?.message ?? error))
+}, SWEEP_MS)
 
 const authorized = (req, url) => {
   const header = req.headers.authorization || ''
