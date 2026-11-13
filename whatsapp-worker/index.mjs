@@ -44,6 +44,8 @@ const client = new Client({
   authTimeoutMs: 120_000,
   puppeteer: {
     headless: true,
+    // Fail page calls after 60 s instead of puppeteer's 180 s default
+    protocolTimeout: 60_000,
     executablePath: process.env.CHROME_PATH || undefined,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote'],
   },
@@ -166,9 +168,19 @@ client.on('message', (message) => enqueue(message, 'event'))
 const SWEEP_MS = 20_000
 const MAX_AGE_S = 6 * 60 * 60 // older unread messages are left for a person
 
+let sweeping = false
 async function sweepUnread() {
-  if (!ready) return
-  const chats = await client.getChats()
+  if (!ready || sweeping) return
+  sweeping = true
+  try {
+    await sweepChats()
+  } finally {
+    sweeping = false
+  }
+}
+
+async function sweepChats() {
+  const chats = await withTimeout(client.getChats(), 30_000)
   for (const chat of chats) {
     if (chat.isGroup || chat.unreadCount <= 0) continue
     const recent = await chat.fetchMessages({ limit: Math.min(chat.unreadCount, 10) })
@@ -179,6 +191,32 @@ async function sweepUnread() {
     }
   }
 }
+
+const withTimeout = (promise, ms) =>
+  Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error(`timed out after ${ms} ms`)), ms))])
+
+/**
+ * Watchdog: WhatsApp Web can end up frozen (every call into the page hangs) while still
+ * looking connected. Check it every minute; after 3 failed checks in a row, exit so Railway
+ * restarts the service with a fresh browser.
+ */
+let failedChecks = 0
+setInterval(async () => {
+  if (!ready) return
+  try {
+    const state = await withTimeout(client.getState(), 20_000)
+    if (state !== 'CONNECTED') throw new Error(`state ${state}`)
+    if (failedChecks > 0) console.log('Watchdog: WhatsApp responding again')
+    failedChecks = 0
+  } catch (error) {
+    failedChecks++
+    console.error(`Watchdog check ${failedChecks}/3 failed:`, error?.message ?? error)
+    if (failedChecks >= 3) {
+      console.error('Watchdog: WhatsApp Web is frozen, restarting')
+      process.exit(1)
+    }
+  }
+}, 60_000)
 
 setInterval(() => {
   sweepUnread().catch((error) => console.error('Unread sweep failed:', error?.message ?? error))
@@ -219,6 +257,17 @@ const server = http.createServer(async (req, res) => {
       qr: !ready && latestQr ? await QRCode.toDataURL(latestQr, { width: 320, margin: 2 }) : null,
       number: ready ? client.info?.wid?.user ?? null : null,
     })
+  }
+
+  // What WhatsApp Web is showing, to diagnose a session that is linked but not receiving
+  if (req.method === 'GET' && url.pathname === '/screenshot') {
+    try {
+      const png = await withTimeout(client.pupPage.screenshot({ type: 'png' }), 20_000)
+      res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' })
+      return res.end(png)
+    } catch (error) {
+      return send(res, 500, { error: error?.message ?? 'Screenshot failed' })
+    }
   }
 
   // Unlinks the number; the restart then shows a fresh QR for another phone
