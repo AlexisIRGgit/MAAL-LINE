@@ -56,9 +56,37 @@ client.on('qr', (qr) => {
   ready = false
   console.log('Scan the QR code: open /qr?token=<WORKER_SECRET> on this service')
 })
-client.on('authenticated', () => console.log('Authenticated'))
+client.on('authenticated', () => {
+  console.log('Authenticated')
+  watchBrowser()
+})
 client.on('auth_failure', (message) => console.error('Auth failure:', message))
+let pageCrashed = false
+let pageErrors = 0
+/** Browser-level problems never surface through whatsapp-web.js; log them */
+function watchBrowser() {
+  const page = client.pupPage
+  if (!page || page.__watched) return
+  page.__watched = true
+  page.on('error', (error) => {
+    pageCrashed = true
+    console.error('WhatsApp Web tab crashed:', error?.message ?? error)
+  })
+  page.on('pageerror', (error) => {
+    if (pageErrors++ < 20) console.error('WhatsApp Web page error:', String(error?.message ?? error).slice(0, 300))
+  })
+  page.on('console', (message) => {
+    if (message.type() === 'error' && pageErrors++ < 20) console.error('WhatsApp Web console:', message.text().slice(0, 300))
+  })
+  page.on('dialog', (dialog) => {
+    console.error('WhatsApp Web dialog:', dialog.message().slice(0, 300))
+    dialog.dismiss().catch(() => {})
+  })
+  client.pupBrowser?.on('disconnected', () => console.error('Chrome disconnected'))
+}
+
 client.on('ready', () => {
+  watchBrowser()
   ready = true
   latestQr = null
   console.log('WhatsApp connected and ready')
@@ -256,6 +284,23 @@ const server = http.createServer(async (req, res) => {
       ready,
       qr: !ready && latestQr ? await QRCode.toDataURL(latestQr, { width: 320, margin: 2 }) : null,
       number: ready ? client.info?.wid?.user ?? null : null,
+    })
+  }
+
+  // Browser facts that don't need the page's JavaScript to answer
+  if (req.method === 'GET' && url.pathname === '/debug') {
+    const page = client.pupPage
+    const pages = await withTimeout(client.pupBrowser?.pages() ?? Promise.resolve([]), 10_000).catch(() => null)
+    const metrics = await withTimeout(page?.metrics() ?? Promise.resolve(null), 10_000).catch((e) => ({ error: e?.message }))
+    return send(res, 200, {
+      ready,
+      pageCrashed,
+      pageErrors,
+      url: page?.url() ?? null,
+      pages: pages?.map((p) => p.url()) ?? 'timed out',
+      metrics,
+      chrome: await withTimeout(client.pupBrowser?.version() ?? Promise.resolve(null), 10_000).catch(() => null),
+      memory: process.memoryUsage().rss,
     })
   }
 
